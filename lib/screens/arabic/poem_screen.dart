@@ -13,8 +13,6 @@ class _PoemScreenState extends State<PoemScreen> {
   List<dynamic> allPoems = [];
   Map<String, dynamic>? selectedPoemData;
   bool isLoading = true;
-  bool isPlaying = false;
-  double audioPosition = 0.0;
 
   @override
   void initState() {
@@ -61,18 +59,7 @@ class _PoemScreenState extends State<PoemScreen> {
         ),
         body: isLoading 
             ? const Center(child: CircularProgressIndicator())
-            : Stack(
-                children: [
-                  _buildPoemContent(primaryColor),
-                  if (selectedPoemData != null)
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      child: _buildFloatingAudioPlayer(primaryColor),
-                    ),
-                ],
-              ),
+            : _buildPoemContent(primaryColor),
       ),
     );
   }
@@ -173,7 +160,7 @@ class _PoemScreenState extends State<PoemScreen> {
             Icon(Icons.library_books_rounded, size: 80, color: Colors.grey[300]),
             const SizedBox(height: 20),
             const Text(
-              "يرجى اختيار قصيدة للعرض والاستماع",
+              "يرجى اختيار قصيدة للعرض",
               style: TextStyle(color: Colors.grey, fontSize: 16),
             ),
           ],
@@ -182,7 +169,7 @@ class _PoemScreenState extends State<PoemScreen> {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -364,71 +351,6 @@ class _PoemScreenState extends State<PoemScreen> {
         const SizedBox(width: 10),
         Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
       ],
-    );
-  }
-
-  Widget _buildFloatingAudioPlayer(Color primaryColor) {
-    return SafeArea(
-      child: Container(
-        width: double.infinity,
-        margin: const EdgeInsets.fromLTRB(15, 0, 15, 10),
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withAlpha(25), blurRadius: 20, offset: const Offset(0, 8)),
-          ],
-          border: Border.all(color: primaryColor.withAlpha(20)),
-        ),
-        child: Row(
-          children: [
-            IconButton(
-              icon: Transform.flip(
-                flipX: true,
-                child: Icon(isPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_filled_rounded),
-              ),
-              iconSize: 48,
-              color: primaryColor,
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
-              onPressed: () => setState(() => isPlaying = !isPlaying),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        selectedPoemData!['poem_name'],
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1E293B)),
-                      ),
-                      const Text("03:20 / 00:00", style: TextStyle(fontSize: 10, color: Colors.grey)),
-                    ],
-                  ),
-                  SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      trackHeight: 3,
-                      thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
-                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
-                      activeTrackColor: primaryColor,
-                      inactiveTrackColor: primaryColor.withAlpha(25),
-                      thumbColor: primaryColor,
-                    ),
-                    child: Slider(
-                      value: audioPosition,
-                      onChanged: (val) => setState(() => audioPosition = val),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

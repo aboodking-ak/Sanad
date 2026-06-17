@@ -1337,6 +1337,11 @@ class _HomePageScreenState extends State<HomePageScreen> {
               physics: const NeverScrollableScrollPhysics(),
               children: [
                 _buildToolListItem(
+                    label: 'قائمة المهام',
+                    icon: Icons.checklist_rounded,
+                    primaryColor: primaryColor,
+                    secondaryColor: secondaryColor),
+                _buildToolListItem(
                     label: 'بومودورو',
                     icon: Icons.timer_outlined,
                     primaryColor: primaryColor,
@@ -2065,6 +2070,8 @@ class _HomePageScreenState extends State<HomePageScreen> {
               Navigator.pushNamed(context, '/notes');
             } else if (label == 'بومودورو') {
               Navigator.pushNamed(context, '/pomodoro');
+            } else if (label == 'قائمة المهام') {
+              Navigator.pushNamed(context, '/todos');
             }
           },
           child: Padding(

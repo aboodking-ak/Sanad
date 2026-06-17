@@ -13,8 +13,6 @@ class _SurahScreenState extends State<SurahScreen> {
   Map<String, dynamic>? islamicData;
   Map<String, dynamic>? selectedUnit;
   bool isInitialLoading = true;
-  bool isPlaying = false;
-  double audioPosition = 0.3;
 
   @override
   void initState() {
@@ -70,18 +68,7 @@ class _SurahScreenState extends State<SurahScreen> {
       ),
       body: islamicData == null
           ? const Center(child: Text("تعذر تحميل البيانات"))
-          : Stack(
-              children: [
-                _buildSurahContent(primaryColor),
-                if (selectedUnit != null)
-                  Positioned(
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    child: _buildFloatingAudioPlayer(primaryColor),
-                  ),
-              ],
-            ),
+          : _buildSurahContent(primaryColor),
     );
   }
 
@@ -192,7 +179,7 @@ class _SurahScreenState extends State<SurahScreen> {
             ),
             const SizedBox(height: 20),
             const Text(
-              "يرجى اختيار السورة للعرض والاستماع",
+              "يرجى اختيار السورة للعرض",
               style: TextStyle(color: Colors.grey, fontSize: 15, fontWeight: FontWeight.w600, fontFamily: 'Tajawal'),
             ),
           ],
@@ -201,7 +188,7 @@ class _SurahScreenState extends State<SurahScreen> {
     }
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: 140),
+      padding: const EdgeInsets.only(bottom: 20),
       child: Column(
         children: [
           _buildSurahTitleHeader(primaryColor),
@@ -452,54 +439,6 @@ class _SurahScreenState extends State<SurahScreen> {
             ),
           );
         }),
-      ),
-    );
-  }
-
-  Widget _buildFloatingAudioPlayer(Color primaryColor) {
-    return SafeArea(
-      child: Container(
-        width: double.infinity,
-        margin: const EdgeInsets.fromLTRB(15, 0, 15, 10),
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.1), blurRadius: 20, offset: const Offset(0, 8))],
-          border: Border.all(color: primaryColor.withValues(alpha: 0.08)),
-        ),
-        child: Row(
-          children: [
-            IconButton(
-              icon: Icon(isPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_filled_rounded),
-              iconSize: 48, color: primaryColor, padding: EdgeInsets.zero, constraints: const BoxConstraints(),
-              onPressed: () => setState(() => isPlaying = !isPlaying),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(selectedUnit?['lesson']['surah'] ?? "", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Color(0xFF1E293B), fontFamily: 'Tajawal')),
-                      const Text("00:00 / 00:00", style: TextStyle(fontSize: 10, color: Colors.grey, fontFamily: 'Tajawal')),
-                    ],
-                  ),
-                  SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      trackHeight: 3, thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 5),
-                      overlayShape: const RoundSliderOverlayShape(overlayRadius: 10),
-                      activeTrackColor: primaryColor, inactiveTrackColor: primaryColor.withValues(alpha: 0.1), thumbColor: primaryColor,
-                    ),
-                    child: Slider(value: audioPosition, onChanged: (val) => setState(() => audioPosition = val)),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

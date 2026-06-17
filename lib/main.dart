@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/theme/app_theme.dart';
 import 'screens/splash/SplashScreen.dart';
 import 'screens/auth/SignUpScreen.dart';
@@ -18,9 +19,17 @@ import 'screens/biology/BiologyDiagramsScreen.dart';
 import 'screens/tools/CountdownScreen.dart';
 import 'screens/tools/NotesScreen.dart';
 import 'screens/tools/PomodoroScreen.dart';
+import 'screens/tools/TodosScreen.dart';
 import 'screens/profile/ProfileScreen.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await Supabase.initialize(
+    url: 'https://vxdhjeefbrdjwzwdlybu.supabase.co',
+    anonKey: 'sb_publishable_bh6MjtlteOB4F6eyax80jA_GjlXFpIh',
+  );
+
   runApp(const MyApp());
 }
 
@@ -68,6 +77,7 @@ class MyApp extends StatelessWidget {
         '/countdown': (context) => const CountdownScreen(),
         '/notes': (context) => const NotesScreen(),
         '/pomodoro': (context) => const PomodoroScreen(),
+        '/todos': (context) => const TodosScreen(),
         '/profile': (context) => const ProfileScreen(),
       },
     );
