@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HadithsScreen extends StatefulWidget {
   const HadithsScreen({super.key});
@@ -22,14 +23,19 @@ class _HadithsScreenState extends State<HadithsScreen> {
 
   Future<void> _loadHadithData() async {
     try {
-      final String response = await rootBundle.loadString('assets/jsons/subjects/islamic/hadiths_questions.json');
-      final data = json.decode(response);
+      final response = await Supabase.instance.client
+          .from('app_contents')
+          .select('data')
+          .eq('subject', 'islamic')
+          .eq('type', 'hadiths')
+          .single();
+      
       setState(() {
-        hadithData = data;
+        hadithData = response['data'];
         isInitialLoading = false;
       });
     } catch (e) {
-      debugPrint("Error loading hadith data: $e");
+      debugPrint("Error loading hadith data from Supabase: $e");
       setState(() => isInitialLoading = false);
     }
   }
@@ -39,12 +45,6 @@ class _HadithsScreenState extends State<HadithsScreen> {
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
     const backgroundColor = Color(0xFFF1F5F9);
-
-    if (isInitialLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -62,13 +62,15 @@ class _HadithsScreenState extends State<HadithsScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list_rounded),
-            onPressed: () => _showSelectionBottomSheet(context, primaryColor),
+            onPressed: isInitialLoading ? null : () => _showSelectionBottomSheet(context, primaryColor),
           ),
         ],
       ),
-      body: hadithData == null
-          ? const Center(child: Text("تعذر تحميل البيانات"))
-          : _buildHadithContent(primaryColor),
+      body: isInitialLoading 
+          ? Center(child: SizedBox(width: 40, height: 40, child: CircularProgressIndicator(strokeWidth: 3, color: primaryColor)))
+          : (hadithData == null
+              ? const Center(child: Text("تعذر تحميل البيانات"))
+              : _buildHadithContent(primaryColor)),
     );
   }
 

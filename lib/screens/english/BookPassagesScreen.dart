@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class BookPassagesScreen extends StatefulWidget {
   const BookPassagesScreen({super.key});
@@ -23,14 +24,19 @@ class _BookPassagesScreenState extends State<BookPassagesScreen> {
 
   Future<void> _loadData() async {
     try {
-      final String response = await rootBundle.loadString('assets/jsons/subjects/english/book_passages.json');
-      final Map<String, dynamic> data = json.decode(response);
+      final response = await Supabase.instance.client
+          .from('app_contents')
+          .select('data')
+          .eq('subject', 'english')
+          .eq('type', 'passages')
+          .single();
+      
       setState(() {
-        bookData = data;
+        bookData = response['data'];
         isLoading = false;
       });
     } catch (e) {
-      debugPrint("Error loading book passages data: $e");
+      debugPrint("Error loading book passages data from Supabase: $e");
       setState(() => isLoading = false);
     }
   }
@@ -40,12 +46,6 @@ class _BookPassagesScreenState extends State<BookPassagesScreen> {
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
     const backgroundColor = Color(0xFFF1F5F9);
-
-    if (isLoading) {
-      return const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
 
     return Scaffold(
       backgroundColor: backgroundColor,
@@ -63,13 +63,15 @@ class _BookPassagesScreenState extends State<BookPassagesScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list_rounded),
-            onPressed: () => _showSelectionBottomSheet(context, primaryColor),
+            onPressed: isLoading ? null : () => _showSelectionBottomSheet(context, primaryColor),
           ),
         ],
       ),
-      body: bookData == null
-          ? const Center(child: Text("تعذر تحميل البيانات"))
-          : _buildPassageContent(primaryColor),
+      body: isLoading 
+          ? Center(child: SizedBox(width: 40, height: 40, child: CircularProgressIndicator(strokeWidth: 3, color: primaryColor)))
+          : (bookData == null
+              ? const Center(child: Text("تعذر تحميل البيانات"))
+              : _buildPassageContent(primaryColor)),
     );
   }
 

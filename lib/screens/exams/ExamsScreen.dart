@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ExamsScreen extends StatefulWidget {
   final String subjectName;
@@ -29,85 +30,76 @@ class _ExamsScreenState extends State<ExamsScreen> {
   }
 
   Future<void> initializeData() async {
-    final Map<String, List<String>> subjectFiles = {
-      'الإسلامية': [
-        'tajweed_questions.json',
-        'unit1_questions.json',
-        'unit2_questions.json',
-        'unit3_questions.json',
-        'unit4_questions.json',
-        'unit5_questions.json'
-      ],
-      'العربية': [
-        'rules/istifham_questions.json',
-        'rules/nafi_questions.json',
-        'rules/takdim_questions.json',
-        'rules/tawkid_questions.json',
-        'rules/nidaa_questions.json',
-        'rules/taajjub_questions.json',
-        'rules/madh_thamm_questions.json',
-        'rules/tamanni_tarajji_questions.json',
-        'rules/ard_tahdeed_questions.json',
-        'rules/tahzeer_ighraa_questions.json',
-        'literature/unit1_questions.json',
-        'literature/unit2_questions.json',
-        'literature/unit3_questions.json',
-        'literature/unit4_questions.json',
-        'literature/unit5_questions.json',
-        'literature/unit6_questions.json',
-        'literature/unit7_questions.json',
-        'literature/unit8_questions.json',
-        'literature/unit9_questions.json',
-        'literature/unit10_questions.json',
-      ],
-      'الإنجليزية': [
-        'essays.json'
-      ],
-    };
-
     try {
-      final List<String> files = subjectFiles[widget.subjectName] ?? [];
-      for (var file in files) {
-        String path;
-        if (widget.subjectName == 'الإسلامية') {
-          path = 'assets/jsons/subjects/islamic/$file';
-        } else if (widget.subjectName == 'الإنجليزية') {
-          path = 'assets/jsons/subjects/english/$file';
-        } else {
-          // For Arabic, file string includes 'rules/' or 'literature/'
-          path = 'assets/jsons/subjects/arabic/$file';
-        }
+      if (!mounted) return;
+      setState(() {
+        subjectData = {}; // تصفير البيانات لضمان النظافة
+        isInitialLoading = true;
+      });
 
-        final String response = await rootBundle.loadString(path);
-        final data = json.decode(response);
+      String dbSubject = 'islamic';
+      final String sName = widget.subjectName;
+      if (sName.contains('عرب')) dbSubject = 'arabic';
+      if (sName.contains('نكليز')) dbSubject = 'english';
+
+      // جلب كافة البيانات الخاصة بهذا القسم من السيرفر
+      final response = await Supabase.instance.client
+          .from('app_contents')
+          .select('title, data')
+          .eq('subject', dbSubject)
+          .eq('type', 'ministerials');
+
+      final Set<String> addedTitles = {};
+
+      for (var item in response) {
+        if (item['data'] == null) continue;
+        final data = item['data'] as Map<String, dynamic>;
+        String chapterTitle = item['title']?.toString().trim() ?? "قسم غير مسمى";
         
-        if (widget.subjectName == 'العربية') {
-          String category = data['category'] ?? "القواعد";
+        if (dbSubject == 'arabic') {
+          // تصنيف تلقائي ذكي بناءً على العنوان اليدوي
+          bool isLiterature = chapterTitle.contains('الوحدة') || chapterTitle.contains('وحدة');
+          String category = isLiterature ? "الأدب" : "القواعد";
+          
           if (!subjectData.containsKey(category)) {
             subjectData[category] = {'lessons': []};
           }
-          (subjectData[category]['lessons'] as List).add({
-            'lesson_title': data['subject'],
-            'data': data
-          });
-        } else if (widget.subjectName == 'الإنجليزية') {
+          
+          List lessonsList = subjectData[category]['lessons'];
+
+          // إضافة الوحدة أو موضوع القواعد كخيار واحد فقط بدون تفكيك
+          if (!addedTitles.contains(chapterTitle)) {
+            lessonsList.add({'lesson_title': chapterTitle, 'data': data});
+            addedTitles.add(chapterTitle);
+          }
+        } else if (dbSubject == 'english') {
+          // هيكلية الإنكليزي (وحدات مدمجة أو منفصلة)
           final List<dynamic> units = data['units'] ?? [];
-          for (var unit in units) {
-            String chapterTitle = unit['title'] ?? "قسم غير مسمى";
-            subjectData[chapterTitle] = {
-              'unit': unit['title'],
-              'questions': unit['essays']
-            };
+          if (units.isNotEmpty) {
+            for (var unit in units) {
+              String unitTitle = unit['title'] ?? chapterTitle;
+              if (!addedTitles.contains(unitTitle)) {
+                subjectData[unitTitle] = {'unit': unitTitle, 'questions': unit['essays']};
+                addedTitles.add(unitTitle);
+              }
+            }
+          } else {
+            if (!addedTitles.contains(chapterTitle)) {
+              subjectData[chapterTitle] = data;
+              addedTitles.add(chapterTitle);
+            }
           }
         } else {
-          String chapterTitle = data['unit'] ?? data['topic'] ?? "قسم غير مسمى";
-          subjectData[chapterTitle] = data;
+          if (!addedTitles.contains(chapterTitle)) {
+            subjectData[chapterTitle] = data;
+            addedTitles.add(chapterTitle);
+          }
         }
       }
-      setState(() => isInitialLoading = false);
+      if (mounted) setState(() => isInitialLoading = false);
     } catch (e) {
       debugPrint("Error initializing data: $e");
-      setState(() => isInitialLoading = false);
+      if (mounted) setState(() => isInitialLoading = false);
     }
   }
 
@@ -126,12 +118,16 @@ class _ExamsScreenState extends State<ExamsScreen> {
       if (lesson != null) {
         if (widget.subjectName == 'العربية') {
           final data = lesson['data'];
-          if (data.containsKey('parts')) {
+          if (data.containsKey('extracted_questions')) {
+            questionsList.addAll(List.from(data['extracted_questions']));
+          } else if (data.containsKey('parts')) {
             for (var part in data['parts']) {
               if (part['questions'] != null) {
                 questionsList.addAll(List.from(part['questions']));
               }
             }
+          } else if (data.containsKey('questions')) {
+            questionsList.addAll(List.from(data['questions']));
           }
         } else {
           if (lesson['sections'] != null) {
@@ -202,7 +198,13 @@ class _ExamsScreenState extends State<ExamsScreen> {
         ],
       ),
       body: isInitialLoading 
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(
+              child: SizedBox(
+                width: 40, 
+                height: 40, 
+                child: CircularProgressIndicator(strokeWidth: 3, color: primaryColor)
+              ),
+            )
           : buildQuestionsList(primaryColor),
     );
   }
@@ -210,21 +212,25 @@ class _ExamsScreenState extends State<ExamsScreen> {
   void showSelectionSheet(BuildContext context, Color primaryColor) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       backgroundColor: Colors.white,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
       ),
       builder: (context) {
+        String? tempChapter = selectedChapter;
+        String? tempTopic = selectedTopic;
+
         return StatefulBuilder(
           builder: (context, setModalState) {
             List<String> chapters = subjectData.keys.toList();
             List<String> topics = [];
-            if (selectedChapter != null && subjectData[selectedChapter]!.containsKey('lessons')) {
-              topics = (subjectData[selectedChapter]['lessons'] as List).map((l) => l['lesson_title'].toString()).toList();
+            if (tempChapter != null && subjectData[tempChapter] != null && subjectData[tempChapter]!.containsKey('lessons')) {
+              topics = (subjectData[tempChapter]['lessons'] as List).map((l) => l['lesson_title'].toString()).toList();
             }
 
             return Padding(
-              padding: const EdgeInsets.all(24.0),
+              padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,15 +244,11 @@ class _ExamsScreenState extends State<ExamsScreen> {
                     "الوحدة / القسم",
                     Icons.folder_open_rounded,
                     chapters,
-                    selectedChapter,
+                    tempChapter,
                     (val) {
                       setModalState(() {
-                        selectedChapter = val;
-                        selectedTopic = null;
-                      });
-                      setState(() {
-                        selectedChapter = val;
-                        selectedTopic = null;
+                        tempChapter = val;
+                        tempTopic = null;
                       });
                     },
                   ),
@@ -256,12 +258,11 @@ class _ExamsScreenState extends State<ExamsScreen> {
                       "الموضوع",
                       Icons.topic_outlined,
                       topics,
-                      selectedTopic,
+                      tempTopic,
                       (val) {
-                        setModalState(() => selectedTopic = val);
-                        setState(() => selectedTopic = val);
+                        setModalState(() => tempTopic = val);
                       },
-                      isEnabled: selectedChapter != null,
+                      isEnabled: tempChapter != null,
                     ),
                   ],
                   const SizedBox(height: 30),
@@ -269,8 +270,12 @@ class _ExamsScreenState extends State<ExamsScreen> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: (selectedChapter != null && (topics.isEmpty || selectedTopic != null))
+                      onPressed: (tempChapter != null && (topics.isEmpty || tempTopic != null))
                           ? () {
+                              setState(() {
+                                selectedChapter = tempChapter;
+                                selectedTopic = tempTopic;
+                              });
                               Navigator.pop(context);
                               applyFilter();
                             }
@@ -293,26 +298,35 @@ class _ExamsScreenState extends State<ExamsScreen> {
   }
 
   Widget buildDropdown(String hint, IconData icon, List<String> items, String? value, ValueChanged<String?> onChanged, {bool isEnabled = true}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: isEnabled ? Colors.grey[50] : Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          isExpanded: true,
-          value: value,
-          hint: Row(
-            children: [
-              Icon(icon, size: 20, color: Colors.grey[400]),
-              const SizedBox(width: 12),
-              Text(hint, style: TextStyle(color: Colors.grey[400])),
-            ],
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: isEnabled ? Colors.grey[50] : Colors.grey[100],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[200]!),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            isExpanded: true,
+            value: (value != null && items.contains(value)) ? value : null,
+            hint: Row(
+              children: [
+                Icon(icon, size: 20, color: Colors.grey[400]),
+                const SizedBox(width: 12),
+                Text(items.isEmpty && isEnabled ? "جاري تحميل الوحدات..." : hint, 
+                     style: TextStyle(color: Colors.grey[400], fontSize: 14)),
+              ],
+            ),
+            items: isEnabled && items.isNotEmpty
+                ? items.map((item) => DropdownMenuItem(
+                    value: item, 
+                    child: Text(item, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500))
+                  )).toList()
+                : null,
+            onChanged: isEnabled ? onChanged : null,
           ),
-          items: isEnabled ? items.map((item) => DropdownMenuItem(value: item, child: Text(item, style: const TextStyle(fontSize: 13)))).toList() : null,
-          onChanged: isEnabled ? onChanged : null,
         ),
       ),
     );

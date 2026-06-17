@@ -52,6 +52,73 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
     });
   }
 
+  Widget _buildErrorView(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(30.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.picture_as_pdf_outlined,
+              size: 100,
+              color: Colors.grey.withAlpha(100),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              "عذراً، الملف غير متوفر حالياً",
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 10),
+            const Text(
+              "نعمل على توفير جميع المناهج في أقرب وقت ممكن. شكراً لتفهمك.",
+              style: TextStyle(
+                fontSize: 14,
+                color: Colors.grey,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 30),
+            ElevatedButton.icon(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.arrow_back_rounded),
+              label: const Text("العودة للخلف"),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 25, vertical: 12),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScrollThumb(BuildContext context) {
+    return PdfViewerScrollThumb(
+      controller: _controller,
+      orientation: ScrollbarOrientation.right,
+      thumbSize: const Size(40, 50),
+      thumbBuilder: (context, thumbSize, pageNumber, controller) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primary.withAlpha(200),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Center(
+          child: Text(
+            pageNumber?.toString() ?? '',
+            style: const TextStyle(color: Colors.white, fontSize: 12),
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
@@ -77,93 +144,53 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
               ),
         body: Stack(
           children: [
-            PdfViewer.asset(
-              widget.pdfPath,
-              controller: _controller,
-              params: PdfViewerParams(
-                onViewerReady: (document, controller) {
-                  _loadLastPage();
-                },
-                onPageChanged: (pageNumber) {
-                  if (pageNumber != null) {
-                    _saveLastPage(pageNumber);
-                  }
-                },
-                textSelectionParams: const PdfTextSelectionParams(
-                  enabled: false,
-                ),
-                // رسالة خطأ جميلة عند عدم وجود الملف
-                errorBannerBuilder: (context, error, stackTrace, documentRef) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(30.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.picture_as_pdf_outlined,
-                            size: 100,
-                            color: Colors.grey.withAlpha(100),
-                          ),
-                          const SizedBox(height: 20),
-                          Text(
-                            "عذراً، الملف غير متوفر حالياً",
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 10),
-                          const Text(
-                            "نعمل على توفير جميع المناهج في أقرب وقت ممكن. شكراً لتفهمك.",
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: 30),
-                          ElevatedButton.icon(
-                            onPressed: () => Navigator.pop(context),
-                            icon: const Icon(Icons.arrow_back_rounded),
-                            label: const Text("العودة للخلف"),
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: 25, vertical: 12),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-                // إضافة شريط تمرير سريع
-                viewerOverlayBuilder: (context, size, handleLinkTap) => [
-                  PdfViewerScrollThumb(
+            widget.pdfPath.startsWith('http')
+                ? PdfViewer.uri(
+                    Uri.parse(widget.pdfPath),
                     controller: _controller,
-                    orientation: ScrollbarOrientation.right,
-                    thumbSize: const Size(40, 50),
-                    thumbBuilder: (context, thumbSize, pageNumber, controller) =>
-                        Container(
-                      decoration: BoxDecoration(
-                        color:
-                            Theme.of(context).colorScheme.primary.withAlpha(200),
-                        borderRadius: BorderRadius.circular(10),
+                    params: PdfViewerParams(
+                      onViewerReady: (document, controller) {
+                        _loadLastPage();
+                      },
+                      onPageChanged: (pageNumber) {
+                        if (pageNumber != null) {
+                          _saveLastPage(pageNumber);
+                        }
+                      },
+                      textSelectionParams: const PdfTextSelectionParams(
+                        enabled: false,
                       ),
-                      child: Center(
-                        child: Text(
-                          pageNumber?.toString() ?? '',
-                          style: const TextStyle(
-                              color: Colors.white, fontSize: 12),
-                        ),
+                      errorBannerBuilder: (context, error, stackTrace, documentRef) {
+                        return _buildErrorView(context);
+                      },
+                      viewerOverlayBuilder: (context, size, handleLinkTap) => [
+                        _buildScrollThumb(context),
+                      ],
+                    ),
+                  )
+                : PdfViewer.asset(
+                    widget.pdfPath,
+                    controller: _controller,
+                    params: PdfViewerParams(
+                      onViewerReady: (document, controller) {
+                        _loadLastPage();
+                      },
+                      onPageChanged: (pageNumber) {
+                        if (pageNumber != null) {
+                          _saveLastPage(pageNumber);
+                        }
+                      },
+                      textSelectionParams: const PdfTextSelectionParams(
+                        enabled: false,
                       ),
+                      errorBannerBuilder: (context, error, stackTrace, documentRef) {
+                        return _buildErrorView(context);
+                      },
+                      viewerOverlayBuilder: (context, size, handleLinkTap) => [
+                        _buildScrollThumb(context),
+                      ],
                     ),
                   ),
-                ],
-              ),
-            ),
             if (_isFullScreen)
               Positioned(
                 top: 40,

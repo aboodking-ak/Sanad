@@ -5,7 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants/app_assets.dart';
+import '../../core/models/subject_model.dart';
 
 class HomePageScreen extends StatefulWidget {
   const HomePageScreen({super.key});
@@ -40,6 +42,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
   bool isAdsRemoved = false;
   bool isAiSubscribed = false;
   int _aiMessagesCount = 0;
+  List<SubjectModel> _supabaseSubjects = [];
 
   String _getInitials(String name) {
     if (name.isEmpty) return "S";
@@ -57,7 +60,6 @@ class _HomePageScreenState extends State<HomePageScreen> {
   late ChatSession _chat;
 
   @override
-  @override
   void initState() {
     super.initState();
     // تصفير القيم عند الدخول لأول مرة فقط (للتجربة)
@@ -70,6 +72,20 @@ class _HomePageScreenState extends State<HomePageScreen> {
     _loadUserData();
     _startCountdown();
     _initGemini();
+    _fetchSupabaseData();
+  }
+
+  Future<void> _fetchSupabaseData() async {
+    try {
+      final subjects = await SubjectModel.fetchFromSupabase();
+      if (mounted) {
+        setState(() {
+          _supabaseSubjects = subjects;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching Supabase data: $e");
+    }
   }
 
   Future<void> _loadUserData() async {
@@ -310,6 +326,40 @@ class _HomePageScreenState extends State<HomePageScreen> {
     }
   }
 
+  List<Map<String, dynamic>> _getSubjectPdfs(String label, List<Map<String, String>> defaultPdfs) {
+    List<String> supabaseKeys = [];
+    bool isScientific = selectedStage?.contains('علمي') ?? true;
+
+    switch (label) {
+      case 'الإسلامية': supabaseKeys = ['islamic']; break;
+      case 'العربية': supabaseKeys = ['arabic_p1', 'arabic_p2']; break;
+      case 'الإنكليزي': supabaseKeys = ['english_student', 'english_activity']; break;
+      case 'الرياضيات': supabaseKeys = [isScientific ? 'math_scientific' : 'math_literary']; break;
+      case 'الأحياء': supabaseKeys = ['biology']; break;
+      case 'الكيمياء': supabaseKeys = ['chemistry']; break;
+      case 'الفيزياء': supabaseKeys = ['physics']; break;
+      case 'التاريخ': supabaseKeys = ['history']; break;
+      case 'الجغرافية': supabaseKeys = ['geography']; break;
+      case 'الاقتصاد': supabaseKeys = ['economics']; break;
+    }
+
+    List<Map<String, dynamic>> supabasePdfs = [];
+    for (var key in supabaseKeys) {
+      final subject = _supabaseSubjects.firstWhere(
+        (s) => s.label == key,
+        orElse: () => SubjectModel(label: '', icon: Icons.book, pdfs: []),
+      );
+      for (var pdf in subject.pdfs) {
+        supabasePdfs.add({'title': pdf.title, 'path': pdf.url});
+      }
+    }
+
+    if (supabasePdfs.isNotEmpty) {
+      return supabasePdfs;
+    }
+    return defaultPdfs;
+  }
+
   List<Map<String, dynamic>> get filteredSubjects {
     bool isScientific = selectedStage?.contains('علمي') ?? true;
 
@@ -317,9 +367,9 @@ class _HomePageScreenState extends State<HomePageScreen> {
       {
         'label': 'الإسلامية',
         'icon': Icons.menu_book_rounded,
-        'pdfs': [
+        'pdfs': _getSubjectPdfs('الإسلامية', [
           {'title': 'الكتاب', 'path': AppAssets.islamicPdf}
-        ],
+        ]),
         'exams': [
           {'title': 'اختبار شامل - الفصل الأول'},
           {'title': 'اختبار شامل - الفصل الثاني'},
@@ -328,10 +378,10 @@ class _HomePageScreenState extends State<HomePageScreen> {
       {
         'label': 'العربية',
         'icon': Icons.auto_stories_rounded,
-        'pdfs': [
+        'pdfs': _getSubjectPdfs('العربية', [
           {'title': 'الكتاب - الجزء الأول', 'path': AppAssets.arabicP1Pdf},
           {'title': 'الكتاب - الجزء الثاني', 'path': AppAssets.arabicP2Pdf},
-        ],
+        ]),
         'exams': [
           {'title': 'اختبار الأدب - الفصل الأول'},
           {'title': 'اختبار القواعد - الفصل الأول'},
@@ -340,10 +390,10 @@ class _HomePageScreenState extends State<HomePageScreen> {
       {
         'label': 'الإنكليزي',
         'icon': Icons.language_rounded,
-        'pdfs': [
+        'pdfs': _getSubjectPdfs('الإنكليزي', [
           {'title': 'الكتاب - كتاب الطالب', 'path': AppAssets.englishStudentPdf},
           {'title': 'الكتاب - كتاب النشاط', 'path': AppAssets.englishActivityPdf},
-        ],
+        ]),
         'exams': [
           {'title': 'اختبار مفردات - Unit 1'},
           {'title': 'اختبار قواعد - Unit 1'},
@@ -355,9 +405,9 @@ class _HomePageScreenState extends State<HomePageScreen> {
       {
         'label': 'الرياضيات',
         'icon': Icons.functions_rounded,
-        'pdfs': [
+        'pdfs': _getSubjectPdfs('الرياضيات', [
           {'title': 'الكتاب', 'path': AppAssets.mathScientificPdf}
-        ],
+        ]),
         'exams': [
           {'title': 'اختبار الأعداد المركبة'},
           {'title': 'اختبار القطوع المخروطية'},
@@ -366,9 +416,9 @@ class _HomePageScreenState extends State<HomePageScreen> {
       {
         'label': 'الأحياء',
         'icon': Icons.biotech_rounded,
-        'pdfs': [
+        'pdfs': _getSubjectPdfs('الأحياء', [
           {'title': 'الكتاب', 'path': AppAssets.biologyPdf}
-        ],
+        ]),
         'exams': [
           {'title': 'اختبار الخلية'},
           {'title': 'اختبار الأنسجة'},
@@ -377,9 +427,9 @@ class _HomePageScreenState extends State<HomePageScreen> {
       {
         'label': 'الكيمياء',
         'icon': Icons.science_rounded,
-        'pdfs': [
+        'pdfs': _getSubjectPdfs('الكيمياء', [
           {'title': 'الكتاب', 'path': AppAssets.chemistryPdf}
-        ],
+        ]),
         'exams': [
           {'title': 'اختبار الثرموداينمك'},
           {'title': 'اختبار الاتزان الكيميائي'},
@@ -388,9 +438,9 @@ class _HomePageScreenState extends State<HomePageScreen> {
       {
         'label': 'الفيزياء',
         'icon': Icons.bolt_rounded,
-        'pdfs': [
+        'pdfs': _getSubjectPdfs('الفيزياء', [
           {'title': 'الكتاب', 'path': AppAssets.physicsPdf}
-        ],
+        ]),
         'exams': [
           {'title': 'اختبار المتسعات'},
           {'title': 'اختبار الحث الكهرومغناطيسي'},
@@ -402,33 +452,33 @@ class _HomePageScreenState extends State<HomePageScreen> {
       {
         'label': 'الرياضيات',
         'icon': Icons.functions_rounded,
-        'pdfs': [
+        'pdfs': _getSubjectPdfs('الرياضيات', [
           {'title': 'الكتاب', 'path': AppAssets.mathLiteraryPdf}
-        ],
+        ]),
         'exams': []
       },
       {
         'label': 'التاريخ',
         'icon': Icons.history_edu_rounded,
-        'pdfs': [
+        'pdfs': _getSubjectPdfs('التاريخ', [
           {'title': 'الكتاب', 'path': AppAssets.historyPdf}
-        ],
+        ]),
         'exams': []
       },
       {
         'label': 'الجغرافية',
         'icon': Icons.public_rounded,
-        'pdfs': [
+        'pdfs': _getSubjectPdfs('الجغرافية', [
           {'title': 'الكتاب', 'path': AppAssets.geographyPdf}
-        ],
+        ]),
         'exams': []
       },
       {
         'label': 'الاقتصاد',
         'icon': Icons.pie_chart_rounded,
-        'pdfs': [
+        'pdfs': _getSubjectPdfs('الاقتصاد', [
           {'title': 'الكتاب', 'path': AppAssets.economicsPdf}
-        ],
+        ]),
         'exams': []
       },
     ];
@@ -916,6 +966,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
   }
 
   Widget _buildHomeView(Color primaryColor, Color secondaryColor) {
+    final currentTip = _tips[_currentTipIndex];
     return Stack(
       children: [
         SingleChildScrollView(
@@ -948,7 +999,98 @@ class _HomePageScreenState extends State<HomePageScreen> {
             ],
           ),
         ),
-        _buildFloatingTip(primaryColor, secondaryColor),
+        // فقاعة النصيحة - تظهر فوق الزر
+        if (_isTipVisible)
+          Positioned(
+            bottom: 90,
+            left: 20,
+            child: GestureDetector(
+              onTap: () => setState(() => _isTipVisible = false),
+              child: Container(
+                width: 280,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(25),
+                  boxShadow: [
+                    BoxShadow(
+                      color: primaryColor.withAlpha(40),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
+                  border: Border.all(color: primaryColor.withAlpha(30), width: 1),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: secondaryColor.withAlpha(30),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            _getTipIcon(currentTip['type']!),
+                            color: secondaryColor,
+                            size: 16,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          "${currentTip['type']} اليوم",
+                          style: TextStyle(
+                            color: primaryColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      currentTip['text']!,
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontSize: 14,
+                        height: 1.5,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        // الزر العائم - موقعه ثابت تماماً
+        Positioned(
+          bottom: 20,
+          left: 20,
+          child: FloatingActionButton(
+            onPressed: () {
+              setState(() {
+                if (!_isTipVisible) {
+                  _currentTipIndex = (_currentTipIndex + 1) % _tips.length;
+                }
+                _isTipVisible = !_isTipVisible;
+              });
+            },
+            backgroundColor: primaryColor,
+            elevation: 8,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: Icon(
+                _isTipVisible ? Icons.close_rounded : Icons.lightbulb_rounded,
+                key: ValueKey<bool>(_isTipVisible),
+                color: secondaryColor,
+                size: 30,
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -1112,108 +1254,6 @@ class _HomePageScreenState extends State<HomePageScreen> {
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildFloatingTip(Color primaryColor, Color secondaryColor) {
-    final currentTip = _tips[_currentTipIndex];
-
-    return Stack(
-      children: [
-        // فقاعة النصيحة - تظهر فوق الزر
-        if (_isTipVisible)
-          Positioned(
-            bottom: 90, // مسافة كافية فوق الزر العائم
-            left: 20,
-            child: GestureDetector(
-              onTap: () => setState(() => _isTipVisible = false),
-              child: Container(
-                width: 280,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(25),
-                  boxShadow: [
-                    BoxShadow(
-                      color: primaryColor.withAlpha(40),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                  border: Border.all(color: primaryColor.withAlpha(30), width: 1),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: secondaryColor.withAlpha(30),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            _getTipIcon(currentTip['type']!),
-                            color: secondaryColor,
-                            size: 16,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          "${currentTip['type']} اليوم",
-                          style: TextStyle(
-                            color: primaryColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      currentTip['text']!,
-                      style: const TextStyle(
-                        color: Colors.black87,
-                        fontSize: 14,
-                        height: 1.5,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        // الزر العائم - موقعه ثابت تماماً
-        Positioned(
-          bottom: 20,
-          left: 20,
-          child: FloatingActionButton(
-            onPressed: () {
-              setState(() {
-                if (!_isTipVisible) {
-                  // تغيير المحتوى فقط عند الفتح
-                  _currentTipIndex = (_currentTipIndex + 1) % _tips.length;
-                }
-                _isTipVisible = !_isTipVisible;
-              });
-            },
-            backgroundColor: primaryColor,
-            elevation: 8,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: Icon(
-                _isTipVisible ? Icons.close_rounded : Icons.lightbulb_rounded,
-                key: ValueKey<bool>(_isTipVisible),
-                color: secondaryColor,
-                size: 30,
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -1804,8 +1844,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
   void _showSubjectDetails(BuildContext context, Map<String, dynamic> subject) {
     final primaryColor = Theme.of(context).colorScheme.primary;
     final secondaryColor = Theme.of(context).colorScheme.secondary;
-    final List<Map<String, String>> pdfs =
-        List<Map<String, String>>.from(subject['pdfs']);
+    final List pdfs = subject['pdfs'] as List;
 
     showModalBottomSheet(
       context: context,
@@ -1849,8 +1888,9 @@ class _HomePageScreenState extends State<HomePageScreen> {
               const SizedBox(height: 30),
               // عرض الكتب (سواء كتاب واحد أو أجزاء)
               ...pdfs.map((pdf) {
+                final pdfData = pdf as Map<String, dynamic>;
                 return _buildBottomSheetItem(
-                  pdf['title']!,
+                  pdfData['title']!.toString(),
                   Icons.menu_book_rounded,
                   primaryColor,
                   onTap: () {
@@ -1859,8 +1899,8 @@ class _HomePageScreenState extends State<HomePageScreen> {
                       context,
                       '/pdf_viewer',
                       arguments: {
-                        'title': pdf['title'],
-                        'pdfPath': pdf['path'],
+                        'title': pdfData['title'],
+                        'pdfPath': pdfData['path'],
                       },
                     );
                   },
