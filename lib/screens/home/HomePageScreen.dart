@@ -1095,90 +1095,116 @@ class _HomePageScreenState extends State<HomePageScreen> {
     );
   }
 
+  String _normalizeArabic(String text) {
+    return text
+        .replaceAll('أ', 'ا')
+        .replaceAll('إ', 'ا')
+        .replaceAll('آ', 'ا')
+        .replaceAll('ة', 'ه')
+        .replaceAll('ى', 'ي')
+        .toLowerCase()
+        .trim();
+  }
+
   Widget _buildSearchResults(Color primaryColor, Color secondaryColor) {
-    final query = _searchQuery.trim().toLowerCase();
+    final query = _normalizeArabic(_searchQuery);
     final List<Map<String, dynamic>> results = [];
     final currentSubjects = filteredSubjects;
 
+    void navigateAndClear(String route, {Object? arguments}) {
+      Navigator.pushNamed(context, route, arguments: arguments).then((_) {
+        if (mounted) {
+          setState(() {
+            _searchQuery = "";
+            _searchController.clear();
+          });
+        }
+      });
+    }
+
     for (var subject in currentSubjects) {
       final subjectLabel = subject['label'].toString();
+      final normalizedLabel = _normalizeArabic(subjectLabel);
       
       // 1. البحث في الكتب (PDFs)
-      final pdfs = subject['pdfs'] as List<Map<String, dynamic>>;
+      final pdfs = subject['pdfs'] as List;
       for (var pdf in pdfs) {
-        final title = pdf['title'].toString();
-        if (title.toLowerCase().contains(query) || subjectLabel.toLowerCase().contains(query)) {
+        final pdfData = pdf as Map<String, dynamic>;
+        final title = pdfData['title'].toString();
+        final normalizedTitle = _normalizeArabic(title);
+        
+        if (normalizedTitle.contains(query) || normalizedLabel.contains(query)) {
           results.add({
             'title': "كتاب $subjectLabel - $title",
             'type': 'كتاب',
             'icon': Icons.menu_book_rounded,
-            'onTap': () => Navigator.pushNamed(context, '/pdf_viewer', arguments: {'title': title, 'pdfPath': pdf['path']}),
+            'onTap': () => navigateAndClear('/pdf_viewer', arguments: {'title': title, 'pdfPath': pdfData['path']}),
           });
         }
       }
 
       // 2. البحث في الاختبارات والوزاريات (فقط لمواد معينة)
       if (subjectLabel == 'الإسلامية' || subjectLabel == 'العربية') {
-        if ("اختبارات $subjectLabel".contains(query) || "الاختبارات".contains(query)) {
+        if (_normalizeArabic("اختبارات $subjectLabel").contains(query) || _normalizeArabic("الاختبارات").contains(query)) {
           results.add({
             'title': "اختبارات $subjectLabel",
             'type': 'اختبارات',
             'icon': Icons.assignment_turned_in_rounded,
-            'onTap': () => Navigator.pushNamed(context, '/exams', arguments: {'subjectName': subjectLabel}),
+            'onTap': () => navigateAndClear('/exams', arguments: {'subjectName': subjectLabel}),
           });
         }
-        if ("وزاريات $subjectLabel".contains(query) || "الوزاريات".contains(query)) {
+        if (_normalizeArabic("وزاريات $subjectLabel").contains(query) || _normalizeArabic("الوزاريات").contains(query)) {
           results.add({
             'title': "وزاريات $subjectLabel",
             'type': 'وزاريات',
             'icon': Icons.account_balance_rounded,
-            'onTap': () => Navigator.pushNamed(context, '/ministerials', arguments: {'subjectName': subjectLabel}),
+            'onTap': () => navigateAndClear('/ministerials', arguments: {'subjectName': subjectLabel}),
           });
         }
       }
 
       // 3. الأقسام الخاصة
       if (subjectLabel == 'الإسلامية') {
-        if ("أحكام التلاوة".contains(query)) {
+        if (_normalizeArabic("أحكام التلاوة").contains(query)) {
           results.add({
             'title': "أحكام التلاوة - الإسلامية",
             'type': 'قسم',
             'icon': Icons.menu_book_rounded,
-            'onTap': () => Navigator.pushNamed(context, '/tajweed_rules'),
+            'onTap': () => navigateAndClear('/tajweed_rules'),
           });
         }
-        if ("سور الحفظ".contains(query)) {
+        if (_normalizeArabic("سور الحفظ").contains(query)) {
           results.add({
             'title': "سور الحفظ - الإسلامية",
             'type': 'قسم',
             'icon': Icons.menu_book_outlined,
-            'onTap': () => Navigator.pushNamed(context, '/surahs'),
+            'onTap': () => navigateAndClear('/surahs'),
           });
         }
       }
-      if (subjectLabel == 'العربية' && "قصائد الأدب".contains(query)) {
+      if (subjectLabel == 'العربية' && _normalizeArabic("قصائد الأدب").contains(query)) {
         results.add({
           'title': "قصائد الأدب - العربية",
           'type': 'قسم',
           'icon': Icons.auto_stories_rounded,
-          'onTap': () => Navigator.pushNamed(context, '/poems'),
+          'onTap': () => navigateAndClear('/poems'),
         });
       }
       if (subjectLabel == 'الإنكليزي') {
-        if ("الإنشاءات".contains(query)) {
+        if (_normalizeArabic("الإنشاءات").contains(query)) {
           results.add({
             'title': "الإنشاءات - الإنكليزي",
             'type': 'قسم',
             'icon': Icons.edit_note_rounded,
-            'onTap': () => Navigator.pushNamed(context, '/essays'),
+            'onTap': () => navigateAndClear('/essays'),
           });
         }
-        if ("قطع الكتاب".contains(query)) {
+        if (_normalizeArabic("قطع الكتاب").contains(query)) {
           results.add({
             'title': "قطع الكتاب - الإنكليزي",
             'type': 'قسم',
             'icon': Icons.book_rounded,
-            'onTap': () => Navigator.pushNamed(context, '/book_passages'),
+            'onTap': () => navigateAndClear('/book_passages'),
           });
         }
       }
