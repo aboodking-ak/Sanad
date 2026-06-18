@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -22,18 +23,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
   Duration _timeLeft = const Duration(days: 45, hours: 12, minutes: 30);
   
   int _currentTipIndex = 0;
-  final List<Map<String, String>> _tips = [
-    {'type': 'نصيحة', 'text': 'ابدأ يومك بنية صادقة، فالتوفيق يبدأ بصدق العمل والاجتهاد المستمر للوصول إلى هدفك.'},
-    {'type': 'دعاء', 'text': 'اللهم لا سهل إلا ما جعلته سهلاً، وأنت تجعل الحزن إذا شئت سهلاً.'},
-    {'type': 'تحفيز', 'text': 'تذكر دائماً أن القمة تتسع للجميع، فلا تتوقف حتى تصل إلى هناك وتترك بصمتك.'},
-    {'type': 'حلم', 'text': 'تخيل نفسك يوم النتائج وأنت ترفع رأس والديك فخراً، هذا الحلم يستحق كل لحظة سهر.'},
-    {'type': 'نصيحة', 'text': 'تنظيم الوقت هو نصف النجاح، خصص وقتاً للراحة كما تخصص وقتاً للدراسة لتبدع أكثر.'},
-    {'type': 'دعاء', 'text': 'اللهم اشرح لي صدري ويسر لي أمري واحلل عقدة من لساني يفقهوا قولي.'},
-    {'type': 'تحفيز', 'text': 'الفشل ليس نهاية الطريق، بل هو فرصة لتبدأ من جديد بذكاء أكبر وخبرة أكثر.'},
-    {'type': 'حلم', 'text': 'أحلامك الكبيرة تبدأ من هذه الصفحة ومن هذا الكتاب، لا تستهن بما تنجزه اليوم.'},
-    {'type': 'نصيحة', 'text': 'ركز على فهم المادة لا حفظها، فالفهم هو الذي يبقى معك في قاعة الامتحان وفي الحياة.'},
-    {'type': 'دعاء', 'text': 'ربي زدني علماً وأنر بصيرتي، واجعل علمي نافعاً لي ولأمتي.'},
-  ];
+  List<Map<String, String>> _tips = [];
   
   String userName = "الطالب";
   String userEmail = "user@email.com";
@@ -70,9 +60,28 @@ class _HomePageScreenState extends State<HomePageScreen> {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
         overlays: SystemUiOverlay.values);
     _loadUserData();
+    _loadTips();
     _startCountdown();
     _initGemini();
     _fetchSupabaseData();
+  }
+
+  Future<void> _loadTips() async {
+    try {
+      final String response = await rootBundle.loadString('assets/jsons/tips.json');
+      final List<dynamic> data = json.decode(response);
+      setState(() {
+        _tips = data.map((item) => Map<String, String>.from(item)).toList();
+      });
+    } catch (e) {
+      debugPrint("Error loading tips: $e");
+      // Fallback if file not found
+      setState(() {
+        _tips = [
+          {'type': 'نصيحة', 'text': 'ابدأ يومك بنية صادقة، فالتوفيق يبدأ بصدق العمل والاجتهاد المستمر للوصول إلى هدفك.'}
+        ];
+      });
+    }
   }
 
   Future<void> _fetchSupabaseData() async {
@@ -966,6 +975,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
   }
 
   Widget _buildHomeView(Color primaryColor, Color secondaryColor) {
+    if (_tips.isEmpty) return const Center(child: CircularProgressIndicator());
     final currentTip = _tips[_currentTipIndex];
     return Stack(
       children: [

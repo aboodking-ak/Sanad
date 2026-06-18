@@ -46,6 +46,7 @@ flutter:
     - assets/jsons/arabic/rules/
     - assets/jsons/arabic/literature/
     - assets/jsons/english/
+    - assets/jsons/tips.json
 
   fonts:
     - family: Tajawal
