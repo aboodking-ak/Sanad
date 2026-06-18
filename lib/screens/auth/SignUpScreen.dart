@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants/app_assets.dart';
+import '../../core/services/auth_service.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -16,6 +17,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
+  final _authService = AuthService();
 
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
@@ -32,19 +34,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
     super.dispose();
   }
 
-  Future<void> _saveUserData() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_name', _nameController.text.trim());
-      await prefs.setString('user_email', _emailController.text.trim());
-      // سنعتبره مسجل دخول بمجرد إنشاء الحساب في هذا النموذج التوضيحي
-      await prefs.setBool('is_logged_in', true);
-    } catch (e) {
-      // تم حذف debugPrint
-    }
-  }
-
   void _submit() async {
+    // إخفاء الكيبورد عند الضغط
+    FocusScope.of(context).unfocus();
+
     if (_formKey.currentState!.validate()) {
       if (!_agreeToTerms) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -59,14 +52,38 @@ class _SignUpScreenState extends State<SignUpScreen> {
       
       setState(() => _isLoading = true);
       
-      // حفظ المعلومات محلياً
-      await _saveUserData();
-      
-      setState(() => _isLoading = false);
+      try {
+        await _authService.signUp(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+          fullName: _nameController.text.trim(),
+        );
 
-      if (mounted) {
-        // إظهار حوار التأكيد
-        _showVerificationDialog();
+        if (mounted) {
+          _showVerificationDialog();
+        }
+      } on AuthException catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.message),
+              backgroundColor: Colors.redAccent,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("حدث خطأ غير متوقع، يرجى المحاولة لاحقاً"),
+              backgroundColor: Colors.redAccent,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
       }
     }
   }

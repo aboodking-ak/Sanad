@@ -99,8 +99,10 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
              subjectData[unit['title']] = {'questions': unit['essays']};
            }
         } else {
-          String chapterTitle = data['unit'] ?? data['topic'] ?? "قسم غير مسمى";
-          subjectData[chapterTitle] = data;
+          String? chapterTitle = data['unit'] ?? data['topic'];
+          if (chapterTitle != null && chapterTitle.isNotEmpty) {
+            subjectData[chapterTitle] = data;
+          }
         }
       }
       

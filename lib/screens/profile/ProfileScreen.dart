@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../core/services/auth_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -15,6 +16,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String userEmail = "user@email.com";
   String? _profileImagePath;
   String selectedStage = "غير محدد";
+  bool _isLoading = false;
+  final _authService = AuthService();
 
   @override
   void initState() {
@@ -27,7 +30,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final savedName = prefs.getString('user_name');
     final savedEmail = prefs.getString('user_email');
     final savedImagePath = prefs.getString('profile_image_path');
-    final savedStage = prefs.getString('user_stage'); // Assuming this exists or passed
+    final savedStage = prefs.getString('user_stage');
     
     if (mounted) {
       setState(() {
@@ -101,21 +104,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
+                        // إخفاء الكيبورد
+                        FocusScope.of(context).unfocus();
+
                         final newName = nameController.text.trim();
                         if (newName.isNotEmpty) {
-                          final prefs = await SharedPreferences.getInstance();
-                          await prefs.setString('user_name', newName);
-                          setState(() {
-                            userName = newName;
-                          });
-                          if (mounted) Navigator.pop(context);
+                          try {
+                            setState(() => _isLoading = true);
+                            
+                            // 1. تحديث في السحاب
+                            await _authService.updateUserName(newName);
+                            
+                            // 2. تحديث محلي
+                            final prefs = await SharedPreferences.getInstance();
+                            await prefs.setString('user_name', newName);
+                            
+                            setState(() {
+                              userName = newName;
+                            });
+                            
+                            if (mounted) {
+                              Navigator.pop(context, newName); // إرجاع الاسم الجديد
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("تم تحديث الاسم بنجاح")),
+                              );
+                            }
+                          } catch (e) {
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text("فشل تحديث الاسم، يرجى المحاولة لاحقاً")),
+                              );
+                            }
+                          } finally {
+                            if (mounted) setState(() => _isLoading = false);
+                          }
                         }
                       },
                       style: ElevatedButton.styleFrom(
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         elevation: 0,
                       ),
-                      child: const Text("حفظ", style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: _isLoading 
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Text("حفظ", style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -134,28 +165,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
         source: ImageSource.gallery,
         maxWidth: 2000,
         maxHeight: 2000,
-        imageQuality: 100,
+        imageQuality: 80,
       );
       
       if (image != null) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('profile_image_path', image.path);
-        setState(() {
-          _profileImagePath = image.path;
-        });
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("تم تحديث الصورة الشخصية بنجاح")),
-          );
+        setState(() => _isLoading = true);
+        
+        final File imageFile = File(image.path);
+        final String? publicUrl = await _authService.uploadProfileImage(imageFile);
+
+        if (publicUrl != null) {
+          // إضافة طابع زمني للرابط لتجاوز التخزين المؤقت في فلاتر
+          final String publicUrlWithCache = "$publicUrl?t=${DateTime.now().millisecondsSinceEpoch}";
+          
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('profile_image_path', publicUrlWithCache);
+          setState(() {
+            _profileImagePath = publicUrlWithCache;
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text("تم رفع الصورة وحفظها بنجاح")),
+            );
+          }
         }
       }
     } catch (e) {
-      debugPrint("Error picking image: $e");
+      print("Profile image upload error: $e");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("فشل الوصول إلى المعرض، يرجى منح الإذن من إعدادات الهاتف")),
+          SnackBar(content: Text("فشل رفع الصورة: ${e.toString().split(':').last}")),
         );
       }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -184,7 +227,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   image: _profileImagePath != null
-                    ? DecorationImage(image: FileImage(File(_profileImagePath!)), fit: BoxFit.cover)
+                    ? (_profileImagePath!.startsWith('http') 
+                        ? DecorationImage(image: NetworkImage(_profileImagePath!), fit: BoxFit.cover)
+                        : DecorationImage(image: FileImage(File(_profileImagePath!)), fit: BoxFit.cover))
                     : null,
                   color: Theme.of(context).colorScheme.primary.withAlpha(25),
                 ),
@@ -212,18 +257,68 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 left: 20,
                 child: IconButton(
                   icon: const Icon(Icons.delete_forever_rounded, color: Colors.redAccent, size: 35),
-                  onPressed: () async {
-                    final prefs = await SharedPreferences.getInstance();
-                    await prefs.remove('profile_image_path');
-                    setState(() {
-                      _profileImagePath = null;
-                    });
-                    if (mounted) {
-                      Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("تم حذف الصورة الشخصية")),
-                      );
-                    }
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (confirmContext) => Dialog(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                        child: Padding(
+                          padding: const EdgeInsets.all(24.0),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.delete_forever_rounded, size: 50, color: Colors.redAccent),
+                              const SizedBox(height: 20),
+                              const Text("حذف الصورة", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 12),
+                              const Text("هل أنت متأكد من رغبتك في حذف الصورة الشخصية؟", textAlign: TextAlign.center),
+                              const SizedBox(height: 24),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextButton(
+                                      onPressed: () => Navigator.pop(confirmContext),
+                                      child: const Text("إلغاء"),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: ElevatedButton(
+                                      onPressed: () async {
+                                        Navigator.pop(confirmContext);
+                                        try {
+                                          setState(() => _isLoading = true);
+                                          await _authService.deleteProfileImage();
+                                          setState(() {
+                                            _profileImagePath = null;
+                                          });
+                                          if (mounted) {
+                                            Navigator.pop(context, 'deleted'); // إرجاع إشارة الحذف
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(content: Text("تم حذف الصورة الشخصية بنجاح")),
+                                            );
+                                          }
+                                        } catch (e) {
+                                          if (mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(content: Text("فشل حذف الصورة، يرجى المحاولة لاحقاً")),
+                                            );
+                                          }
+                                        } finally {
+                                          if (mounted) setState(() => _isLoading = false);
+                                        }
+                                      },
+                                      style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+                                      child: const Text("حذف", style: TextStyle(color: Colors.white)),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    );
                   },
                 ),
               ),
@@ -276,8 +371,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
-                        final prefs = await SharedPreferences.getInstance();
-                        await prefs.setBool('is_logged_in', false);
+                        await _authService.signOut();
                         if (context.mounted) {
                           Navigator.pushNamedAndRemoveUntil(context, '/signin', (route) => false);
                         }
@@ -343,10 +437,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
-                        final prefs = await SharedPreferences.getInstance();
-                        await prefs.clear(); // حذف كافة البيانات (الاسم، الإيميل، الصورة، حالة الدخول)
-                        if (context.mounted) {
-                          Navigator.pushNamedAndRemoveUntil(context, '/signup', (route) => false);
+                        try {
+                          setState(() => _isLoading = true);
+                          
+                          // 1. حذف الحساب من Supabase
+                          await _authService.deleteAccount();
+                          
+                          // 2. مسح البيانات المحلية
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.clear();
+                          
+                          if (context.mounted) {
+                            Navigator.pushNamedAndRemoveUntil(context, '/signup', (route) => false);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text("تم حذف الحساب بنجاح")),
+                            );
+                          }
+                        } catch (e) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("فشل حذف الحساب: ${e.toString().split(':').last}")),
+                            );
+                          }
+                        } finally {
+                          if (mounted) setState(() => _isLoading = false);
                         }
                       },
                       style: ElevatedButton.styleFrom(
@@ -355,7 +469,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         elevation: 0,
                       ),
-                      child: const Text("حذف الآن", style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: _isLoading 
+                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                        : const Text("حذف الآن", style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -381,6 +497,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
           backgroundColor: primaryColor,
           foregroundColor: Colors.white,
           elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            onPressed: () => Navigator.pop(context, true), // إرجاع true عند الضغط على زر الرجوع
+          ),
         ),
         body: SafeArea(
           child: Column(
@@ -399,19 +519,39 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               onTap: _showFullImageDialog,
                               child: Hero(
                                 tag: 'profile_pic',
-                                child: CircleAvatar(
-                                  radius: 60,
-                                  backgroundColor: secondaryColor.withAlpha(25),
-                                  backgroundImage: _profileImagePath != null ? FileImage(File(_profileImagePath!)) : null,
-                                  child: _profileImagePath == null
-                                      ? Text(
-                                          _getInitials(userName),
-                                          style: TextStyle(
-                                              fontSize: 40,
-                                              fontWeight: FontWeight.bold,
-                                              color: primaryColor),
-                                        )
-                                      : null,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white.withOpacity(0.5), width: 2.5),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withAlpha(40),
+                                        blurRadius: 20,
+                                        spreadRadius: 2,
+                                        offset: Offset.zero, // موزعة في كل الاتجاهات
+                                      ),
+                                    ],
+                                  ),
+                                  child: CircleAvatar(
+                                    radius: 60,
+                                    backgroundColor: secondaryColor.withAlpha(25),
+                                    backgroundImage: _profileImagePath != null 
+                                        ? (_profileImagePath!.startsWith('http') 
+                                            ? NetworkImage(_profileImagePath!) as ImageProvider
+                                            : FileImage(File(_profileImagePath!)))
+                                        : null,
+                                    child: _profileImagePath == null || _isLoading
+                                        ? (_isLoading 
+                                            ? const CircularProgressIndicator()
+                                            : Text(
+                                                _getInitials(userName),
+                                                style: TextStyle(
+                                                    fontSize: 40,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: primaryColor),
+                                              ))
+                                        : null,
+                                  ),
                                 ),
                               ),
                             ),

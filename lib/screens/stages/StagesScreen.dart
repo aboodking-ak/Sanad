@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/constants/app_assets.dart';
+import '../../core/services/auth_service.dart';
 
 class StagesScreen extends StatefulWidget {
   const StagesScreen({super.key});
@@ -11,6 +12,9 @@ class StagesScreen extends StatefulWidget {
 }
 
 class _StagesScreenState extends State<StagesScreen> {
+  final _authService = AuthService();
+  bool _isUpdating = false;
+
   @override
   void initState() {
     super.initState();
@@ -209,24 +213,38 @@ class _StagesScreenState extends State<StagesScreen> {
         width: double.infinity,
         height: 50,
         child: ElevatedButton(
-          onPressed: selectedStage == null
+          onPressed: (selectedStage == null || _isUpdating)
               ? null
               : () async {
-                  final prefs = await SharedPreferences.getInstance();
-                  await prefs.setString('user_stage', selectedStage!);
-                  if (mounted) {
-                    Navigator.pushReplacementNamed(context, '/home',
-                        arguments: selectedStage);
+                  setState(() => _isUpdating = true);
+                  try {
+                    // تحديث في السحابة ومحلياً
+                    await _authService.updateUserStage(selectedStage!);
+                    
+                    if (mounted) {
+                      Navigator.pushReplacementNamed(context, '/home',
+                          arguments: selectedStage);
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("فشل حفظ المرحلة الدراسية، يرجى المحاولة لاحقاً")),
+                      );
+                    }
+                  } finally {
+                    if (mounted) setState(() => _isUpdating = false);
                   }
                 },
-          child: const Text(
-            "متابعة",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          child: _isUpdating 
+            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+            : const Text(
+                "متابعة",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
         ),
       ),
     );

@@ -99,22 +99,41 @@ class _HomePageScreenState extends State<HomePageScreen> {
 
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
+    
+    // 1. جلب الصورة المخزنة محلياً فوراً
+    final savedImagePath = prefs.getString('profile_image_path');
     final savedName = prefs.getString('user_name');
     final savedEmail = prefs.getString('user_email');
-    final savedImagePath = prefs.getString('profile_image_path');
     final savedStage = prefs.getString('user_stage');
     
     if (mounted) {
       setState(() {
-        if (savedName != null && savedName.isNotEmpty) {
-          userName = savedName;
-        }
+        if (savedName != null && savedName.isNotEmpty) userName = savedName;
         userEmail = savedEmail ?? "user@email.com";
         _profileImagePath = savedImagePath;
-        if (savedStage != null) {
-          selectedStage = savedStage;
-        }
+        if (savedStage != null) selectedStage = savedStage;
       });
+    }
+
+    // 2. تحديث البيانات من Supabase في الخلفية لضمان الدقة
+    final supabase = Supabase.instance.client;
+    final user = supabase.auth.currentUser;
+    if (user != null) {
+      final latestImageUrl = user.userMetadata?['profile_image'];
+      final latestName = user.userMetadata?['full_name'];
+      
+      if (latestImageUrl != null && latestImageUrl != _profileImagePath) {
+        await prefs.setString('profile_image_path', latestImageUrl);
+        if (mounted) {
+          setState(() {
+            _profileImagePath = latestImageUrl;
+          });
+        }
+      }
+      if (latestName != null && latestName != userName) {
+        await prefs.setString('user_name', latestName);
+        if (mounted) setState(() => userName = latestName);
+      }
     }
   }
 
@@ -199,39 +218,6 @@ class _HomePageScreenState extends State<HomePageScreen> {
         ),
       ),
     );
-  }
-
-  Future<void> _pickImage() async {
-    final ImagePicker picker = ImagePicker();
-    try {
-      // محاولة فتح المعرض بجودة عالية
-      final XFile? image = await picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 2000, // رفع الحد الأقصى للعرض
-        maxHeight: 2000, // رفع الحد الأقصى للطول
-        imageQuality: 100, // الجودة الكاملة
-      );
-      
-      if (image != null) {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('profile_image_path', image.path);
-        setState(() {
-          _profileImagePath = image.path;
-        });
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("تم تحديث الصورة الشخصية بنجاح")),
-          );
-        }
-      }
-    } catch (e) {
-      debugPrint("Error picking image: $e");
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("فشل الوصول إلى المعرض، يرجى منح الإذن من إعدادات الهاتف")),
-        );
-      }
-    }
   }
 
   void _initGemini() {
@@ -329,9 +315,15 @@ class _HomePageScreenState extends State<HomePageScreen> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    final args = ModalRoute.of(context)?.settings.arguments as String?;
-    if (args != null) {
+    final args = ModalRoute.of(context)?.settings.arguments;
+    
+    if (args is String) {
       selectedStage = args;
+    } else if (args is Map<String, dynamic>) {
+      // استقبال البيانات من شاشة البداية لضمان الظهور الفوري
+      if (args['userName'] != null) userName = args['userName'];
+      if (args['profileImage'] != null) _profileImagePath = args['profileImage'];
+      if (args['selectedStage'] != null) selectedStage = args['selectedStage'];
     }
   }
 
@@ -748,17 +740,21 @@ class _HomePageScreenState extends State<HomePageScreen> {
           border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              blurRadius: 8,
+              color: Colors.black.withOpacity(0.25),
+              blurRadius: 10,
               spreadRadius: 1,
-              offset: const Offset(0, 3),
+              offset: Offset.zero, // موزعة في كل الاتجاهات
             ),
           ],
         ),
         child: CircleAvatar(
           radius: 22,
           backgroundColor: Colors.white.withAlpha(40),
-          backgroundImage: _profileImagePath != null ? FileImage(File(_profileImagePath!)) : null,
+          backgroundImage: _profileImagePath != null 
+              ? (_profileImagePath!.startsWith('http') 
+                  ? NetworkImage(_profileImagePath!) as ImageProvider
+                  : FileImage(File(_profileImagePath!)))
+              : null,
           child: _profileImagePath == null
               ? Text(
                   _getInitials(userName),
@@ -1602,7 +1598,9 @@ class _HomePageScreenState extends State<HomePageScreen> {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   image: _profileImagePath != null
-                    ? DecorationImage(image: FileImage(File(_profileImagePath!)), fit: BoxFit.cover)
+                    ? (_profileImagePath!.startsWith('http') 
+                        ? DecorationImage(image: NetworkImage(_profileImagePath!), fit: BoxFit.cover)
+                        : DecorationImage(image: FileImage(File(_profileImagePath!)), fit: BoxFit.cover))
                     : null,
                   color: Theme.of(context).colorScheme.primary.withAlpha(25),
                 ),

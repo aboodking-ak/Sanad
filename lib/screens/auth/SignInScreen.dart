@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants/app_assets.dart';
+import '../../core/services/auth_service.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -14,7 +15,9 @@ class _SignInScreenState extends State<SignInScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _authService = AuthService();
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -23,20 +26,66 @@ class _SignInScreenState extends State<SignInScreen> {
     super.dispose();
   }
 
-  Future<void> _saveLoginStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('is_logged_in', true);
-    // في تطبيق حقيقي، سنقوم بحفظ البريد الإلكتروني والاسم القادم من السيرفر هنا
-    if (prefs.getString('user_email') == null) {
-      await prefs.setString('user_email', _emailController.text.trim());
-    }
-  }
-
   void _submit() async {
+    // إخفاء الكيبورد عند الضغط
+    FocusScope.of(context).unfocus();
+
     if (_formKey.currentState!.validate()) {
-      await _saveLoginStatus();
-      if (mounted) {
-        Navigator.pushReplacementNamed(context, '/stages');
+      setState(() => _isLoading = true);
+      try {
+        final response = await _authService.signIn(
+          email: _emailController.text.trim(),
+          password: _passwordController.text.trim(),
+        );
+
+        if (response.user != null) {
+          if (response.user!.emailConfirmedAt == null) {
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("يرجى تأكيد بريدك الإلكتروني أولاً. تفقد صندوق الوارد."),
+                  backgroundColor: Colors.orangeAccent,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+              await _authService.signOut();
+            }
+          } else {
+            // التحقق من وجود المرحلة في Metadata
+            final userStage = response.user!.userMetadata?['user_stage'];
+            if (mounted) {
+              if (userStage != null) {
+                // إذا كانت المرحلة موجودة، نذهب للرئيسية مباشرة
+                Navigator.pushReplacementNamed(context, '/home', arguments: userStage);
+              } else {
+                // إذا لم تكن موجودة، نذهب لشاشة اختيار المراحل
+                Navigator.pushReplacementNamed(context, '/stages');
+              }
+            }
+          }
+        }
+      } on AuthException catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.message),
+              backgroundColor: Colors.redAccent,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("حدث خطأ غير متوقع، يرجى المحاولة لاحقاً"),
+              backgroundColor: Colors.redAccent,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) setState(() => _isLoading = false);
       }
     }
   }
@@ -221,73 +270,111 @@ class _SignInScreenState extends State<SignInScreen> {
 
   void _showForgotPasswordDialog(BuildContext context, Color primaryColor) {
     final resetEmailController = TextEditingController();
+    bool isResetting = false;
+
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: primaryColor.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(Icons.lock_reset_rounded, size: 50, color: primaryColor),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                "استعادة كلمة المرور",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                "أدخل بريدك الإلكتروني لتلقي رابط إعادة تعيين كلمة المرور الخاصة بك.",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.5),
-              ),
-              const SizedBox(height: 24),
-              _buildTextField(
-                controller: resetEmailController,
-                hint: "البريد الإلكتروني",
-                icon: Icons.email_outlined,
-                keyboardType: TextInputType.emailAddress,
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton(
-                  onPressed: () {
-                    // هنا سيتم إضافة منطق Firebase لاحقاً
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("سيتم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني"),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    elevation: 0,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          backgroundColor: Colors.white,
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: primaryColor.withOpacity(0.1),
+                    shape: BoxShape.circle,
                   ),
-                  child: const Text("إرسال الرابط", style: TextStyle(fontWeight: FontWeight.bold)),
+                  child: Icon(Icons.lock_reset_rounded, size: 50, color: primaryColor),
                 ),
-              ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                style: TextButton.styleFrom(
-                  minimumSize: const Size(double.infinity, 40),
+                const SizedBox(height: 20),
+                const Text(
+                  "استعادة كلمة المرور",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
-                child: const Text("إلغاء", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w600)),
-              ),
-            ],
+                const SizedBox(height: 12),
+                const Text(
+                  "أدخل بريدك الإلكتروني لتلقي رابط إعادة تعيين كلمة المرور الخاصة بك.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.5),
+                ),
+                const SizedBox(height: 24),
+                _buildTextField(
+                  controller: resetEmailController,
+                  hint: "البريد الإلكتروني",
+                  icon: Icons.email_outlined,
+                  keyboardType: TextInputType.emailAddress,
+                ),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton(
+                    onPressed: isResetting ? null : () async {
+                      // إخفاء الكيبورد
+                      FocusScope.of(context).unfocus();
+
+                      if (resetEmailController.text.isEmpty) return;
+                      setState(() => isResetting = true);
+                      try {
+                        await _authService.resetPassword(resetEmailController.text.trim());
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("تم إرسال رابط إعادة التعيين إلى بريدك الإلكتروني"),
+                              behavior: SnackBarBehavior.floating,
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        }
+                      } on AuthException catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text("خطأ: ${e.message}"),
+                              behavior: SnackBarBehavior.floating,
+                              backgroundColor: Colors.redAccent,
+                            ),
+                          );
+                        }
+                      } catch (e) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text("حدث خطأ غير متوقع، يرجى المحاولة لاحقاً"),
+                              behavior: SnackBarBehavior.floating,
+                              backgroundColor: Colors.redAccent,
+                            ),
+                          );
+                        }
+                      } finally {
+                        if (context.mounted) setState(() => isResetting = false);
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      elevation: 0,
+                    ),
+                    child: isResetting 
+                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                      : const Text("إرسال الرابط", style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: TextButton.styleFrom(
+                    minimumSize: const Size(double.infinity, 40),
+                  ),
+                  child: const Text("إلغاء", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.w600)),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -313,9 +400,10 @@ class _SignInScreenState extends State<SignInScreen> {
       width: double.infinity,
       height: 45,
       child: ElevatedButton(
-        onPressed: _submit,
-        child: const Text("تسجيل الدخول",
-            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+        onPressed: _isLoading ? null : _submit,
+        child: _isLoading 
+          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+          : const Text("تسجيل الدخول", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
       ),
     );
   }
