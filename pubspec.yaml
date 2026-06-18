@@ -42,10 +42,10 @@ flutter:
     - assets/icons/subjects/
     - assets/icons/logo/
     - assets/pdfs/subjects/
-    - assets/jsons/subjects/islamic/
-    - assets/jsons/subjects/arabic/rules/
-    - assets/jsons/subjects/arabic/literature/
-    - assets/jsons/subjects/english/
+    - assets/jsons/islamic/
+    - assets/jsons/arabic/rules/
+    - assets/jsons/arabic/literature/
+    - assets/jsons/english/
 
   fonts:
     - family: Tajawal

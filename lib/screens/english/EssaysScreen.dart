@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EssaysScreen extends StatefulWidget {
   const EssaysScreen({super.key});
@@ -25,19 +24,14 @@ class _EssaysScreenState extends State<EssaysScreen> {
 
   Future<void> _loadEssays() async {
     try {
-      final response = await Supabase.instance.client
-          .from('app_contents')
-          .select('data')
-          .eq('subject', 'english')
-          .eq('type', 'essays')
-          .single();
-      
+      final String response = await rootBundle.loadString('assets/jsons/english/essays.json');
+      final Map<String, dynamic> data = json.decode(response);
       setState(() {
-        essaysData = response['data'];
+        essaysData = data;
         isInitialLoading = false;
       });
     } catch (e) {
-      debugPrint("Error loading essays data from Supabase: $e");
+      debugPrint("Error loading essays data: $e");
       setState(() => isInitialLoading = false);
     }
   }
@@ -88,6 +82,7 @@ class _EssaysScreenState extends State<EssaysScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
       ),

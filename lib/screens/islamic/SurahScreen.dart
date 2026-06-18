@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SurahScreen extends StatefulWidget {
   const SurahScreen({super.key});
@@ -23,19 +22,14 @@ class _SurahScreenState extends State<SurahScreen> {
 
   Future<void> _loadSurahData() async {
     try {
-      final response = await Supabase.instance.client
-          .from('app_contents')
-          .select('data')
-          .eq('subject', 'islamic')
-          .eq('type', 'surahs')
-          .single();
-      
+      final String response = await rootBundle.loadString('assets/jsons/islamic/islamic_surah.json');
+      final data = json.decode(response);
       setState(() {
-        islamicData = response['data'];
+        islamicData = data;
         isInitialLoading = false;
       });
     } catch (e) {
-      debugPrint("Error loading surah data from Supabase: $e");
+      debugPrint("Error loading surah data: $e");
       setState(() => isInitialLoading = false);
     }
   }

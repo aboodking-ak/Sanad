@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PoemScreen extends StatefulWidget {
   const PoemScreen({super.key});
@@ -23,19 +22,14 @@ class _PoemScreenState extends State<PoemScreen> {
 
   Future<void> _loadPoemsData() async {
     try {
-      final response = await Supabase.instance.client
-          .from('app_contents')
-          .select('data')
-          .eq('subject', 'arabic')
-          .eq('type', 'poems')
-          .single();
-      
+      final String response = await rootBundle.loadString('assets/jsons/arabic/literature/poems.json');
+      final data = json.decode(response);
       setState(() {
-        allPoems = response['data'];
+        allPoems = data;
         isLoading = false;
       });
     } catch (e) {
-      debugPrint("Error loading poems from Supabase: $e");
+      debugPrint("Error loading poems: $e");
       setState(() => isLoading = false);
     }
   }

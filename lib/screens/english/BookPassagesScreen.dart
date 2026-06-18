@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class BookPassagesScreen extends StatefulWidget {
   const BookPassagesScreen({super.key});
@@ -24,19 +23,14 @@ class _BookPassagesScreenState extends State<BookPassagesScreen> {
 
   Future<void> _loadData() async {
     try {
-      final response = await Supabase.instance.client
-          .from('app_contents')
-          .select('data')
-          .eq('subject', 'english')
-          .eq('type', 'passages')
-          .single();
-      
+      final String response = await rootBundle.loadString('assets/jsons/english/book_passages.json');
+      final Map<String, dynamic> data = json.decode(response);
       setState(() {
-        bookData = response['data'];
+        bookData = data;
         isLoading = false;
       });
     } catch (e) {
-      debugPrint("Error loading book passages data from Supabase: $e");
+      debugPrint("Error loading book passages data: $e");
       setState(() => isLoading = false);
     }
   }
@@ -81,6 +75,7 @@ class _BookPassagesScreenState extends State<BookPassagesScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.white,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
       ),

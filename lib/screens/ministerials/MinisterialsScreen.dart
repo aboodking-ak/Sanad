@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class MinisterialsScreen extends StatefulWidget {
   final String subjectName;
@@ -26,6 +25,43 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
   }
 
   Future<void> initializeData() async {
+    final Map<String, List<String>> subjectFiles = {
+      'الإسلامية': [
+        'tajweed_questions.json',
+        'unit1_questions.json',
+        'unit2_questions.json',
+        'unit3_questions.json',
+        'unit4_questions.json',
+        'unit5_questions.json',
+        'hadiths_questions.json'
+      ],
+      'العربية': [
+        'rules/istifham_questions.json',
+        'rules/nafi_questions.json',
+        'rules/takdim_questions.json',
+        'rules/tawkid_questions.json',
+        'rules/nidaa_questions.json',
+        'rules/taajjub_questions.json',
+        'rules/madh_thamm_questions.json',
+        'rules/tamanni_tarajji_questions.json',
+        'rules/ard_tahdeed_questions.json',
+        'rules/tahzeer_ighraa_questions.json',
+        'literature/unit1_questions.json',
+        'literature/unit2_questions.json',
+        'literature/unit3_questions.json',
+        'literature/unit4_questions.json',
+        'literature/unit5_questions.json',
+        'literature/unit6_questions.json',
+        'literature/unit7_questions.json',
+        'literature/unit8_questions.json',
+        'literature/unit9_questions.json',
+        'literature/unit10_questions.json',
+      ],
+      'الإنكليزي': [
+        'essays.json'
+      ]
+    };
+
     try {
       if (!mounted) return;
       setState(() {
@@ -33,53 +69,44 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
         isInitialLoading = true;
       });
 
-      String sName = widget.subjectName;
-      String searchKey = 'islamic';
-      if (sName.contains('عرب')) searchKey = 'arabic';
-      if (sName.contains('نكليز')) searchKey = 'english';
+      final List<String> files = subjectFiles[widget.subjectName] ?? [];
+      
+      for (var file in files) {
+        String path = '';
+        if (widget.subjectName == 'الإسلامية') {
+          path = 'assets/jsons/islamic/$file';
+        } else if (widget.subjectName == 'العربية') {
+          path = 'assets/jsons/arabic/$file';
+        } else {
+          path = 'assets/jsons/english/$file';
+        }
 
-      final response = await Supabase.instance.client
-          .from('app_contents')
-          .select('*');
-
-      // مجموعة لمنع التكرار نهائياً
-      final Set<String> addedTitles = {};
-
-      for (var item in response) {
-        String itemSub = (item['subject'] ?? "").toString().toLowerCase();
-        String itemType = (item['type'] ?? "").toString().toLowerCase();
+        final String response = await rootBundle.loadString(path);
+        final data = json.decode(response);
         
-        if (!itemSub.contains(searchKey) || !itemType.contains('ministerial')) continue;
-        if (item['data'] == null) continue;
-
-        final data = item['data'] as Map<String, dynamic>;
-        String title = (item['title'] ?? "بدون عنوان").toString().trim();
-
-        if (searchKey == 'arabic') {
-          bool isLit = title.contains('الوحدة') || title.contains('وحدة');
-          String category = isLit ? "الأدب" : "القواعد";
-          
+        if (widget.subjectName == 'العربية') {
+          String category = path.contains('rules') ? "القواعد" : "الأدب";
           if (!subjectData.containsKey(category)) {
             subjectData[category] = {'lessons': []};
           }
-
-          List lessonsList = subjectData[category]['lessons'];
-
-          // إضافة الوحدة أو موضوع القواعد كخيار واحد فقط بدون تفكيك
-          if (!addedTitles.contains(title)) {
-            lessonsList.add({'lesson_title': title, 'data': data});
-            addedTitles.add(title);
-          }
+          (subjectData[category]['lessons'] as List).add({
+            'lesson_title': data['subject'] ?? data['unit'] ?? "بدون عنوان",
+            'data': data
+          });
+        } else if (widget.subjectName == 'الإنكليزي') {
+           final List<dynamic> units = data['units'] ?? [];
+           for (var unit in units) {
+             subjectData[unit['title']] = {'questions': unit['essays']};
+           }
         } else {
-          if (!addedTitles.contains(title)) {
-            subjectData[title] = data;
-            addedTitles.add(title);
-          }
+          String chapterTitle = data['unit'] ?? data['topic'] ?? "قسم غير مسمى";
+          subjectData[chapterTitle] = data;
         }
       }
       
       if (mounted) setState(() => isInitialLoading = false);
     } catch (e) {
+      debugPrint("Error loading assets: $e");
       if (mounted) setState(() => isInitialLoading = false);
     }
   }
@@ -87,49 +114,41 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
   void applyFilter() {
     if (selectedChapter == null) return;
     
-    final chapterData = subjectData[selectedChapter];
-    List<dynamic> questionsList = [];
-    final bool isArabic = widget.subjectName.contains('عرب');
-
-    if (chapterData.containsKey('questions')) {
-      questionsList = List.from(chapterData['questions']);
-    } else if (chapterData.containsKey('lessons')) {
-      final lessons = chapterData['lessons'] as List;
+    dynamic data;
+    if (selectedTopic != null && subjectData[selectedChapter] is Map && subjectData[selectedChapter].containsKey('lessons')) {
+      final lessons = subjectData[selectedChapter]['lessons'] as List;
       final lesson = lessons.firstWhere((l) => l['lesson_title'] == selectedTopic, orElse: () => null);
-      
-      if (lesson != null) {
-        if (isArabic) {
-          final data = lesson['data'];
-          if (data.containsKey('extracted_questions')) {
-            for (var q in data['extracted_questions']) {
-              questionsList.add(q);
-            }
-          } else if (data.containsKey('parts')) {
-            for (var part in data['parts']) {
-              String partName = part['part'] ?? "";
-              if (part['questions'] != null) {
-                for (var q in part['questions']) {
-                  Map<String, dynamic> qWithTag = Map<String, dynamic>.from(q);
-                  qWithTag['section_tag'] = partName;
-                  questionsList.add(qWithTag);
-                }
-              }
-            }
-          } else if (data.containsKey('questions')) {
-            questionsList.addAll(List.from(data['questions']));
-          }
-        } else {
-          // التعامل مع هيكلية المواد الأخرى
-          if (lesson['sections'] != null) {
-            for (var section in lesson['sections']) {
-              if (section['questions'] != null) {
-                questionsList.addAll(List.from(section['questions']));
-              }
-            }
+      data = lesson != null ? lesson['data'] : null;
+    } else {
+      data = subjectData[selectedChapter];
+    }
+
+    if (data == null) return;
+
+    List<dynamic> questionsList = [];
+    if (data.containsKey('questions')) {
+      questionsList = List.from(data['questions']);
+    } else if (data.containsKey('parts')) {
+      for (var part in data['parts']) {
+        String partName = part['part'] ?? "";
+        if (part['questions'] != null) {
+          for (var q in part['questions']) {
+            Map<String, dynamic> qWithTag = Map<String, dynamic>.from(q);
+            qWithTag['section_tag'] = partName;
+            questionsList.add(qWithTag);
           }
         }
       }
+    } else if (data.containsKey('extracted_questions')) {
+      questionsList = List.from(data['extracted_questions']);
+    } else if (data.containsKey('sections')) {
+       for (var section in data['sections']) {
+          if (section['questions'] != null) {
+            questionsList.addAll(List.from(section['questions']));
+          }
+       }
     }
+
     setState(() => filteredQuestions = questionsList);
   }
 
@@ -159,13 +178,7 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
         ],
       ),
       body: isInitialLoading 
-          ? Center(
-              child: SizedBox(
-                width: 40, 
-                height: 40, 
-                child: CircularProgressIndicator(strokeWidth: 3, color: primaryColor)
-              ),
-            )
+          ? Center(child: SizedBox(width: 40, height: 40, child: CircularProgressIndicator(strokeWidth: 3, color: primaryColor)))
           : buildQuestionsList(primaryColor, secondaryColor),
     );
   }
@@ -328,7 +341,7 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
           builder: (context, setModalState) {
             List<String> chapters = subjectData.keys.toList();
             List<String> topics = [];
-            if (tempChapter != null && subjectData[tempChapter] != null && subjectData[tempChapter]!.containsKey('lessons')) {
+            if (tempChapter != null && subjectData[tempChapter] is Map && subjectData[tempChapter].containsKey('lessons')) {
               topics = (subjectData[tempChapter]['lessons'] as List).map((l) => l['lesson_title'].toString()).toList();
             }
 

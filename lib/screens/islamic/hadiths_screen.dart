@@ -1,7 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HadithsScreen extends StatefulWidget {
   const HadithsScreen({super.key});
@@ -23,19 +22,14 @@ class _HadithsScreenState extends State<HadithsScreen> {
 
   Future<void> _loadHadithData() async {
     try {
-      final response = await Supabase.instance.client
-          .from('app_contents')
-          .select('data')
-          .eq('subject', 'islamic')
-          .eq('type', 'hadiths')
-          .single();
-      
+      final String response = await rootBundle.loadString('assets/jsons/islamic/hadiths_questions.json');
+      final data = json.decode(response);
       setState(() {
-        hadithData = response['data'];
+        hadithData = data;
         isInitialLoading = false;
       });
     } catch (e) {
-      debugPrint("Error loading hadith data from Supabase: $e");
+      debugPrint("Error loading hadith data: $e");
       setState(() => isInitialLoading = false);
     }
   }
@@ -210,7 +204,7 @@ class _HadithsScreenState extends State<HadithsScreen> {
           
           if (hasGuidance) ...[
             const SizedBox(height: 10),
-            _buildSectionHeader("أهم ما يرشد إليه الحديث", primaryColor),
+            _buildSectionHeader("أبرز ما ترشد إليه الحديث", primaryColor),
             _buildGuidanceCard(sections.firstWhere((s) => s['section_title'] == "أهم ما يرشد إليه الحديث")),
           ],
         ],
