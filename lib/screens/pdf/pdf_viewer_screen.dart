@@ -157,6 +157,23 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
                           _saveLastPage(pageNumber);
                         }
                       },
+                      loadingBannerBuilder: (context, bytesDownloaded, totalBytes) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const CircularProgressIndicator(),
+                              const SizedBox(height: 20),
+                              Text(
+                                totalBytes != null
+                                    ? "جاري تحميل الكتاب: ${(bytesDownloaded / totalBytes * 100).toStringAsFixed(0)}%"
+                                    : "جاري تحميل الكتاب...",
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
                       textSelectionParams: const PdfTextSelectionParams(
                         enabled: false,
                       ),
@@ -179,6 +196,23 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
                         if (pageNumber != null) {
                           _saveLastPage(pageNumber);
                         }
+                      },
+                      loadingBannerBuilder: (context, bytesDownloaded, totalBytes) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const CircularProgressIndicator(),
+                              const SizedBox(height: 20),
+                              Text(
+                                totalBytes != null
+                                    ? "جاري تحميل الكتاب: ${(bytesDownloaded / totalBytes * 100).toStringAsFixed(0)}%"
+                                    : "جاري تحميل الكتاب...",
+                                style: const TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
+                        );
                       },
                       textSelectionParams: const PdfTextSelectionParams(
                         enabled: false,

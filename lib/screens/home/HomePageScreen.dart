@@ -33,6 +33,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
   bool isAiSubscribed = false;
   int _aiMessagesCount = 0;
   List<SubjectModel> _supabaseSubjects = [];
+  bool _isLoadingSubjects = false; // حالة تحميل المواد
 
   String _getInitials(String name) {
     if (name.isEmpty) return "S";
@@ -85,6 +86,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
   }
 
   Future<void> _fetchSupabaseData() async {
+    setState(() => _isLoadingSubjects = true);
     try {
       final subjects = await SubjectModel.fetchFromSupabase();
       if (mounted) {
@@ -94,6 +96,8 @@ class _HomePageScreenState extends State<HomePageScreen> {
       }
     } catch (e) {
       debugPrint("Error fetching Supabase data: $e");
+    } finally {
+      if (mounted) setState(() => _isLoadingSubjects = false);
     }
   }
 
@@ -984,20 +988,20 @@ class _HomePageScreenState extends State<HomePageScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
                   child: GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    clipBehavior: Clip.none,
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 1.4,
-                      crossAxisSpacing: 15,
-                      mainAxisSpacing: 15,
-                    ),
-                    itemCount: filteredSubjects.length,
-                    itemBuilder: (context, index) {
-                      return _buildSubjectCard(filteredSubjects[index]);
-                    },
-                  ),
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        clipBehavior: Clip.none,
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 1.4,
+                          crossAxisSpacing: 15,
+                          mainAxisSpacing: 15,
+                        ),
+                        itemCount: filteredSubjects.length,
+                        itemBuilder: (context, index) {
+                          return _buildSubjectCard(filteredSubjects[index]);
+                        },
+                      ),
                 ),
               ] else
                 _buildSearchResults(primaryColor, secondaryColor),
