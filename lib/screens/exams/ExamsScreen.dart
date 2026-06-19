@@ -123,7 +123,13 @@ class _ExamsScreenState extends State<ExamsScreen> {
     if (selectedTopic != null && subjectData[selectedChapter] is Map && subjectData[selectedChapter].containsKey('lessons')) {
       final lessons = subjectData[selectedChapter]['lessons'] as List;
       final lesson = lessons.firstWhere((l) => l['lesson_title'] == selectedTopic, orElse: () => null);
-      data = lesson != null ? lesson['data'] : null;
+      
+      // للمواد العربية البيانات مخزنة في مفتاح data، للإسلامية الكائن نفسه هو البيانات
+      if (widget.subjectName == 'العربية') {
+        data = lesson != null ? lesson['data'] : null;
+      } else {
+        data = lesson;
+      }
     } else {
       data = subjectData[selectedChapter];
     }

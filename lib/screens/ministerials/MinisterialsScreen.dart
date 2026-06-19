@@ -32,8 +32,7 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
         'unit2_questions.json',
         'unit3_questions.json',
         'unit4_questions.json',
-        'unit5_questions.json',
-        'hadiths_questions.json'
+        'unit5_questions.json'
       ],
       'العربية': [
         'rules/istifham_questions.json',
@@ -100,6 +99,7 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
            }
         } else {
           String? chapterTitle = data['unit'] ?? data['topic'];
+          
           if (chapterTitle != null && chapterTitle.isNotEmpty) {
             subjectData[chapterTitle] = data;
           }
@@ -120,7 +120,13 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
     if (selectedTopic != null && subjectData[selectedChapter] is Map && subjectData[selectedChapter].containsKey('lessons')) {
       final lessons = subjectData[selectedChapter]['lessons'] as List;
       final lesson = lessons.firstWhere((l) => l['lesson_title'] == selectedTopic, orElse: () => null);
-      data = lesson != null ? lesson['data'] : null;
+      
+      // للمواد العربية البيانات مخزنة في مفتاح data، للإسلامية الكائن نفسه هو البيانات
+      if (widget.subjectName == 'العربية') {
+        data = lesson != null ? lesson['data'] : null;
+      } else {
+        data = lesson;
+      }
     } else {
       data = subjectData[selectedChapter];
     }
