@@ -44,6 +44,11 @@ class _HomePageScreenState extends State<HomePageScreen> {
   List<Map<String, dynamic>> _leaderboardUsers = [];
   bool _isLoadingLeaderboard = false;
 
+  // متغيرات الإشعارات
+  List<Map<String, dynamic>> _liveNotifications = [];
+  bool _isLoadingNotifications = false;
+  int _unreadCount = 0;
+
   String _getInitials(String name) {
     if (name.isEmpty) return "S";
     return name.trim().substring(0, 1).toUpperCase();
@@ -75,6 +80,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
     _initGemini();
     _fetchSupabaseData();
     _fetchLeaderboard();
+    _fetchNotifications();
   }
 
   @override
@@ -122,6 +128,65 @@ class _HomePageScreenState extends State<HomePageScreen> {
     }
   }
 
+  Future<void> _fetchNotifications() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+
+    if (mounted) setState(() => _isLoadingNotifications = true);
+    try {
+      final List<dynamic> data = await Supabase.instance.client
+          .from('notifications')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', ascending: false);
+
+      if (mounted) {
+        setState(() {
+          _liveNotifications = List<Map<String, dynamic>>.from(data);
+          // حساب التنبيهات غير المقروءة بدقة (تجنب الـ null)
+          _unreadCount = _liveNotifications.where((n) => n['is_read'] != true).length;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching notifications: $e");
+    } finally {
+      if (mounted) setState(() => _isLoadingNotifications = false);
+    }
+  }
+
+  Future<void> _markAllAsRead() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null || _unreadCount == 0) return;
+
+    try {
+      await Supabase.instance.client.rpc('mark_notifications_as_read', params: {
+        'target_user_id': user.id,
+      });
+      if (mounted) {
+        setState(() {
+          _unreadCount = 0;
+          // تحديث الحالة محلياً أيضاً لضمان استجابة الواجهة فوراً
+          for (var n in _liveNotifications) {
+            n['is_read'] = true;
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint("Error marking as read: $e");
+    }
+  }
+
+  Future<void> _deleteNotification(String id) async {
+    try {
+      await Supabase.instance.client
+          .from('notifications')
+          .delete()
+          .eq('id', id);
+    } catch (e) {
+      debugPrint("Error deleting notification: $e");
+    }
+  }
+
   String _formatDuration(int totalSeconds) {
     final hours = totalSeconds ~/ 3600;
     final minutes = (totalSeconds % 3600) ~/ 60;
@@ -134,19 +199,6 @@ class _HomePageScreenState extends State<HomePageScreen> {
     if (hour < 12) return "صباح الخير";
     return "مساء الخير";
   }
-
-  final List<Map<String, String>> _notifications = [
-    {
-      'title': 'مرحباً بك في سند',
-      'body': 'نتمنى لك رحلة تعليمية ممتعة ومفيدة.',
-      'time': 'منذ ساعة'
-    },
-    {
-      'title': 'تحديث جديد',
-      'body': 'تم إضافة مواد دراسية جديدة للمرحلة السادسة العلمي.',
-      'time': 'منذ ساعتين'
-    },
-  ];
 
   Future<void> _loadTips() async {
     try {
@@ -553,89 +605,116 @@ class _HomePageScreenState extends State<HomePageScreen> {
 
     return DefaultTabController(
       length: 5,
-      child: Directionality(
-        textDirection: TextDirection.rtl,
-        child: Scaffold(
-          backgroundColor: Colors.white,
-          resizeToAvoidBottomInset: false, // الحل الاحترافي: منع الشاشة من الانضغاط
-          drawer: _buildDrawer(context, primaryColor, secondaryColor),
-          appBar: AppBar(
-            toolbarHeight: 80,
-            backgroundColor: primaryColor,
-            elevation: 4,
-            shadowColor: Colors.black,
-            surfaceTintColor: Colors.transparent,
-            centerTitle: false,
-            titleSpacing: 0, // إزالة المسافة التلقائية ليكون النص قريباً من الأيقونة
-            systemOverlayStyle: SystemUiOverlayStyle.light,
-            leading: Builder(
-              builder: (context) => IconButton(
-                icon: const Icon(
-                  Icons.menu_rounded,
-                  color: Colors.white,
-                  size: 32,
-                ),
-                onPressed: () => Scaffold.of(context).openDrawer(),
-              ),
-            ),
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(30),
-              ),
-            ),
-            title: _buildGreetingText(secondaryColor),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(left: 15),
-                child: _buildUserAvatar(),
-              ),
-            ],
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(70),
-              child: Container(
-                margin: const EdgeInsets.fromLTRB(15, 0, 15, 15),
-                decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(30),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white.withAlpha(50), width: 1.5), // حواف بيضاء خفيفة وواضحة
-                ),
-                child: TabBar(
-                  dividerColor: Colors.transparent,
-                  indicatorColor: secondaryColor,
-                  indicatorSize: TabBarIndicatorSize.label,
-                  indicatorWeight: 4,
-                  labelColor: secondaryColor,
-                  unselectedLabelColor: Colors.white70,
-                  indicator: UnderlineTabIndicator(
-                    borderSide: BorderSide(width: 4.0, color: secondaryColor),
-                    insets: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Builder(
+        builder: (context) {
+          return Directionality(
+            textDirection: TextDirection.rtl,
+            child: Scaffold(
+              backgroundColor: Colors.white,
+              resizeToAvoidBottomInset: false, // الحل الاحترافي: منع الشاشة من الانضغاط
+              drawer: _buildDrawer(context, primaryColor, secondaryColor),
+              appBar: AppBar(
+                toolbarHeight: 80,
+                backgroundColor: primaryColor,
+                elevation: 4,
+                shadowColor: Colors.black,
+                surfaceTintColor: Colors.transparent,
+                centerTitle: false,
+                titleSpacing: 0, // إزالة المسافة التلقائية ليكون النص قريباً من الأيقونة
+                systemOverlayStyle: SystemUiOverlayStyle.light,
+                leading: Builder(
+                  builder: (context) => IconButton(
+                    icon: const Icon(
+                      Icons.menu_rounded,
+                      color: Colors.white,
+                      size: 32,
+                    ),
+                    onPressed: () => Scaffold.of(context).openDrawer(),
                   ),
-                  tabs: const [
-                    Tab(icon: Icon(Icons.home_rounded, size: 26)),
-                    Tab(icon: Icon(Icons.auto_awesome_rounded, size: 26)),
-                    Tab(icon: Icon(Icons.handyman_rounded, size: 26)),
-                    Tab(icon: Icon(Icons.notifications_none_rounded, size: 26)),
-                    Tab(icon: Icon(Icons.emoji_events_rounded, size: 26)),
+                ),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(30),
+                    bottomRight: Radius.circular(30),
+                  ),
+                ),
+                title: _buildGreetingText(secondaryColor),
+                actions: [
+                  Padding(
+                    padding: const EdgeInsets.only(left: 15),
+                    child: _buildUserAvatar(),
+                  ),
+                ],
+                bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(70),
+                  child: Container(
+                    margin: const EdgeInsets.fromLTRB(15, 0, 15, 15),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withAlpha(30),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white.withAlpha(50), width: 1.5), // حواف بيضاء خفيفة وواضحة
+                    ),
+                    child: TabBar(
+                      dividerColor: Colors.transparent,
+                      indicatorColor: secondaryColor,
+                      indicatorSize: TabBarIndicatorSize.label,
+                      indicatorWeight: 4,
+                      labelColor: secondaryColor,
+                      unselectedLabelColor: Colors.white70,
+                      indicator: UnderlineTabIndicator(
+                        borderSide: BorderSide(width: 4.0, color: secondaryColor),
+                        insets: const EdgeInsets.symmetric(horizontal: 16.0),
+                      ),
+                      tabs: [
+                        const Tab(icon: Icon(Icons.home_rounded, size: 26)),
+                        const Tab(icon: Icon(Icons.auto_awesome_rounded, size: 26)),
+                        const Tab(icon: Icon(Icons.handyman_rounded, size: 26)),
+                        Tab(
+                          icon: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              const Icon(Icons.notifications_none_rounded, size: 26),
+                              if (_unreadCount > 0)
+                                Positioned(
+                                  right: -2,
+                                  top: -2,
+                                  child: Container(
+                                    padding: const EdgeInsets.all(4),
+                                    decoration: const BoxDecoration(
+                                      color: Colors.redAccent,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    constraints: const BoxConstraints(
+                                      minWidth: 10,
+                                      minHeight: 10,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                        const Tab(icon: Icon(Icons.emoji_events_rounded, size: 26)),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              body: SafeArea(
+                bottom: true, // يضمن عدم تداخل المحتوى مع أزرار النظام في الأسفل
+                child: TabBarView(
+                  // تم ترك خاصية physics افتراضية للسماح بالسحب بين التبويبات
+                  children: [
+                    _buildHomeView(primaryColor, secondaryColor),
+                    _buildAiChatView(primaryColor),
+                    _buildToolsView(primaryColor, secondaryColor),
+                    _buildNotificationsView(primaryColor, secondaryColor),
+                    _buildLeaderboardView(primaryColor, secondaryColor),
                   ],
                 ),
               ),
             ),
-          ),
-          body: SafeArea(
-            bottom: true, // يضمن عدم تداخل المحتوى مع أزرار النظام في الأسفل
-            child: TabBarView(
-              // تم ترك خاصية physics افتراضية للسماح بالسحب بين التبويبات
-              children: [
-                _buildHomeView(primaryColor, secondaryColor),
-                _buildAiChatView(primaryColor),
-                _buildToolsView(primaryColor, secondaryColor),
-                _buildNotificationsView(primaryColor, secondaryColor),
-                _buildLeaderboardView(primaryColor, secondaryColor),
-              ],
-            ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -1625,93 +1704,235 @@ class _HomePageScreenState extends State<HomePageScreen> {
     );
   }
 
+  String _getRelativeTime(DateTime dateTime) {
+    final now = DateTime.now();
+    final difference = now.difference(dateTime);
+
+    if (difference.inSeconds < 60) {
+      return "الآن";
+    } else if (difference.inMinutes < 60) {
+      return "منذ ${difference.inMinutes} دقيقة";
+    } else if (difference.inHours < 24) {
+      return "منذ ${difference.inHours} ساعة";
+    } else if (difference.inDays == 1) {
+      return "أمس";
+    } else if (difference.inDays < 7) {
+      return "منذ ${difference.inDays} أيام";
+    } else {
+      // بعد أسبوع، يظهر التاريخ بشكل ثابت
+      return "${dateTime.day}/${dateTime.month}/${dateTime.year}";
+    }
+  }
+
+  Future<void> _markAsRead(String id) async {
+    try {
+      await Supabase.instance.client
+          .from('notifications')
+          .update({'is_read': true})
+          .eq('id', id);
+      
+      debugPrint("DB: Notification $id marked as read");
+
+      if (mounted) {
+        setState(() {
+          final index = _liveNotifications.indexWhere((n) => n['id'].toString() == id);
+          if (index != -1) {
+            _liveNotifications[index]['is_read'] = true;
+            _unreadCount = _liveNotifications.where((n) => n['is_read'] != true).length;
+          }
+        });
+      }
+    } catch (e) {
+      debugPrint("Error marking as read in DB: $e");
+    }
+  }
+
+  Future<void> _showNotificationDialog(Map<String, dynamic> notification) async {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    final secondaryColor = Theme.of(context).colorScheme.secondary;
+    
+    // تحديد كـ مقروء عند الفتح إذا لم يكن مقروءاً مسبقاً
+    if (notification['is_read'] != true) {
+      _markAsRead(notification['id'].toString());
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: secondaryColor.withAlpha(25),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.notifications_active_rounded, size: 40, color: secondaryColor),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                notification['title'] ?? "تنبيه",
+                style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 15),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Text(
+                    notification['body'] ?? "",
+                    style: const TextStyle(fontSize: 15, color: Colors.black87, height: 1.6),
+                    textAlign: TextAlign.justify,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  child: const Text("تم", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildNotificationsView(Color primaryColor, Color secondaryColor) {
-    if (_notifications.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+    if (_isLoadingNotifications) return const Center(child: CircularProgressIndicator());
+    
+    if (_liveNotifications.isEmpty) {
+      return RefreshIndicator(
+        onRefresh: _fetchNotifications,
+        child: ListView(
           children: [
-            Icon(Icons.notifications_none_rounded,
-                size: 80, color: Colors.grey[300]),
-            const SizedBox(height: 16),
-            Text("لا توجد إشعارات حالياً",
-                style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: primaryColor)),
+            SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.notifications_none_rounded,
+                      size: 80, color: Colors.grey[300]),
+                  const SizedBox(height: 16),
+                  Text("لا توجد إشعارات حالياً",
+                      style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: primaryColor)),
+                ],
+              ),
+            ),
           ],
         ),
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      itemCount: _notifications.length,
-      itemBuilder: (context, index) {
-        return Dismissible(
-          key: Key(_notifications[index]['title']! + _notifications[index]['time']!),
-          direction: DismissDirection.startToEnd,
-          onDismissed: (direction) {
-            setState(() {
-              _notifications.removeAt(index);
-            });
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("تم حذف الإشعار"),
-                duration: Duration(seconds: 2),
-                behavior: SnackBarBehavior.floating,
+    return RefreshIndicator(
+      onRefresh: _fetchNotifications,
+      child: ListView.builder(
+        physics: const AlwaysScrollableScrollPhysics(), // يضمن عمل الريفريش حتى لو كانت القائمة قصيرة
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        itemCount: _liveNotifications.length,
+        itemBuilder: (context, index) {
+          final notification = _liveNotifications[index];
+          final String id = notification['id'].toString();
+          
+          String timeText = "منذ قليل";
+          try {
+            final DateTime createdAt = DateTime.parse(notification['created_at']);
+            timeText = _getRelativeTime(createdAt.toLocal());
+          } catch (e) {
+            debugPrint("Date Parse Error: $e");
+          }
+
+          return Dismissible(
+            key: Key(id),
+            direction: DismissDirection.startToEnd,
+            onDismissed: (direction) {
+              setState(() {
+                _liveNotifications.removeAt(index);
+              });
+              _deleteNotification(id);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text("تم حذف الإشعار"),
+                  duration: Duration(seconds: 2),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            },
+            background: Container(
+              margin: const EdgeInsets.only(bottom: 15),
+              decoration: BoxDecoration(
+                color: Colors.redAccent,
+                borderRadius: BorderRadius.circular(15),
               ),
-            );
-          },
-          background: Container(
-            margin: const EdgeInsets.only(bottom: 15),
-            decoration: BoxDecoration(
-              color: Colors.redAccent,
-              borderRadius: BorderRadius.circular(15),
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.only(right: 20),
+              child: const Icon(Icons.delete_sweep_rounded, color: Colors.white),
             ),
-            alignment: Alignment.centerRight,
-            padding: const EdgeInsets.only(right: 20),
-            child: const Icon(Icons.delete_sweep_rounded, color: Colors.white),
-          ),
-          child: Container(
-            margin: const EdgeInsets.only(bottom: 15),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(
-                    color: Colors.black.withAlpha(50),
-                    blurRadius: 10,
-                    offset: const Offset(0, 0)),
-              ],
-            ),
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(15),
-              leading: CircleAvatar(
-                backgroundColor: secondaryColor.withAlpha(25),
-                child: Icon(Icons.notifications_active_outlined,
-                    color: secondaryColor),
-              ),
-              title: Text(_notifications[index]['title']!,
-                  style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: primaryColor,
-                      fontSize: 16)),
-              subtitle: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 5),
-                  Text(_notifications[index]['body']!,
-                      style: TextStyle(color: Colors.grey[600], fontSize: 14)),
-                  const SizedBox(height: 8),
-                  Text(_notifications[index]['time']!,
-                      style: TextStyle(color: Colors.grey[400], fontSize: 12)),
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 15),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(15),
+                boxShadow: [
+                  BoxShadow(
+                      color: Colors.black.withAlpha(50),
+                      blurRadius: 10,
+                      offset: const Offset(0, 0)),
                 ],
               ),
+              child: ListTile(
+                onTap: () => _showNotificationDialog(notification),
+                contentPadding: const EdgeInsets.all(15),
+                leading: CircleAvatar(
+                  backgroundColor: notification['is_read'] == true 
+                      ? Colors.grey[200] 
+                      : secondaryColor.withAlpha(25),
+                  child: Icon(
+                    notification['is_read'] == true 
+                        ? Icons.notifications_none_rounded 
+                        : Icons.notifications_active_outlined,
+                    color: notification['is_read'] == true ? Colors.grey : secondaryColor),
+                ),
+                title: Text(notification['title'] ?? "",
+                    style: TextStyle(
+                        fontWeight: notification['is_read'] == true ? FontWeight.normal : FontWeight.bold,
+                        color: notification['is_read'] == true ? Colors.grey[600] : primaryColor,
+                        fontSize: 16)),
+                subtitle: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 5),
+                    Text(
+                      notification['body'] ?? "",
+                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(timeText,
+                        style: TextStyle(color: Colors.grey[400], fontSize: 12)),
+                  ],
+                ),
+              ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
