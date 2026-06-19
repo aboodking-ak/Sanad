@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/models/subject_model.dart';
+import '../../core/utils/study_timer_service.dart';
 
 class HomePageScreen extends StatefulWidget {
   const HomePageScreen({super.key});
@@ -34,6 +35,10 @@ class _HomePageScreenState extends State<HomePageScreen> {
   int _aiMessagesCount = 0;
   List<SubjectModel> _supabaseSubjects = [];
   bool _isLoadingSubjects = false; // حالة تحميل المواد
+
+  // متغيرات تتبع الوقت والمتصدرين
+  List<Map<String, dynamic>> _leaderboardUsers = [];
+  bool _isLoadingLeaderboard = false;
 
   String _getInitials(String name) {
     if (name.isEmpty) return "S";
@@ -65,7 +70,79 @@ class _HomePageScreenState extends State<HomePageScreen> {
     _startCountdown();
     _initGemini();
     _fetchSupabaseData();
+    _fetchLeaderboard();
   }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    _searchController.dispose();
+    _chatController.dispose();
+    super.dispose();
+  }
+
+  void _syncTimeOnRefresh() async {
+    // هذه الدالة ستقوم فقط بمزامنة الوقت الحالي مع السيرفر
+    // منطق الحساب موجود في TimeTrackingWrapper
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user != null) {
+      // نحن نعتمد الآن على الـ Global Wrapper ولكن للريفريش نحتاج التأكد من الحفظ
+      // سنقوم بعمل تحديث بسيط لتحفيز السيرفر
+    }
+  }
+
+  Future<void> _updateStudyTime() async {
+    // تم نقل هذا المنطق إلى TimeTrackingWrapper
+    // سنتركه فارغاً أو نقوم باستدعاء المزامنة من الـ Wrapper إذا لزم الأمر
+  }
+
+  Future<void> _fetchLeaderboard() async {
+    if (!mounted) return;
+    setState(() => _isLoadingLeaderboard = true);
+    try {
+      final List<dynamic> data = await Supabase.instance.client
+          .from('profiles')
+          .select('id, full_name, profile_image, stage, weekly_study_time')
+          .order('weekly_study_time', ascending: false)
+          .limit(50);
+
+      if (mounted) {
+        setState(() {
+          _leaderboardUsers = List<Map<String, dynamic>>.from(data);
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching leaderboard: $e");
+    } finally {
+      if (mounted) setState(() => _isLoadingLeaderboard = false);
+    }
+  }
+
+  String _formatDuration(int totalSeconds) {
+    final hours = totalSeconds ~/ 3600;
+    final minutes = (totalSeconds % 3600) ~/ 60;
+    if (hours > 0) return "$hours س $minutes د";
+    return "$minutes دقيقة";
+  }
+
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return "صباح الخير";
+    return "مساء الخير";
+  }
+
+  final List<Map<String, String>> _notifications = [
+    {
+      'title': 'مرحباً بك في سند',
+      'body': 'نتمنى لك رحلة تعليمية ممتعة ومفيدة.',
+      'time': 'منذ ساعة'
+    },
+    {
+      'title': 'تحديث جديد',
+      'body': 'تم إضافة مواد دراسية جديدة للمرحلة السادسة العلمي.',
+      'time': 'منذ ساعتين'
+    },
+  ];
 
   Future<void> _loadTips() async {
     try {
@@ -288,33 +365,6 @@ class _HomePageScreenState extends State<HomePageScreen> {
       }
     });
   }
-
-  @override
-  void dispose() {
-    _timer.cancel();
-    _searchController.dispose();
-    _chatController.dispose();
-    super.dispose();
-  }
-
-  String _getGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return "صباح الخير";
-    return "مساء الخير";
-  }
-
-  final List<Map<String, String>> _notifications = [
-    {
-      'title': 'مرحباً بك في سند',
-      'body': 'نتمنى لك رحلة تعليمية ممتعة ومفيدة.',
-      'time': 'منذ ساعة'
-    },
-    {
-      'title': 'تحديث جديد',
-      'body': 'تم إضافة مواد دراسية جديدة للمرحلة السادسة العلمي.',
-      'time': 'منذ ساعتين'
-    },
-  ];
 
   @override
   void didChangeDependencies() {
@@ -1531,49 +1581,195 @@ class _HomePageScreenState extends State<HomePageScreen> {
   }
 
   Widget _buildLeaderboardView(Color primaryColor, Color secondaryColor) {
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          _buildSectionHeader("المتصدرين", "هذا الأسبوع"),
-          const SizedBox(height: 40),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisAlignment: MainAxisAlignment.center,
+    if (_isLoadingLeaderboard) return const Center(child: CircularProgressIndicator());
+    if (_leaderboardUsers.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.emoji_events_outlined, size: 80, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            const Text("لا توجد بيانات حالياً", style: TextStyle(color: Colors.grey, fontSize: 16)),
+          ],
+        ),
+      );
+    }
+
+    // إيجاد رتبة المستخدم الحالي
+    final currentUser = Supabase.instance.client.auth.currentUser;
+    int userRank = -1;
+    Map<String, dynamic>? userData;
+    
+    if (currentUser != null) {
+      for (int i = 0; i < _leaderboardUsers.length; i++) {
+        if (_leaderboardUsers[i]['id'] == currentUser.id) {
+          userRank = i + 1;
+          userData = _leaderboardUsers[i];
+          break;
+        }
+      }
+    }
+
+    return Stack(
+      children: [
+        RefreshIndicator(
+          onRefresh: () async {
+            await StudyTimerService().syncTime();
+            await _fetchLeaderboard();
+          },
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            child: Column(
               children: [
-                _buildPodiumUser(
-                    name: "أحمد علي",
-                    hours: "42 ساعة",
-                    rank: 2,
-                    height: 140,
-                    primaryColor: primaryColor,
-                    secondaryColor: secondaryColor),
-                const SizedBox(width: 15),
-                _buildPodiumUser(
-                    name: "سارة محمد",
-                    hours: "56 ساعة",
-                    rank: 1,
-                    height: 180,
-                    hasCrown: true,
-                    primaryColor: primaryColor,
-                    secondaryColor: secondaryColor),
-                const SizedBox(width: 15),
-                _buildPodiumUser(
-                    name: "ياسر حسن",
-                    hours: "38 ساعة",
-                    rank: 3,
-                    height: 110,
-                    primaryColor: primaryColor,
-                    secondaryColor: secondaryColor),
+                _buildSectionHeader("المتصدرين", "أفضل 50 طالب"),
+                const SizedBox(height: 40),
+                // منصة التتويج (أول 3)
+                if (_leaderboardUsers.length >= 3)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildPodiumUser(
+                            user: _leaderboardUsers[1],
+                            rank: 2,
+                            height: 140,
+                            primaryColor: primaryColor,
+                            secondaryColor: secondaryColor),
+                        const SizedBox(width: 15),
+                        _buildPodiumUser(
+                            user: _leaderboardUsers[0],
+                            rank: 1,
+                            height: 180,
+                            hasCrown: true,
+                            primaryColor: primaryColor,
+                            secondaryColor: secondaryColor),
+                        const SizedBox(width: 15),
+                        _buildPodiumUser(
+                            user: _leaderboardUsers[2],
+                            rank: 3,
+                            height: 110,
+                            primaryColor: primaryColor,
+                            secondaryColor: secondaryColor),
+                      ],
+                    ),
+                  )
+                else if (_leaderboardUsers.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        if (_leaderboardUsers.length > 1)
+                          _buildPodiumUser(
+                              user: _leaderboardUsers[1],
+                              rank: 2,
+                              height: 140,
+                              primaryColor: primaryColor,
+                              secondaryColor: secondaryColor),
+                        if (_leaderboardUsers.length > 1) const SizedBox(width: 15),
+                        _buildPodiumUser(
+                            user: _leaderboardUsers[0],
+                            rank: 1,
+                            height: 180,
+                            hasCrown: true,
+                            primaryColor: primaryColor,
+                            secondaryColor: secondaryColor),
+                        if (_leaderboardUsers.length > 2) const SizedBox(width: 15),
+                        if (_leaderboardUsers.length > 2)
+                          _buildPodiumUser(
+                              user: _leaderboardUsers[2],
+                              rank: 3,
+                              height: 110,
+                              primaryColor: primaryColor,
+                              secondaryColor: secondaryColor),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 40),
+                _buildLeaderList(primaryColor),
+                const SizedBox(height: 120), // مساحة إضافية للبار العائم
               ],
             ),
           ),
-          const SizedBox(height: 40),
-          _buildLeaderList(primaryColor),
-          const SizedBox(height: 100),
-        ],
-      ),
+        ),
+        if (userData != null)
+          Positioned(
+            bottom: 20,
+            left: 20,
+            right: 20,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12), // تصغير البادينج العمودي
+              decoration: BoxDecoration(
+                color: primaryColor,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: primaryColor.withOpacity(0.4),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    "#$userRank",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
+                  ),
+                  const SizedBox(width: 15),
+                  _buildUserCircle(userData['profile_image'], userData['full_name'] ?? "أنت", 20, Colors.white), // تصغير قطر الدائرة
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          userData['full_name'] ?? "أنت",
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          userData['stage'] ?? "طالب",
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.8),
+                            fontSize: 11,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      _formatDuration(userData['weekly_study_time'] ?? 0),
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+      ],
     );
   }
 
@@ -2076,15 +2272,32 @@ class _HomePageScreenState extends State<HomePageScreen> {
     );
   }
 
-  Widget _buildPodiumUser({required String name, required String hours, required int rank, required double height, bool hasCrown = false, required Color primaryColor, required Color secondaryColor}) {
+  Widget _buildPodiumUser({required Map<String, dynamic> user, required int rank, required double height, bool hasCrown = false, required Color primaryColor, required Color secondaryColor}) {
+    final String name = user['full_name'] ?? "طالب";
+    final String? imageUrl = user['profile_image'];
+    final String? stage = user['stage'];
+    final int studyTime = user['weekly_study_time'] ?? 0;
+
     return Column(
       children: [
         if (hasCrown) const Icon(Icons.workspace_premium_rounded, color: Colors.amber, size: 35),
         const SizedBox(height: 5),
-        CircleAvatar(radius: 30, backgroundColor: secondaryColor.withAlpha(25), child: Icon(Icons.person, color: primaryColor)),
+        _buildUserCircle(imageUrl, name, 30, primaryColor),
         const SizedBox(height: 10),
-        Text(name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-        Text(hours, style: TextStyle(color: secondaryColor, fontSize: 11, fontWeight: FontWeight.bold)),
+        Text(name, 
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.visible,
+        ),
+        if (stage != null && stage.isNotEmpty)
+          Text(stage, 
+            style: TextStyle(color: Colors.grey[600], fontSize: 10, fontWeight: FontWeight.w500),
+            textAlign: TextAlign.center,
+          ),
+        const SizedBox(height: 4),
+        Text(_formatDuration(studyTime), 
+          style: TextStyle(color: secondaryColor, fontSize: 11, fontWeight: FontWeight.bold)),
         const SizedBox(height: 10),
         Container(
           width: 80, height: height,
@@ -2095,26 +2308,74 @@ class _HomePageScreenState extends State<HomePageScreen> {
     );
   }
 
+  Widget _buildUserCircle(String? imageUrl, String name, double radius, Color primaryColor) {
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(color: primaryColor.withAlpha(50), width: 2),
+      ),
+      child: CircleAvatar(
+        radius: radius,
+        backgroundColor: primaryColor.withAlpha(20),
+        backgroundImage: (imageUrl != null && imageUrl.isNotEmpty) 
+            ? (imageUrl.startsWith('http') ? NetworkImage(imageUrl) : FileImage(File(imageUrl)) as ImageProvider)
+            : null,
+        child: (imageUrl == null || imageUrl.isEmpty)
+            ? Text(
+                _getInitials(name), 
+                style: TextStyle(
+                  color: primaryColor, 
+                  fontWeight: FontWeight.bold, 
+                  fontSize: radius * 0.8
+                )
+              )
+            : null,
+      ),
+    );
+  }
+
   Widget _buildLeaderList(Color primaryColor) {
+    if (_leaderboardUsers.length <= 3) return const SizedBox();
+    
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: ListView.builder(
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
-        itemCount: 4,
+        itemCount: _leaderboardUsers.length - 3,
         itemBuilder: (context, index) {
+          final user = _leaderboardUsers[index + 3];
+          final String name = user['full_name'] ?? "طالب";
+          final String? imageUrl = user['profile_image'];
+          final String? stage = user['stage'];
+          final int studyTime = user['weekly_study_time'] ?? 0;
+
           return Container(
             margin: const EdgeInsets.only(bottom: 10),
             padding: const EdgeInsets.all(15),
-            decoration: BoxDecoration(color: Colors.grey[50], borderRadius: BorderRadius.circular(15)),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: [BoxShadow(color: Colors.black.withAlpha(20), blurRadius: 5, offset: const Offset(0, 2))],
+            ),
             child: Row(
               children: [
-                Text("${index + 4}", style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
+                Text("${index + 4}", style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(width: 15),
-                const CircleAvatar(radius: 20, child: Icon(Icons.person)),
+                _buildUserCircle(imageUrl, name, 22, primaryColor),
                 const SizedBox(width: 15),
-                const Expanded(child: Text("مستخدم متفوق", style: TextStyle(fontWeight: FontWeight.bold))),
-                Text("30 ساعة", style: TextStyle(color: Colors.grey[600], fontSize: 13)),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      if (stage != null)
+                        Text(stage, style: TextStyle(color: Colors.grey[500], fontSize: 11)),
+                    ],
+                  ),
+                ),
+                Text(_formatDuration(studyTime), 
+                  style: TextStyle(color: primaryColor, fontSize: 13, fontWeight: FontWeight.bold)),
               ],
             ),
           );

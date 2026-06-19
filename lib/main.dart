@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/theme/app_theme.dart';
+import 'core/utils/time_tracking_wrapper.dart';
 import 'screens/splash/SplashScreen.dart';
 import 'screens/auth/SignUpScreen.dart';
 import 'screens/auth/SignInScreen.dart';
@@ -81,9 +82,11 @@ class _MyAppState extends State<MyApp> {
       title: 'سند',
       theme: AppTheme.lightTheme,
       builder: (context, child) {
-        return Directionality(
-          textDirection: TextDirection.rtl,
-          child: child!,
+        return TimeTrackingWrapper(
+          child: Directionality(
+            textDirection: TextDirection.rtl,
+            child: child!,
+          ),
         );
       },
       initialRoute: _isLoggedIn ? '/home' : '/',
