@@ -48,6 +48,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
   List<Map<String, dynamic>> _liveNotifications = [];
   bool _isLoadingNotifications = false;
   int _unreadCount = 0;
+  StreamSubscription? _notificationsSubscription;
 
   String _getInitials(String name) {
     if (name.isEmpty) return "S";
@@ -88,6 +89,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
     _timer.cancel();
     _searchController.dispose();
     _chatController.dispose();
+    _notificationsSubscription?.cancel();
     super.dispose();
   }
 
@@ -132,26 +134,29 @@ class _HomePageScreenState extends State<HomePageScreen> {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) return;
 
-    if (mounted) setState(() => _isLoadingNotifications = true);
-    try {
-      final List<dynamic> data = await Supabase.instance.client
-          .from('notifications')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', ascending: false);
+    // إلغاء أي اشتراك قديم لتجنب التكرار
+    _notificationsSubscription?.cancel();
 
-      if (mounted) {
-        setState(() {
-          _liveNotifications = List<Map<String, dynamic>>.from(data);
-          // حساب التنبيهات غير المقروءة بدقة (تجنب الـ null)
-          _unreadCount = _liveNotifications.where((n) => n['is_read'] != true).length;
+    if (mounted) setState(() => _isLoadingNotifications = true);
+    
+    // بدء الاستماع الفوري للتغييرات في جدول الإشعارات
+    _notificationsSubscription = Supabase.instance.client
+        .from('notifications')
+        .stream(primaryKey: ['id'])
+        .eq('user_id', user.id)
+        .order('created_at', ascending: false)
+        .listen((data) {
+          if (mounted) {
+            setState(() {
+              _liveNotifications = List<Map<String, dynamic>>.from(data);
+              _unreadCount = _liveNotifications.where((n) => n['is_read'] != true).length;
+              _isLoadingNotifications = false;
+            });
+          }
+        }, onError: (error) {
+          debugPrint("Realtime Error: $error");
+          if (mounted) setState(() => _isLoadingNotifications = false);
         });
-      }
-    } catch (e) {
-      debugPrint("Error fetching notifications: $e");
-    } finally {
-      if (mounted) setState(() => _isLoadingNotifications = false);
-    }
   }
 
   Future<void> _markAllAsRead() async {
