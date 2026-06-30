@@ -597,19 +597,97 @@ class _HomePageScreenState extends State<HomePageScreen> {
     return [...sharedSubjects, ...(isScientific ? scientificSubjects : literarySubjects)];
   }
 
+  Future<bool> _showExitDialog() async {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
+    return await showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        backgroundColor: Colors.white,
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: primaryColor.withAlpha(20),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.exit_to_app_rounded, size: 45, color: primaryColor),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                "مغادرة التطبيق",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                "هل أنت متأكد من رغبتك في إغلاق التطبيق؟ سيتم حفظ وقت دراستك تلقائياً.",
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.5),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: Colors.grey[300]!),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: const Text("البقاء", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  const SizedBox(width: 15),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        elevation: 0,
+                      ),
+                      child: const Text("خروج", style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    ) ?? false;
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final primaryColor = theme.colorScheme.primary;
     final secondaryColor = theme.colorScheme.secondary;
 
-    return DefaultTabController(
-      length: 5,
-      child: Builder(
-        builder: (context) {
-          return Directionality(
-            textDirection: TextDirection.rtl,
-            child: Scaffold(
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) async {
+        if (didPop) return;
+        final shouldPop = await _showExitDialog();
+        if (shouldPop && context.mounted) {
+          SystemNavigator.pop();
+        }
+      },
+      child: DefaultTabController(
+        length: 5,
+        child: Builder(
+          builder: (context) {
+            return Directionality(
+              textDirection: TextDirection.rtl,
+              child: Scaffold(
               backgroundColor: Colors.white,
               resizeToAvoidBottomInset: false, // الحل الاحترافي: منع الشاشة من الانضغاط
               drawer: _buildDrawer(context, primaryColor, secondaryColor),
@@ -716,6 +794,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
           );
         },
       ),
+    ),
     );
   }
 
