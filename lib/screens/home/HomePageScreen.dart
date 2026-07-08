@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -13,7 +12,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/models/subject_model.dart';
-import '../../core/utils/study_timer_service.dart';
 
 class HomePageScreen extends StatefulWidget {
   const HomePageScreen({super.key});
@@ -43,6 +41,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
   // متغيرات تتبع الوقت والمتصدرين
   List<Map<String, dynamic>> _leaderboardUsers = [];
   bool _isLoadingLeaderboard = false;
+  StreamSubscription? _leaderboardSubscription;
 
   // متغيرات الإشعارات
   List<Map<String, dynamic>> _liveNotifications = [];
@@ -90,6 +89,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
     _searchController.dispose();
     _chatController.dispose();
     _notificationsSubscription?.cancel();
+    _leaderboardSubscription?.cancel();
     super.dispose();
   }
 
@@ -110,24 +110,30 @@ class _HomePageScreenState extends State<HomePageScreen> {
 
   Future<void> _fetchLeaderboard() async {
     if (!mounted) return;
+    
+    _leaderboardSubscription?.cancel();
     setState(() => _isLoadingLeaderboard = true);
-    try {
-      final List<dynamic> data = await Supabase.instance.client
-          .from('profiles')
-          .select('id, full_name, profile_image, stage, weekly_study_time')
-          .order('weekly_study_time', ascending: false)
-          .limit(50);
 
-      if (mounted) {
-        setState(() {
-          _leaderboardUsers = List<Map<String, dynamic>>.from(data);
+    // البدء بالاستماع المباشر للتغييرات في جدول البروفايلات لترتيب المتصدرين
+    _leaderboardSubscription = Supabase.instance.client
+        .from('profiles')
+        .stream(primaryKey: ['id'])
+        .listen((data) {
+          if (mounted) {
+            setState(() {
+              // تحويل البيانات وترتيبها وأخذ أفضل 50
+              var sortedUsers = List<Map<String, dynamic>>.from(data);
+              sortedUsers.sort((a, b) => 
+                (b['weekly_study_time'] ?? 0).compareTo(a['weekly_study_time'] ?? 0));
+              
+              _leaderboardUsers = sortedUsers.take(50).toList();
+              _isLoadingLeaderboard = false;
+            });
+          }
+        }, onError: (error) {
+          debugPrint("Leaderboard Realtime Error: $error");
+          if (mounted) setState(() => _isLoadingLeaderboard = false);
         });
-      }
-    } catch (e) {
-      debugPrint("Error fetching leaderboard: $e");
-    } finally {
-      if (mounted) setState(() => _isLoadingLeaderboard = false);
-    }
   }
 
   Future<void> _fetchNotifications() async {
@@ -2052,17 +2058,12 @@ class _HomePageScreenState extends State<HomePageScreen> {
 
     return Stack(
       children: [
-        RefreshIndicator(
-          onRefresh: () async {
-            await StudyTimerService().syncTime();
-            await _fetchLeaderboard();
-          },
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            child: Column(
-              children: [
-                _buildSectionHeader("المتصدرين", "أفضل 50 طالب"),
-                const SizedBox(height: 40),
+        SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            children: [
+              _buildSectionHeader("المتصدرين", "أفضل 50 طالب"),
+              const SizedBox(height: 40),
                 // منصة التتويج (أول 3)
                 if (_leaderboardUsers.length >= 3)
                   Padding(
@@ -2134,7 +2135,6 @@ class _HomePageScreenState extends State<HomePageScreen> {
               ],
             ),
           ),
-        ),
         if (userData != null)
           Positioned(
             bottom: 20,
