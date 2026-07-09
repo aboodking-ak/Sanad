@@ -2098,125 +2098,118 @@ class _HomePageScreenState extends State<HomePageScreen> {
     if (_isLoadingNotifications) return const Center(child: CircularProgressIndicator());
     
     if (_liveNotifications.isEmpty) {
-      return RefreshIndicator(
-        onRefresh: _fetchNotifications,
-        child: ListView(
-          children: [
-            SizedBox(height: MediaQuery.of(context).size.height * 0.2),
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.notifications_none_rounded,
-                      size: 80, color: Colors.grey[300]),
-                  const SizedBox(height: 16),
-                  Text("لا توجد إشعارات حالياً",
-                      style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: primaryColor)),
-                ],
-              ),
+      return ListView(
+        children: [
+          SizedBox(height: MediaQuery.of(context).size.height * 0.2),
+          Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.notifications_none_rounded,
+                    size: 80, color: Colors.grey[300]),
+                const SizedBox(height: 16),
+                Text("لا توجد إشعارات حالياً",
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: primaryColor)),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: _fetchNotifications,
-      child: ListView.builder(
-        physics: const AlwaysScrollableScrollPhysics(), // يضمن عمل الريفريش حتى لو كانت القائمة قصيرة
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        itemCount: _liveNotifications.length,
-        itemBuilder: (context, index) {
-          final notification = _liveNotifications[index];
-          final String id = notification['id'].toString();
-          
-          String timeText = "منذ قليل";
-          try {
-            final DateTime createdAt = DateTime.parse(notification['created_at']);
-            timeText = _getRelativeTime(createdAt.toLocal());
-          } catch (e) {
-            debugPrint("Date Parse Error: $e");
-          }
+    return ListView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      itemCount: _liveNotifications.length,
+      itemBuilder: (context, index) {
+        final notification = _liveNotifications[index];
+        final String id = notification['id'].toString();
+        
+        String timeText = "منذ قليل";
+        try {
+          final DateTime createdAt = DateTime.parse(notification['created_at']);
+          timeText = _getRelativeTime(createdAt.toLocal());
+        } catch (e) {
+          debugPrint("Date Parse Error: $e");
+        }
 
-          return Dismissible(
-            key: Key(id),
-            direction: DismissDirection.startToEnd,
-            onDismissed: (direction) {
-              setState(() {
-                _liveNotifications.removeAt(index);
-              });
-              _deleteNotification(id);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text("تم حذف الإشعار"),
-                  duration: Duration(seconds: 2),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-            background: Container(
-              margin: const EdgeInsets.only(bottom: 15),
-              decoration: BoxDecoration(
-                color: Colors.redAccent,
-                borderRadius: BorderRadius.circular(15),
+        return Dismissible(
+          key: Key(id),
+          direction: DismissDirection.startToEnd,
+          onDismissed: (direction) {
+            setState(() {
+              _liveNotifications.removeAt(index);
+            });
+            _deleteNotification(id);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text("تم حذف الإشعار"),
+                duration: Duration(seconds: 2),
+                behavior: SnackBarBehavior.floating,
               ),
-              alignment: Alignment.centerRight,
-              padding: const EdgeInsets.only(right: 20),
-              child: const Icon(Icons.delete_sweep_rounded, color: Colors.white),
+            );
+          },
+          background: Container(
+            margin: const EdgeInsets.only(bottom: 15),
+            decoration: BoxDecoration(
+              color: Colors.redAccent,
+              borderRadius: BorderRadius.circular(15),
             ),
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 15),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(15),
-                boxShadow: [
-                  BoxShadow(
-                      color: Colors.black.withAlpha(50),
-                      blurRadius: 10,
-                      offset: const Offset(0, 0)),
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 20),
+            child: const Icon(Icons.delete_sweep_rounded, color: Colors.white),
+          ),
+          child: Container(
+            margin: const EdgeInsets.only(bottom: 15),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(15),
+              boxShadow: [
+                BoxShadow(
+                    color: Colors.black.withAlpha(50),
+                    blurRadius: 10,
+                    offset: const Offset(0, 0)),
+              ],
+            ),
+            child: ListTile(
+              onTap: () => _showNotificationDialog(notification),
+              contentPadding: const EdgeInsets.all(15),
+              leading: CircleAvatar(
+                backgroundColor: notification['is_read'] == true 
+                    ? Colors.grey[200] 
+                    : secondaryColor.withAlpha(25),
+                child: Icon(
+                  notification['is_read'] == true 
+                      ? Icons.notifications_none_rounded 
+                      : Icons.notifications_active_outlined,
+                  color: notification['is_read'] == true ? Colors.grey : secondaryColor),
+              ),
+              title: Text(notification['title'] ?? "",
+                  style: TextStyle(
+                      fontWeight: notification['is_read'] == true ? FontWeight.normal : FontWeight.bold,
+                      color: notification['is_read'] == true ? Colors.grey[600] : primaryColor,
+                      fontSize: 16)),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 5),
+                  Text(
+                    notification['body'] ?? "",
+                    style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(timeText,
+                      style: TextStyle(color: Colors.grey[400], fontSize: 12)),
                 ],
               ),
-              child: ListTile(
-                onTap: () => _showNotificationDialog(notification),
-                contentPadding: const EdgeInsets.all(15),
-                leading: CircleAvatar(
-                  backgroundColor: notification['is_read'] == true 
-                      ? Colors.grey[200] 
-                      : secondaryColor.withAlpha(25),
-                  child: Icon(
-                    notification['is_read'] == true 
-                        ? Icons.notifications_none_rounded 
-                        : Icons.notifications_active_outlined,
-                    color: notification['is_read'] == true ? Colors.grey : secondaryColor),
-                ),
-                title: Text(notification['title'] ?? "",
-                    style: TextStyle(
-                        fontWeight: notification['is_read'] == true ? FontWeight.normal : FontWeight.bold,
-                        color: notification['is_read'] == true ? Colors.grey[600] : primaryColor,
-                        fontSize: 16)),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 5),
-                    Text(
-                      notification['body'] ?? "",
-                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(timeText,
-                        style: TextStyle(color: Colors.grey[400], fontSize: 12)),
-                  ],
-                ),
-              ),
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 
