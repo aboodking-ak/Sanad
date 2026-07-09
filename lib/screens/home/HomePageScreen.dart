@@ -3,6 +3,7 @@ import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart' as widgets;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -10,6 +11,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:intl/intl.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/models/subject_model.dart';
 
@@ -33,8 +35,9 @@ class _HomePageScreenState extends State<HomePageScreen> {
   String? _profileImagePath;
   String? selectedStage;
   bool isAdsRemoved = false;
-  bool isAiSubscribed = false;
   int _aiMessagesCount = 0;
+  String _lastAiDate = "";
+  bool _hasShownBetaSheet = false;
   List<SubjectModel> _supabaseSubjects = [];
   bool _isLoadingSubjects = false; // حالة تحميل المواد
 
@@ -61,6 +64,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
   bool _isTipVisible = false;
   final List<Map<String, dynamic>> _chatMessages = [];
   bool _isTyping = false;
+  bool _isAiInitialized = false;
   late GenerativeModel _model;
   late ChatSession _chat;
 
@@ -69,7 +73,6 @@ class _HomePageScreenState extends State<HomePageScreen> {
     super.initState();
     // تصفير القيم عند الدخول لأول مرة فقط (للتجربة)
     isAdsRemoved = false;
-    isAiSubscribed = false;
     _aiMessagesCount = 0;
 
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,
@@ -78,6 +81,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
     _loadTips();
     _startCountdown();
     _initGemini();
+    _loadAiLimit();
     _fetchSupabaseData();
     _fetchLeaderboard();
     _fetchNotifications();
@@ -368,22 +372,115 @@ class _HomePageScreenState extends State<HomePageScreen> {
     );
   }
 
-  void _initGemini() {
-    // ملاحظة: يجب وضع API Key صالح هنا ليعمل الذكاء الاصطناعي
-    const apiKey = 'AIzaSyAc-fKE-o9DfoYciB0o2_UqaKUUFKuG2w0';
-    _model = GenerativeModel(model: 'gemini-2.5-flash', apiKey: apiKey);
-    _chat = _model.startChat();
+  Future<void> _loadAiLimit() async {
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final savedDate = prefs.getString('last_ai_date') ?? "";
     
-    // رسالة الترحيب
-    _chatMessages.add({
-      'text': 'مرحباً بك في سند! أنا مساعدك الذكي، كيف يمكنني مساعدتك في دراستك اليوم؟',
-      'isMe': false,
-    });
+    if (savedDate != today) {
+      // يوم جديد، تصفير العداد
+      await prefs.setInt('ai_messages_count', 0);
+      await prefs.setString('last_ai_date', today);
+      setState(() {
+        _aiMessagesCount = 0;
+        _lastAiDate = today;
+      });
+    } else {
+      setState(() {
+        _aiMessagesCount = prefs.getInt('ai_messages_count') ?? 0;
+        _lastAiDate = savedDate;
+      });
+    }
+  }
+
+  Future<void> _incrementAiCount() async {
+    final prefs = await SharedPreferences.getInstance();
+    final newCount = _aiMessagesCount + 1;
+    await prefs.setInt('ai_messages_count', newCount);
+    setState(() => _aiMessagesCount = newCount);
+  }
+
+  void _showBetaInfoSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(topLeft: Radius.circular(30), topRight: Radius.circular(30)),
+        ),
+        padding: const EdgeInsets.all(25),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(10))),
+            const SizedBox(height: 20),
+            const Icon(Icons.auto_awesome_rounded, size: 50, color: Colors.blueAccent),
+            const SizedBox(height: 15),
+            const Text("نسخة تجريبية (Beta)", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            const Text(
+              "أهلاً بك في المساعد الذكي! هذه النسخة لا تزال تحت التطوير (Beta). يمكنك إرسال 5 رسائل يومياً حالياً لمساعدتنا في تحسين الخدمة.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.black87, height: 1.5),
+            ),
+            const SizedBox(height: 25),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              style: ElevatedButton.styleFrom(
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text("فهمت ذلك", style: TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _initGemini() async {
+    try {
+      // جلب المفتاح من قاعدة البيانات
+      final response = await Supabase.instance.client
+          .from('app_settings')
+          .select('value')
+          .eq('key', 'gemini_api_key')
+          .maybeSingle();
+
+      final String? apiKey = response != null ? response['value']?.toString().trim() : null;
+
+      if (apiKey == null || apiKey.isEmpty) {
+        throw Exception("API Key not found in database");
+      }
+
+      // تثبيت الموديل بنسخة الاستقرار القصوى
+      _model = GenerativeModel(
+        model: 'gemini-3-flash-preview',
+        apiKey: apiKey,
+      );
+      
+      final history = await _loadChatHistory();
+      _chat = _model.startChat(history: history);
+      setState(() => _isAiInitialized = true);
+      debugPrint("Gemini: Success! 1.5-Flash model initialized.");
+      
+    } catch (e) {
+      debugPrint("Gemini Init Error: $e");
+      _showErrorMessage('عذراً، المساعد الذكي غير متاح حالياً (خطأ في الإعدادات).');
+    }
   }
 
   Future<void> _sendMessage() async {
-    if (!isAiSubscribed && _aiMessagesCount >= 3) {
-      _showSubscriptionSheet();
+    if (_isTyping) return;
+
+    if (!_isAiInitialized) {
+      _showErrorMessage('عذراً، لم يتم تهيئة المساعد الذكي بعد. يرجى المحاولة لاحقاً.');
+      return;
+    }
+
+    if (_aiMessagesCount >= 5) {
+      _showLimitReachedSheet();
       return;
     }
 
@@ -393,33 +490,109 @@ class _HomePageScreenState extends State<HomePageScreen> {
     setState(() {
       _chatMessages.add({'text': message, 'isMe': true});
       _chatController.clear();
-      if (!isAiSubscribed) {
-        _aiMessagesCount++; // زيادة العداد عند الإرسال
-      }
       _isTyping = true;
     });
 
+    await _incrementAiCount();
+    await _saveMessageToDB(message, true);
+
     try {
       final response = await _chat.sendMessage(Content.text(message));
+      final responseText = response.text ?? 'عذراً، لم أستطع فهم ذلك.';
       
-      setState(() {
-        _chatMessages.add({
-          'text': response.text ?? 'عذراً، لم أستطع فهم ذلك.',
-          'isMe': false,
-        });
-      });
+      setState(() => _chatMessages.add({'text': responseText, 'isMe': false}));
+      await _saveMessageToDB(responseText, false);
     } catch (e) {
       debugPrint("Gemini Error: $e");
-      setState(() {
-        _chatMessages.add({
-          'text': 'حدث خطأ في الاتصال. يرجى التأكد من مفتاح API أو جودة الإنترنت. الخطأ: ${e.toString().split(':').first}',
-          'isMe': false,
-        });
-      });
+      // إظهار تفاصيل الخطأ كاملة للتشخيص
+      _showErrorMessage('خطأ: ${e.toString()}');
     } finally {
+      if (mounted) setState(() => _isTyping = false);
+    }
+  }
+
+  void _showErrorMessage(String msg) {
+    if (mounted) {
       setState(() {
-        _isTyping = false;
+        _chatMessages.add({'text': msg, 'isMe': false});
       });
+    }
+  }
+
+  Future<List<Content>> _loadChatHistory() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return [];
+
+    try {
+      final List<dynamic> data = await Supabase.instance.client
+          .from('chat_messages')
+          .select('text, is_me')
+          .eq('user_id', user.id)
+          .order('created_at', ascending: true);
+
+      List<Content> history = [];
+      String? lastRole;
+
+      if (mounted && data.isNotEmpty) {
+        setState(() {
+          _chatMessages.clear();
+          for (var msg in data) {
+            final text = msg['text'] ?? "";
+            final isMe = msg['is_me'] ?? false;
+            final currentRole = isMe ? 'user' : 'model';
+            
+            _chatMessages.add({
+              'text': text,
+              'isMe': isMe,
+            });
+
+            // ضمان التعاقب الصحيح: user ثم model ثم user...
+            if (currentRole != lastRole) {
+              // تخطي الرسالة الأولى إذا كانت من الموديل (يجب أن تبدأ الدردشة من المستخدم)
+              if (history.isEmpty && !isMe) continue;
+
+              if (isMe) {
+                history.add(Content.text(text));
+              } else {
+                history.add(Content.model([TextPart(text)]));
+              }
+              lastRole = currentRole;
+            }
+          }
+        });
+      }
+      
+      if (_chatMessages.isEmpty) {
+        _addWelcomeMessage();
+      }
+      return history;
+    } catch (e) {
+      debugPrint("Error loading chat history: $e");
+      return [];
+    }
+  }
+
+  void _addWelcomeMessage() {
+    setState(() {
+      _chatMessages.add({
+        'text': 'مرحباً بك في سند! أنا مساعدك الذكي نسخة 2026، كيف يمكنني مساعدتك في دراستك اليوم؟',
+        'isMe': false,
+      });
+    });
+  }
+
+  Future<void> _saveMessageToDB(String text, bool isMe) async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+
+    try {
+      await Supabase.instance.client.from('chat_messages').insert({
+        'user_id': user.id,
+        'text': text,
+        'is_me': isMe,
+      });
+    } catch (e) {
+      debugPrint("Error saving message to DB: $e");
     }
   }
 
@@ -677,6 +850,39 @@ class _HomePageScreenState extends State<HomePageScreen> {
     ) ?? false;
   }
 
+  void _showLimitReachedSheet() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: const BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.only(topLeft: Radius.circular(30), topRight: Radius.circular(30)),
+        ),
+        padding: const EdgeInsets.all(25),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.lock_clock_rounded, size: 50, color: Colors.orangeAccent),
+            const SizedBox(height: 15),
+            const Text("عذراً، وصلت للحد اليومي", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 10),
+            const Text(
+              "لقد استهلكت 5 رسائل اليوم. يرجى العودة غداً للمتابعة مع المساعد الذكي. تذكر أننا في المرحلة التجريبية!",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.black87, height: 1.5),
+            ),
+            const SizedBox(height: 25),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("حسناً"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -696,8 +902,16 @@ class _HomePageScreenState extends State<HomePageScreen> {
         length: 5,
         child: Builder(
           builder: (context) {
+            final tabController = DefaultTabController.of(context);
+            tabController.addListener(() {
+              if (tabController.index == 1 && !_hasShownBetaSheet) {
+                _hasShownBetaSheet = true;
+                _showBetaInfoSheet();
+              }
+            });
+
             return Directionality(
-              textDirection: TextDirection.rtl,
+              textDirection: widgets.TextDirection.rtl,
               child: Scaffold(
               backgroundColor: Colors.white,
               resizeToAvoidBottomInset: false, // الحل الاحترافي: منع الشاشة من الانضغاط
@@ -756,7 +970,33 @@ class _HomePageScreenState extends State<HomePageScreen> {
                       ),
                       tabs: [
                         const Tab(icon: Icon(Icons.home_rounded, size: 26)),
-                        const Tab(icon: Icon(Icons.auto_awesome_rounded, size: 26)),
+                        Tab(
+                          icon: Stack(
+                            clipBehavior: Clip.none,
+                            children: [
+                              const Icon(Icons.auto_awesome_rounded, size: 26),
+                              Positioned(
+                                top: -8,
+                                right: -12,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: secondaryColor,
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: const Text(
+                                    "Beta",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                         const Tab(icon: Icon(Icons.handyman_rounded, size: 26)),
                         Tab(
                           icon: Stack(
@@ -840,17 +1080,6 @@ class _HomePageScreenState extends State<HomePageScreen> {
               isSubscribed: isAdsRemoved,
               onTap: () => _processPayment('ads'),
             ),
-            const SizedBox(height: 20),
-            _buildPremiumCard(
-              title: "باقة الذكاء",
-              subtitle: "وصول غير محدود لـ AI سند",
-              price: "5,000 د.ع",
-              period: "شهرياً",
-              icon: Icons.auto_awesome_rounded,
-              gradient: const [Color(0xFF2979FF), Color(0xFF2962FF)],
-              isSubscribed: isAiSubscribed,
-              onTap: () => _processPayment('ai'),
-            ),
           ],
         ),
       ),
@@ -901,35 +1130,6 @@ class _HomePageScreenState extends State<HomePageScreen> {
     );
   }
 
-  Widget _buildAiPaywall(Color primaryColor) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(40.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(30),
-              decoration: BoxDecoration(color: Colors.blueAccent.withAlpha(20), shape: BoxShape.circle),
-              child: const Icon(Icons.lock_person_rounded, size: 80, color: Colors.blueAccent),
-            ),
-            const SizedBox(height: 25),
-            const Text("استنفدت الرسائل المجانية", style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 10),
-            const Text("لقد استخدمت 3 رسائل، اشترك الآن للحصول على وصول غير محدود للمساعد الذكي طوال الشهر.", textAlign: TextAlign.center, style: TextStyle(color: Colors.grey, height: 1.5)),
-            const SizedBox(height: 30),
-            ElevatedButton.icon(
-              onPressed: _showSubscriptionSheet,
-              icon: const Icon(Icons.workspace_premium_rounded),
-              label: const Text("اشترك الآن بـ 5,000 د.ع"),
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent, minimumSize: const Size(double.infinity, 55), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15))),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Future<void> _processPayment(String type) async {
     // محاكاة عملية الدفع - هنا يتم ربط ZainCash أو أي بوابة دفع لاحقاً
     showDialog(
@@ -942,8 +1142,6 @@ class _HomePageScreenState extends State<HomePageScreen> {
     
     if (type == 'ads') {
       setState(() => isAdsRemoved = true);
-    } else {
-      setState(() => isAiSubscribed = true);
     }
     // ملاحظة: تم إزالة الكود الخاص بحفظ الحالة في SharedPreferences لجعلها تجريبية فقط
 
@@ -1657,10 +1855,6 @@ class _HomePageScreenState extends State<HomePageScreen> {
   }
 
   Widget _buildAiChatView(Color primaryColor) {
-    // إظهار واجهة الاشتراك فقط بعد استهلاك الـ 3 رسائل بالكامل (أي عند محاولة الرابعة)
-    if (!isAiSubscribed && _aiMessagesCount > 3) {
-      return _buildAiPaywall(primaryColor);
-    }
     return Column(
       children: [
         Expanded(
