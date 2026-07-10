@@ -78,23 +78,32 @@ class AdHelper {
       return;
     }
 
+    bool isRewarded = false;
+
     _rewarded_ad!.fullScreenContentCallback = FullScreenContentCallback(
       onAdDismissedFullScreenContent: (ad) {
         ad.dispose();
         _rewarded_ad = null;
         loadRewardedAd(); // تحميل إعلان جديد للخلفية
-        onComplete();
+        
+        // التحقق مما إذا كان المستخدم قد شاهد الإعلان كاملاً
+        if (isRewarded) {
+          onComplete();
+        } else {
+          debugPrint('Ad dismissed early, reward not earned');
+        }
       },
       onAdFailedToShowFullScreenContent: (ad, error) {
         ad.dispose();
         _rewarded_ad = null;
         loadRewardedAd();
-        onComplete();
+        onComplete(); // السماح بالدخول في حال فشل عرض الإعلان لضمان عدم توقف التطبيق
       },
     );
 
     _rewarded_ad!.show(onUserEarnedReward: (ad, reward) {
       debugPrint('User earned reward: ${reward.amount}');
+      isRewarded = true;
     });
   }
 
