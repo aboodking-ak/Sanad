@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_assets.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -31,12 +33,122 @@ class _SplashScreenState extends State<SplashScreen> {
     final bool hasInternet = await _checkInternet();
     
     if (hasInternet) {
-      if (mounted) _checkLoginStatus();
+      // فحص الصيانة والتحديثات أولاً
+      final bool canProceed = await _checkAppStatus();
+      if (canProceed && mounted) {
+        _checkLoginStatus();
+      }
     } else {
       setState(() {
         _isOffline = true;
       });
     }
+  }
+
+  Future<bool> _checkAppStatus() async {
+    try {
+      final supabase = Supabase.instance.client;
+      final settings = await supabase.from('app_settings').select('key, value');
+      
+      Map<String, dynamic> config = {
+        for (var item in settings) item['key']: item['value']
+      };
+
+      // 1. فحص وضع الصيانة
+      if (config['maintenance_mode'] == 'true' || config['maintenance_mode'] == true) {
+        if (mounted) _showMaintenanceDialog(config['maintenance_message'] ?? "التطبيق في وضع الصيانة حالياً. يرجى العودة لاحقاً.");
+        return false;
+      }
+
+      // 2. فحص التحديث الإجباري
+      final PackageInfo packageInfo = await PackageInfo.fromPlatform();
+      final String currentVersion = packageInfo.version;
+      final String minVersion = config['min_app_version'] ?? "1.0.0";
+
+      if (_isVersionLower(currentVersion, minVersion)) {
+        if (mounted) _showUpdateDialog(config['update_url'] ?? "https://play.google.com/store");
+        return false;
+      }
+
+      return true;
+    } catch (e) {
+      debugPrint("App Status Check Error: $e");
+      return true; // في حال حدوث خطأ في قاعدة البيانات، نسمح بالدخول لضمان عدم تعطل المستخدمين
+    }
+  }
+
+  bool _isVersionLower(String current, String min) {
+    try {
+      List<int> currentParts = current.split('.').map(int.parse).toList();
+      List<int> minParts = min.split('.').map(int.parse).toList();
+      for (int i = 0; i < 3; i++) {
+        int c = i < currentParts.length ? currentParts[i] : 0;
+        int m = i < minParts.length ? minParts[i] : 0;
+        if (c < m) return true;
+        if (c > m) return false;
+      }
+      return false;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  void _showMaintenanceDialog(String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Row(
+            children: [
+              Icon(Icons.construction_rounded, color: Colors.orange),
+              SizedBox(width: 10),
+              Text("صيانة مؤقتة"),
+            ],
+          ),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () => SystemNavigator.pop(),
+              child: const Text("إغلاق التطبيق", style: TextStyle(color: Colors.grey)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showUpdateDialog(String url) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Row(
+            children: [
+              Icon(Icons.system_update_rounded, color: Colors.blue),
+              SizedBox(width: 10),
+              Text("تحديث جديد متوفر"),
+            ],
+          ),
+          content: const Text("يتوفر إصدار جديد من تطبيق سند يحتوي على تحسينات مهمة. يرجى التحديث للمتابعة."),
+          actions: [
+            ElevatedButton(
+              onPressed: () async {
+                final uri = Uri.parse(url);
+                if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+              },
+              style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).primaryColor),
+              child: const Text("تحديث الآن", style: TextStyle(color: Colors.white)),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<bool> _checkInternet() async {
