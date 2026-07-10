@@ -63,9 +63,10 @@ class AdHelper {
   /// إظهار إعلان المكافأة مع تنفيذ أمر بعد انتهائه (مثل التنقل)
   Future<void> showRewardedAd(VoidCallback onComplete) async {
     final prefs = await SharedPreferences.getInstance();
-    final bool isAdsRemoved = prefs.getBool('is_ads_removed') ?? false;
+    final bool isAdsRemoved = prefs.getBool('user_ads_removed') ?? false;
 
     if (isAdsRemoved) {
+      debugPrint('Ads are removed by user subscription, proceeding to action');
       onComplete();
       return;
     }
@@ -108,10 +109,10 @@ class AdHelper {
   Future<void> showAppOpenAdIfAvailable() async {
     // التحقق أولاً إذا كان المستخدم قد اشترى ميزة إزالة الإعلانات
     final prefs = await SharedPreferences.getInstance();
-    final bool isAdsRemoved = prefs.getBool('is_ads_removed') ?? false;
+    final bool isAdsRemoved = prefs.getBool('user_ads_removed') ?? false;
 
     if (isAdsRemoved) {
-      debugPrint('Ads are removed, not showing AppOpenAd');
+      debugPrint('Ads are removed by user subscription');
       return;
     }
 

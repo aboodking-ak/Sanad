@@ -12,6 +12,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:intl/intl.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/models/subject_model.dart';
 import '../../core/utils/ad_helper.dart';
@@ -25,6 +26,10 @@ class HomePageScreen extends StatefulWidget {
 
 class _HomePageScreenState extends State<HomePageScreen> {
   final AdHelper _adHelper = AdHelper();
+  final InAppPurchase _inAppPurchase = InAppPurchase.instance;
+  late StreamSubscription<List<PurchaseDetails>> _purchaseSubscription;
+  static const String _noAdsId = 'sanad_premium_monthly'; // نفس المعرف في جوجل بلاي
+
   // منطق العد التنازلي
   late Timer _timer;
   Duration _timeLeft = const Duration(days: 45, hours: 12, minutes: 30);
@@ -87,6 +92,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
     _fetchSupabaseData();
     _fetchLeaderboard();
     _fetchNotifications();
+    _initializeInAppPurchase();
 
     // إظهار إعلان الفتح بمجرد الدخول للصفحة الرئيسية
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -260,6 +266,9 @@ class _HomePageScreenState extends State<HomePageScreen> {
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     
+    // جلب حالة إزالة الإعلانات
+    final savedAdsStatus = prefs.getBool('user_ads_removed') ?? false;
+    
     // 1. جلب الصورة المخزنة محلياً فوراً
     final savedImagePath = prefs.getString('profile_image_path');
     final savedName = prefs.getString('user_name');
@@ -272,6 +281,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
         userEmail = savedEmail ?? "user@email.com";
         _profileImagePath = savedImagePath;
         if (savedStage != null) selectedStage = savedStage;
+        isAdsRemoved = savedAdsStatus;
       });
     }
 
@@ -282,7 +292,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
       try {
         final profileData = await supabase
             .from('profiles')
-            .select('profile_image, full_name, is_blocked')
+            .select('profile_image, full_name, is_blocked, ads_removed_until')
             .eq('id', user.id)
             .maybeSingle();
 
@@ -291,6 +301,21 @@ class _HomePageScreenState extends State<HomePageScreen> {
           if (profileData['is_blocked'] == true) {
             if (mounted) _showBlockedDialog();
             return;
+          }
+
+          // فحص حالة الاشتراك وتاريخ الانتهاء
+          bool adsStillRemoved = false;
+          if (profileData['ads_removed_until'] != null) {
+            final expiryDate = DateTime.parse(profileData['ads_removed_until']);
+            if (expiryDate.isAfter(DateTime.now())) {
+              adsStillRemoved = true;
+            }
+          }
+
+          // تحديث الحالة محلياً بناءً على السيرفر
+          if (adsStillRemoved != savedAdsStatus) {
+            await prefs.setBool('user_ads_removed', adsStillRemoved);
+            if (mounted) setState(() => isAdsRemoved = adsStillRemoved);
           }
 
           final latestImageUrl = profileData['profile_image'];
@@ -1203,27 +1228,98 @@ class _HomePageScreenState extends State<HomePageScreen> {
     );
   }
 
-  Future<void> _processPayment(String type) async {
-    // محاكاة عملية الدفع - هنا يتم ربط ZainCash أو أي بوابة دفع لاحقاً
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (context) => const Center(child: CircularProgressIndicator()),
-    );
+  void _initializeInAppPurchase() {
+    final purchaseUpdated = _inAppPurchase.purchaseStream;
+    _purchaseSubscription = purchaseUpdated.listen((purchaseDetailsList) {
+      _handlePurchaseUpdates(purchaseDetailsList);
+    }, onDone: () {
+      _purchaseSubscription.cancel();
+    }, onError: (error) {
+      debugPrint("IAP Error: $error");
+    });
+  }
 
-    await Future.delayed(const Duration(seconds: 2)); // محاكاة وقت الاتصال بالسيرفر
-    
-    if (type == 'ads') {
-      setState(() => isAdsRemoved = true);
+  Future<void> _handlePurchaseUpdates(List<PurchaseDetails> purchaseDetailsList) async {
+    for (var purchaseDetails in purchaseDetailsList) {
+      if (purchaseDetails.status == PurchaseStatus.pending) {
+        // العملية قيد الانتظار
+      } else if (purchaseDetails.status == PurchaseStatus.error) {
+        // حدث خطأ في الدفع
+      } else if (purchaseDetails.status == PurchaseStatus.purchased ||
+          purchaseDetails.status == PurchaseStatus.restored) {
+        // نجاح عملية الدفع!
+        await _activateSubscription();
+      }
+
+      if (purchaseDetails.pendingCompletePurchase) {
+        await _inAppPurchase.completePurchase(purchaseDetails);
+      }
     }
-    // ملاحظة: تم إزالة الكود الخاص بحفظ الحالة في SharedPreferences لجعلها تجريبية فقط
+  }
 
-    if (mounted) {
-      Navigator.pop(context); // إغلاق الـ Loading
-      Navigator.pop(context); // إغلاق الـ BottomSheet
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("تم تفعيل الاشتراك بنجاح! استمتع بالمميزات الجديدة"), backgroundColor: Colors.green),
-      );
+  Future<void> _activateSubscription() async {
+    final expiryDate = DateTime.now().add(const Duration(days: 30));
+    final user = Supabase.instance.client.auth.currentUser;
+    
+    if (user != null) {
+      try {
+        await Supabase.instance.client
+            .from('profiles')
+            .update({'ads_removed_until': expiryDate.toIso8601String()})
+            .eq('id', user.id);
+        
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('user_ads_removed', true);
+        if (mounted) setState(() => isAdsRemoved = true);
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("تم تفعيل الاشتراك عبر جوجل بلاي بنجاح!"), backgroundColor: Colors.green),
+        );
+      } catch (e) {
+        debugPrint("DB Sync Error: $e");
+      }
+    }
+  }
+
+  Future<void> _buySubscription() async {
+    final bool available = await _inAppPurchase.isAvailable();
+    if (!available) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("متجر جوجل بلاي غير متاح على هذا الجهاز")),
+        );
+      }
+      return;
+    }
+
+    const Set<String> ids = <String>{_noAdsId};
+    final ProductDetailsResponse response = await _inAppPurchase.queryProductDetails(ids);
+    
+    if (response.error != null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("خطأ من جوجل: ${response.error!.message}")),
+        );
+      }
+      return;
+    }
+
+    if (response.productDetails.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("لم يتم العثور على المنتج في متجر جوجل (تأكد من الـ ID)")),
+        );
+      }
+      return;
+    }
+
+    final PurchaseParam purchaseParam = PurchaseParam(productDetails: response.productDetails.first);
+    _inAppPurchase.buyNonConsumable(purchaseParam: purchaseParam);
+  }
+
+  Future<void> _processPayment(String type) async {
+    if (type == 'ads') {
+      await _buySubscription();
     }
   }
 
