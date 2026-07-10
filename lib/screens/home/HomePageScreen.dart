@@ -271,22 +271,87 @@ class _HomePageScreenState extends State<HomePageScreen> {
     final supabase = Supabase.instance.client;
     final user = supabase.auth.currentUser;
     if (user != null) {
-      final latestImageUrl = user.userMetadata?['profile_image'];
-      final latestName = user.userMetadata?['full_name'];
-      
-      if (latestImageUrl != null && latestImageUrl != _profileImagePath) {
-        await prefs.setString('profile_image_path', latestImageUrl);
-        if (mounted) {
-          setState(() {
-            _profileImagePath = latestImageUrl;
-          });
+      try {
+        final profileData = await supabase
+            .from('profiles')
+            .select('profile_image, full_name, is_blocked')
+            .eq('id', user.id)
+            .maybeSingle();
+
+        if (profileData != null) {
+          // التحقق من الحظر فوراً
+          if (profileData['is_blocked'] == true) {
+            if (mounted) _showBlockedDialog();
+            return;
+          }
+
+          final latestImageUrl = profileData['profile_image'];
+          final latestName = profileData['full_name'];
+          
+          if (latestImageUrl != null && latestImageUrl != _profileImagePath) {
+            await prefs.setString('profile_image_path', latestImageUrl);
+            if (mounted) {
+              setState(() {
+                _profileImagePath = latestImageUrl;
+              });
+            }
+          }
+          if (latestName != null && latestName != userName) {
+            await prefs.setString('user_name', latestName);
+            if (mounted) setState(() => userName = latestName);
+          }
         }
-      }
-      if (latestName != null && latestName != userName) {
-        await prefs.setString('user_name', latestName);
-        if (mounted) setState(() => userName = latestName);
+      } catch (e) {
+        debugPrint("Error checking block status: $e");
       }
     }
+  }
+
+  void _showBlockedDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false, // لا يمكن إغلاقه بالضغط خارجاً
+      builder: (context) => PopScope(
+        canPop: false, // يمنع زر الرجوع في الهاتف
+        child: Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          child: Padding(
+            padding: const EdgeInsets.all(30),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.gavel_rounded, size: 80, color: Colors.redAccent),
+                const SizedBox(height: 25),
+                const Text(
+                  "تم حظر حسابك",
+                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.red),
+                ),
+                const SizedBox(height: 15),
+                const Text(
+                  "عذراً، لقد تم حظر وصولك إلى تطبيق سند بسبب مخالفة شروط الاستخدام. يرجى التواصل مع الإدارة إذا كنت تعتقد أن هذا خطأ.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Colors.black87, height: 1.6),
+                ),
+                const SizedBox(height: 30),
+                ElevatedButton(
+                  onPressed: () {
+                    // تسجيل الخروج والعودة لشاشة البداية
+                    Supabase.instance.client.auth.signOut();
+                    Navigator.pushNamedAndRemoveUntil(context, '/signin', (route) => false);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.redAccent,
+                    minimumSize: const Size(double.infinity, 50),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: const Text("تسجيل الخروج", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Future<void> _editNameDialog() async {
