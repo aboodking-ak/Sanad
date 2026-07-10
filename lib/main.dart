@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/theme/app_theme.dart';
 import 'core/utils/time_tracking_wrapper.dart';
+import 'core/utils/ad_helper.dart';
 import 'screens/splash/SplashScreen.dart';
 import 'screens/auth/SignUpScreen.dart';
 import 'screens/auth/SignInScreen.dart';
@@ -28,6 +30,9 @@ import 'screens/auth/ChangePasswordScreen.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // تهيئة محرك الإعلانات
+  await MobileAds.instance.initialize();
+
   await Supabase.initialize(
     url: 'https://vxdhjeefbrdjwzwdlybu.supabase.co',
     publishableKey: 'sb_publishable_bh6MjtlteOB4F6eyax80jA_GjlXFpIh',
@@ -46,15 +51,35 @@ class MyApp extends StatefulWidget {
   State<MyApp> createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
   bool _isLoggedIn = false;
+  final AdHelper _adHelper = AdHelper();
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _checkLoginStatus();
     _setupAuthListener();
+    
+    // تحميل الإعلانات في الخلفية فقط بدون إظهار تلقائي هنا
+    _adHelper.loadAppOpenAd();
+    _adHelper.loadRewardedAd();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // إظهار الإعلان عندما يعود المستخدم للتطبيق من الخلفية
+    if (state == AppLifecycleState.resumed) {
+      _adHelper.showAppOpenAdIfAvailable();
+    }
   }
 
   Future<void> _checkLoginStatus() async {

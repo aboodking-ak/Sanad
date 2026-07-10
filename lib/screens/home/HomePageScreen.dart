@@ -14,6 +14,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:intl/intl.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/models/subject_model.dart';
+import '../../core/utils/ad_helper.dart';
 
 class HomePageScreen extends StatefulWidget {
   const HomePageScreen({super.key});
@@ -23,6 +24,7 @@ class HomePageScreen extends StatefulWidget {
 }
 
 class _HomePageScreenState extends State<HomePageScreen> {
+  final AdHelper _adHelper = AdHelper();
   // منطق العد التنازلي
   late Timer _timer;
   Duration _timeLeft = const Duration(days: 45, hours: 12, minutes: 30);
@@ -85,6 +87,12 @@ class _HomePageScreenState extends State<HomePageScreen> {
     _fetchSupabaseData();
     _fetchLeaderboard();
     _fetchNotifications();
+
+    // إظهار إعلان الفتح بمجرد الدخول للصفحة الرئيسية
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _adHelper.showAppOpenAdIfAvailable();
+      _adHelper.loadRewardedAd(); // التأكد من تحميل إعلان المكافأة للأقسام
+    });
   }
 
   @override
@@ -2820,15 +2828,17 @@ class _HomePageScreenState extends State<HomePageScreen> {
                   Icons.menu_book_rounded,
                   primaryColor,
                   onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(
-                      context,
-                      '/pdf_viewer',
-                      arguments: {
-                        'title': pdfData['title'],
-                        'pdfPath': pdfData['path'],
-                      },
-                    );
+                    _adHelper.showRewardedAd(() {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(
+                        context,
+                        '/pdf_viewer',
+                        arguments: {
+                          'title': pdfData['title'],
+                          'pdfPath': pdfData['path'],
+                        },
+                      );
+                    });
                   },
                 );
               }),
@@ -2839,14 +2849,16 @@ class _HomePageScreenState extends State<HomePageScreen> {
                   Icons.assignment_turned_in_rounded,
                   primaryColor,
                   onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(
-                      context,
-                      '/exams',
-                      arguments: {
-                        'subjectName': subject['label'],
-                      },
-                    );
+                    _adHelper.showRewardedAd(() {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(
+                        context,
+                        '/exams',
+                        arguments: {
+                          'subjectName': subject['label'],
+                        },
+                      );
+                    });
                   },
                 ),
               // زر الوزاريات الثابت (فقط لمواد معينة)
@@ -2856,14 +2868,16 @@ class _HomePageScreenState extends State<HomePageScreen> {
                   Icons.account_balance_rounded,
                   primaryColor, // جعل لونه نفس لون الكتاب (primary)
                   onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(
-                      context,
-                      '/ministerials',
-                      arguments: {
-                        'subjectName': subject['label'],
-                      },
-                    );
+                    _adHelper.showRewardedAd(() {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(
+                        context,
+                        '/ministerials',
+                        arguments: {
+                          'subjectName': subject['label'],
+                        },
+                      );
+                    });
                   },
                 ),
               // قسم أحكام التلاوة (فقط لمادة الإسلامية)
@@ -2873,8 +2887,10 @@ class _HomePageScreenState extends State<HomePageScreen> {
                   Icons.menu_book_rounded,
                   primaryColor,
                   onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, '/tajweed_rules');
+                    _adHelper.showRewardedAd(() {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/tajweed_rules');
+                    });
                   },
                 ),
               // قسم سور الحفظ (فقط لمادة الإسلامية)
@@ -2884,8 +2900,10 @@ class _HomePageScreenState extends State<HomePageScreen> {
                   Icons.menu_book_outlined,
                   primaryColor,
                   onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, '/surahs');
+                    _adHelper.showRewardedAd(() {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/surahs');
+                    });
                   },
               ),
               // قسم الأحاديث النبوية الشريفة (فقط لمادة الإسلامية)
@@ -2895,8 +2913,10 @@ class _HomePageScreenState extends State<HomePageScreen> {
                   Icons.menu_book_rounded,
                   primaryColor,
                   onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, '/hadiths');
+                    _adHelper.showRewardedAd(() {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/hadiths');
+                    });
                   },
                 ),
               // قسم قصائد الأدب (فقط لمادة العربية)
@@ -2906,8 +2926,10 @@ class _HomePageScreenState extends State<HomePageScreen> {
                   Icons.auto_stories_rounded,
                   primaryColor,
                   onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, '/poems');
+                    _adHelper.showRewardedAd(() {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/poems');
+                    });
                   },
                 ),
               // قسم الإنشاءات (فقط لمادة الإنكليزي)
@@ -2917,8 +2939,10 @@ class _HomePageScreenState extends State<HomePageScreen> {
                   Icons.edit_note_rounded,
                   primaryColor,
                   onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, '/essays');
+                    _adHelper.showRewardedAd(() {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/essays');
+                    });
                   },
                 ),
               // قسم قطع الكتاب (فقط لمادة الإنكليزي)
@@ -2928,8 +2952,10 @@ class _HomePageScreenState extends State<HomePageScreen> {
                   Icons.book_rounded,
                   primaryColor,
                   onTap: () {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(context, '/book_passages');
+                    _adHelper.showRewardedAd(() {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/book_passages');
+                    });
                   },
                 ),
               const SizedBox(height: 20),
