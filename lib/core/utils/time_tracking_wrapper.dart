@@ -29,10 +29,15 @@ class _TimeTrackingWrapperState extends State<TimeTrackingWrapper> with WidgetsB
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.detached) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive || state == AppLifecycleState.detached) {
+      // إيقاف العد فوراً وحفظ الوقت الحالي في السيرفر
+      _timerService.stopTimer();
       _timerService.syncTime();
+      debugPrint("Study Timer: Paused (App in background)");
     } else if (state == AppLifecycleState.resumed) {
+      // إعادة تشغيل العد بمجرد عودة المستخدم
       _timerService.startTimer();
+      debugPrint("Study Timer: Resumed (App in foreground)");
     }
   }
 
