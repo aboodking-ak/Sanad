@@ -100,6 +100,7 @@ class _SignInScreenState extends State<SignInScreen> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: Colors.white,
+        resizeToAvoidBottomInset: false,
         appBar: AppBar(
           backgroundColor: primaryColor,
           elevation: 0,
@@ -110,24 +111,26 @@ class _SignInScreenState extends State<SignInScreen> {
             statusBarBrightness: Brightness.dark,
           ),
         ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 25.0),
-          child: Form(
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 25.0),
+            child: Form(
               key: _formKey,
               child: Column(
                 children: [
-                const SizedBox(height: 20),
-                _buildHeader(primaryColor, secondaryColor),
-                const SizedBox(height: 30),
-                _buildForm(),
-                const SizedBox(height: 10),
-                _buildForgotPassword(secondaryColor),
-                const SizedBox(height: 25),
-                _buildSignInButton(context, primaryColor),
-                const SizedBox(height: 40),
-                _buildBottomLink(context, secondaryColor),
-                const SizedBox(height: 20),
-              ],
+                  const Expanded(flex: 2, child: SizedBox()),
+                  _buildHeader(primaryColor, secondaryColor),
+                  const Expanded(flex: 1, child: SizedBox()),
+                  _buildForm(),
+                  const SizedBox(height: 10),
+                  _buildForgotPassword(secondaryColor),
+                  const SizedBox(height: 25),
+                  _buildSignInButton(context, primaryColor),
+                  const Expanded(flex: 3, child: SizedBox()),
+                  _buildBottomLink(context, secondaryColor),
+                  const SizedBox(height: 20),
+                ],
+              ),
             ),
           ),
         ),
