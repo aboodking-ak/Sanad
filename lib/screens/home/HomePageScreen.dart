@@ -2423,65 +2423,75 @@ class _HomePageScreenState extends State<HomePageScreen> {
                 // منصة التتويج (أول 3)
                 if (_leaderboardUsers.length >= 3)
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        _buildPodiumUser(
-                            user: _leaderboardUsers[1],
-                            rank: 2,
-                            height: 140,
-                            primaryColor: primaryColor,
-                            secondaryColor: secondaryColor),
-                        const SizedBox(width: 15),
-                        _buildPodiumUser(
-                            user: _leaderboardUsers[0],
-                            rank: 1,
-                            height: 180,
-                            hasCrown: true,
-                            primaryColor: primaryColor,
-                            secondaryColor: secondaryColor),
-                        const SizedBox(width: 15),
-                        _buildPodiumUser(
-                            user: _leaderboardUsers[2],
-                            rank: 3,
-                            height: 110,
-                            primaryColor: primaryColor,
-                            secondaryColor: secondaryColor),
-                      ],
-                    ),
-                  )
-                else if (_leaderboardUsers.isNotEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (_leaderboardUsers.length > 1)
-                          _buildPodiumUser(
+                        Expanded(
+                          child: _buildPodiumUser(
                               user: _leaderboardUsers[1],
                               rank: 2,
                               height: 140,
                               primaryColor: primaryColor,
                               secondaryColor: secondaryColor),
-                        if (_leaderboardUsers.length > 1) const SizedBox(width: 15),
-                        _buildPodiumUser(
-                            user: _leaderboardUsers[0],
-                            rank: 1,
-                            height: 180,
-                            hasCrown: true,
-                            primaryColor: primaryColor,
-                            secondaryColor: secondaryColor),
-                        if (_leaderboardUsers.length > 2) const SizedBox(width: 15),
-                        if (_leaderboardUsers.length > 2)
-                          _buildPodiumUser(
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildPodiumUser(
+                              user: _leaderboardUsers[0],
+                              rank: 1,
+                              height: 180,
+                              hasCrown: true,
+                              primaryColor: primaryColor,
+                              secondaryColor: secondaryColor),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildPodiumUser(
                               user: _leaderboardUsers[2],
                               rank: 3,
                               height: 110,
                               primaryColor: primaryColor,
                               secondaryColor: secondaryColor),
+                        ),
+                      ],
+                    ),
+                  )
+                else if (_leaderboardUsers.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        if (_leaderboardUsers.length > 1)
+                          Expanded(
+                            child: _buildPodiumUser(
+                                user: _leaderboardUsers[1],
+                                rank: 2,
+                                height: 140,
+                                primaryColor: primaryColor,
+                                secondaryColor: secondaryColor),
+                          ),
+                        if (_leaderboardUsers.length > 1) const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildPodiumUser(
+                              user: _leaderboardUsers[0],
+                              rank: 1,
+                              height: 180,
+                              hasCrown: true,
+                              primaryColor: primaryColor,
+                              secondaryColor: secondaryColor),
+                        ),
+                        if (_leaderboardUsers.length > 2) const SizedBox(width: 8),
+                        if (_leaderboardUsers.length > 2)
+                          Expanded(
+                            child: _buildPodiumUser(
+                                user: _leaderboardUsers[2],
+                                rank: 3,
+                                height: 110,
+                                primaryColor: primaryColor,
+                                secondaryColor: secondaryColor),
+                          ),
                       ],
                     ),
                   ),
@@ -3114,7 +3124,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
           style: TextStyle(color: secondaryColor, fontSize: 11, fontWeight: FontWeight.bold)),
         const SizedBox(height: 10),
         Container(
-          width: 80, height: height,
+          width: double.infinity, height: height,
           decoration: BoxDecoration(color: primaryColor, borderRadius: const BorderRadius.only(topLeft: Radius.circular(15), topRight: Radius.circular(15))),
           child: Center(child: Text("$rank", style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.bold))),
         ),
