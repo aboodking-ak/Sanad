@@ -63,18 +63,31 @@ class _StagesScreenState extends State<StagesScreen> {
             statusBarBrightness: Brightness.dark,
           ),
         ),
-        body: Column(
-          children: [
-            const Spacer(flex: 1),
-            _buildLogo(primaryColor, secondaryColor),
-            const SizedBox(height: 20),
-            _buildHeader(primaryColor),
-            const Spacer(flex: 1),
-            _buildStagesGrid(),
-            const Spacer(flex: 2),
-            _buildContinueButton(primaryColor),
-            const SizedBox(height: 10),
-          ],
+        body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Column(
+                      children: [
+                        const Expanded(flex: 1, child: SizedBox()),
+                        _buildLogo(primaryColor, secondaryColor),
+                        const SizedBox(height: 20),
+                        _buildHeader(primaryColor),
+                        const Expanded(flex: 1, child: SizedBox()),
+                        _buildStagesGrid(),
+                        const Expanded(flex: 2, child: SizedBox()),
+                        _buildContinueButton(primaryColor),
+                        const SizedBox(height: 10),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
