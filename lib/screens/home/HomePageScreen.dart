@@ -2140,7 +2140,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionHeader("الأدوات التعليمية", "3 أدوات"),
+          _buildSectionHeader("الأدوات التعليمية", "4 أدوات"),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             child: ListView(
