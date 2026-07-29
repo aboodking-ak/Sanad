@@ -100,7 +100,7 @@ class _SignInScreenState extends State<SignInScreen> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: Colors.white,
-        resizeToAvoidBottomInset: false,
+        resizeToAvoidBottomInset: true,
         appBar: AppBar(
           backgroundColor: primaryColor,
           elevation: 0,
@@ -112,26 +112,37 @@ class _SignInScreenState extends State<SignInScreen> {
           ),
         ),
         body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 25.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  const Expanded(flex: 2, child: SizedBox()),
-                  _buildHeader(primaryColor, secondaryColor),
-                  const Expanded(flex: 1, child: SizedBox()),
-                  _buildForm(),
-                  const SizedBox(height: 10),
-                  _buildForgotPassword(secondaryColor),
-                  const SizedBox(height: 25),
-                  _buildSignInButton(context, primaryColor),
-                  const Expanded(flex: 3, child: SizedBox()),
-                  _buildBottomLink(context, secondaryColor),
-                  const SizedBox(height: 20),
-                ],
-              ),
-            ),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            const Expanded(flex: 2, child: SizedBox(height: 20)),
+                            _buildHeader(primaryColor, secondaryColor),
+                            const Expanded(flex: 1, child: SizedBox(height: 20)),
+                            _buildForm(),
+                            const SizedBox(height: 10),
+                            _buildForgotPassword(secondaryColor),
+                            const SizedBox(height: 25),
+                            _buildSignInButton(context, primaryColor),
+                            const Expanded(flex: 3, child: SizedBox(height: 20)),
+                            _buildBottomLink(context, secondaryColor),
+                            const SizedBox(height: 20),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),

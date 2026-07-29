@@ -232,6 +232,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: Colors.white,
+        resizeToAvoidBottomInset: true,
         appBar: AppBar(
           backgroundColor: primaryColor,
           elevation: 0,
@@ -242,25 +243,38 @@ class _SignUpScreenState extends State<SignUpScreen> {
             statusBarBrightness: Brightness.dark,
           ),
         ),
-        body: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 25.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              children: [
-                const SizedBox(height: 10),
-                _buildHeader(primaryColor, secondaryColor),
-                const SizedBox(height: 15),
-                _buildForm(),
-                const SizedBox(height: 8),
-                _buildTermsCheckbox(secondaryColor),
-                const SizedBox(height: 15),
-                _buildSignUpButton(context, primaryColor),
-                const SizedBox(height: 30),
-                _buildBottomLink(context, secondaryColor),
-                const SizedBox(height: 15),
-              ],
-            ),
+        body: SafeArea(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 25.0),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          children: [
+                            const Expanded(flex: 1, child: SizedBox()),
+                            _buildHeader(primaryColor, secondaryColor),
+                            const Expanded(flex: 1, child: SizedBox()),
+                            _buildForm(),
+                            const SizedBox(height: 8),
+                            _buildTermsCheckbox(secondaryColor),
+                            const SizedBox(height: 12),
+                            _buildSignUpButton(context, primaryColor),
+                            const Expanded(flex: 2, child: SizedBox()),
+                            _buildBottomLink(context, secondaryColor),
+                            const SizedBox(height: 15),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
           ),
         ),
       ),
@@ -275,16 +289,16 @@ class _SignUpScreenState extends State<SignUpScreen> {
             alignment: Alignment.center,
             children: [
               Container(
-                width: 175,
-                height: 175,
+                width: 140,
+                height: 140,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(color: Colors.grey[100]!, width: 1),
                 ),
               ),
               SizedBox(
-                width: 175,
-                height: 175,
+                width: 140,
+                height: 140,
                 child: CircularProgressIndicator(
                   value: 0.35,
                   strokeWidth: 2.5,
@@ -293,9 +307,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
               ),
               Image.asset(
                 AppAssets.logo,
-                width: 120,
+                width: 90,
                 errorBuilder: (context, error, stackTrace) =>
-                    Icon(Icons.school, size: 60, color: primaryColor),
+                    Icon(Icons.school, size: 50, color: primaryColor),
               ),
             ],
           ),
@@ -304,11 +318,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         Text(
           "إنشاء حساب جديد",
           style: TextStyle(
-              fontSize: 20, fontWeight: FontWeight.bold, color: primaryColor),
-        ),
-        Text(
-          "ابدأ رحلتك التعليمية معنا",
-          style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+              fontSize: 18, fontWeight: FontWeight.bold, color: primaryColor),
         ),
       ],
     );
@@ -321,7 +331,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           controller: _nameController,
           hint: "الاسم الكامل",
           icon: Icons.person_outline,
-          height: 65,
+          height: 58,
           validator: (value) {
             if (value == null || value.isEmpty) {
               return "يرجى إدخال الاسم الكامل";
@@ -329,13 +339,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
             return null;
           },
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         _buildTextField(
           controller: _emailController,
           hint: "البريد الإلكتروني",
           icon: Icons.email_outlined,
           keyboardType: TextInputType.emailAddress,
-          height: 65,
+          height: 58,
           validator: (value) {
             if (value == null || value.isEmpty) {
               return "يرجى إدخال البريد الإلكتروني";
@@ -346,13 +356,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
             return null;
           },
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         _buildTextField(
           controller: _passwordController,
           hint: "كلمة المرور",
           icon: Icons.lock_outline,
           isPassword: true,
-          height: 65,
+          height: 58,
           obscureText: _obscurePassword,
           onToggleVisibility: () => setState(() => _obscurePassword = !_obscurePassword),
           validator: (value) {
@@ -365,13 +375,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
             return null;
           },
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         _buildTextField(
           controller: _confirmPasswordController,
           hint: "تأكيد كلمة المرور",
           icon: Icons.lock_outline,
           isPassword: true,
-          height: 65,
+          height: 58,
           obscureText: _obscureConfirmPassword,
           onToggleVisibility: () => setState(() => _obscureConfirmPassword = !_obscureConfirmPassword),
           validator: (value) {
