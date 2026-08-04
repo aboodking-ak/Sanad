@@ -734,6 +734,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
       case 'التاريخ': supabaseKeys = ['history']; break;
       case 'الجغرافية': supabaseKeys = ['geography']; break;
       case 'الاقتصاد': supabaseKeys = ['economics']; break;
+      case 'الفرنسية': supabaseKeys = ['french']; break;
     }
 
     List<Map<String, dynamic>> supabasePdfs = [];
@@ -796,17 +797,6 @@ class _HomePageScreenState extends State<HomePageScreen> {
 
     final List<Map<String, dynamic>> scientificSubjects = [
       {
-        'label': 'الرياضيات',
-        'icon': Icons.functions_rounded,
-        'pdfs': _getSubjectPdfs('الرياضيات', [
-          {'title': 'الكتاب', 'path': AppAssets.mathScientificPdf}
-        ]),
-        'exams': [
-          {'title': 'اختبار الأعداد المركبة'},
-          {'title': 'اختبار القطوع المخروطية'},
-        ]
-      },
-      {
         'label': 'الأحياء',
         'icon': Icons.biotech_rounded,
         'pdfs': _getSubjectPdfs('الأحياء', [
@@ -815,6 +805,17 @@ class _HomePageScreenState extends State<HomePageScreen> {
         'exams': [
           {'title': 'اختبار الخلية'},
           {'title': 'اختبار الأنسجة'},
+        ]
+      },
+      {
+        'label': 'الرياضيات',
+        'icon': Icons.functions_rounded,
+        'pdfs': _getSubjectPdfs('الرياضيات', [
+          {'title': 'الكتاب', 'path': AppAssets.mathScientificPdf}
+        ]),
+        'exams': [
+          {'title': 'اختبار الأعداد المركبة'},
+          {'title': 'اختبار القطوع المخروطية'},
         ]
       },
       {
@@ -839,22 +840,28 @@ class _HomePageScreenState extends State<HomePageScreen> {
           {'title': 'اختبار الحث الكهرومغناطيسي'},
         ]
       },
+      {
+        'label': 'الفرنسية',
+        'icon': Icons.translate_rounded,
+        'pdfs': _getSubjectPdfs('الفرنسية', []),
+        'exams': []
+      },
     ];
 
     final List<Map<String, dynamic>> literarySubjects = [
-      {
-        'label': 'الرياضيات',
-        'icon': Icons.functions_rounded,
-        'pdfs': _getSubjectPdfs('الرياضيات', [
-          {'title': 'الكتاب', 'path': AppAssets.mathLiteraryPdf}
-        ]),
-        'exams': []
-      },
       {
         'label': 'التاريخ',
         'icon': Icons.history_edu_rounded,
         'pdfs': _getSubjectPdfs('التاريخ', [
           {'title': 'الكتاب', 'path': AppAssets.historyPdf}
+        ]),
+        'exams': []
+      },
+      {
+        'label': 'الرياضيات',
+        'icon': Icons.functions_rounded,
+        'pdfs': _getSubjectPdfs('الرياضيات', [
+          {'title': 'الكتاب', 'path': AppAssets.mathLiteraryPdf}
         ]),
         'exams': []
       },
