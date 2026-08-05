@@ -1,7 +1,7 @@
 name: sanad
 description: "تطبيق سند التعليمي"
 publish_to: 'none'
-version: 1.0.2+3
+version: 1.1.0+4
 
 environment:
   sdk: ^3.12.0
@@ -47,11 +47,22 @@ flutter:
     - assets/icons/subjects/
     - assets/icons/logo/
     - assets/pdfs/subjects/
-    - assets/jsons/islamic/
-    - assets/jsons/arabic/rules/
-    - assets/jsons/arabic/literature/
-    - assets/jsons/english/
     - assets/jsons/tips.json
+    - assets/jsons/Content/Preparatory/Islamic/
+    - assets/jsons/Content/Preparatory/Arabic/
+    - assets/jsons/Content/Preparatory/English/
+    - assets/jsons/Content/Preparatory/Islamic/Ministerial/
+    - assets/jsons/Content/Preparatory/Arabic/Ministerial/
+    - assets/jsons/Content/Preparatory/English/Ministerial/
+    - assets/jsons/Content/Scientific/Mathematics/Ministerial/
+    - assets/jsons/Content/Scientific/Physics/Ministerial/
+    - assets/jsons/Content/Scientific/Chemistry/Ministerial/
+    - assets/jsons/Content/Scientific/Biology/Ministerial/
+    - assets/jsons/Content/Scientific/French/Ministerial/
+    - assets/jsons/Content/Literary/Mathematics/Ministerial/
+    - assets/jsons/Content/Literary/History/Ministerial/
+    - assets/jsons/Content/Literary/Geography/Ministerial/
+    - assets/jsons/Content/Literary/Economics/Ministerial/
 
   fonts:
     - family: Tajawal

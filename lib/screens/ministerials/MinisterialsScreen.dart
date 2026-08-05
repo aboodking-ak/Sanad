@@ -4,7 +4,13 @@ import 'package:flutter/services.dart';
 
 class MinisterialsScreen extends StatefulWidget {
   final String subjectName;
-  const MinisterialsScreen({super.key, required this.subjectName});
+  final String category;
+
+  const MinisterialsScreen({
+    super.key, 
+    required this.subjectName, 
+    required this.category
+  });
 
   @override
   State<MinisterialsScreen> createState() => _MinisterialsScreenState();
@@ -24,41 +30,55 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
     initializeData();
   }
 
+  String _getSubjectEnglishName(String label) {
+    switch (label) {
+      case 'الإسلامية': return 'Islamic';
+      case 'العربية': return 'Arabic';
+      case 'الإنكليزي': return 'English';
+      case 'الأحياء': return 'Biology';
+      case 'الرياضيات': return 'Mathematics';
+      case 'الكيمياء': return 'Chemistry';
+      case 'الفيزياء': return 'Physics';
+      case 'التاريخ': return 'History';
+      case 'الجغرافية': return 'Geography';
+      case 'الاقتصاد': return 'Economics';
+      case 'الفرنسية': return 'French';
+      default: return label;
+    }
+  }
+
   Future<void> initializeData() async {
+    // هذه القائمة ستكون فارغة أو تحتوي على أسماء الملفات الجديدة التي سيقوم المستخدم بإنشائها
     final Map<String, List<String>> subjectFiles = {
       'الإسلامية': [
-        'tajweed_questions.json',
-        'unit1_questions.json',
-        'unit2_questions.json',
-        'unit3_questions.json',
-        'unit4_questions.json',
-        'unit5_questions.json'
+        'tajweed_ministerials.json',
+        'unit1_ministerials.json',
+        'unit2_ministerials.json',
+        'unit3_ministerials.json',
+        'unit4_ministerials.json',
+        'unit5_ministerials.json'
       ],
       'العربية': [
-        'rules/istifham_questions.json',
-        'rules/nafi_questions.json',
-        'rules/takdim_questions.json',
-        'rules/tawkid_questions.json',
-        'rules/nidaa_questions.json',
-        'rules/taajjub_questions.json',
-        'rules/madh_thamm_questions.json',
-        'rules/tamanni_tarajji_questions.json',
-        'rules/ard_tahdeed_questions.json',
-        'rules/tahzeer_ighraa_questions.json',
-        'literature/unit1_questions.json',
-        'literature/unit2_questions.json',
-        'literature/unit3_questions.json',
-        'literature/unit4_questions.json',
-        'literature/unit5_questions.json',
-        'literature/unit6_questions.json',
-        'literature/unit7_questions.json',
-        'literature/unit8_questions.json',
-        'literature/unit9_questions.json',
-        'literature/unit10_questions.json',
+        'rules/istifham_ministerials.json',
+        'rules/nafi_ministerials.json',
+        'rules/takdim_ministerials.json',
+        'rules/tawkid_ministerials.json',
+        'rules/nidaa_ministerials.json',
+        'rules/taajjub_ministerials.json',
+        'rules/madh_thamm_ministerials.json',
+        'literature/unit1_ministerials.json',
+        'literature/unit2_ministerials.json',
+        'literature/unit3_ministerials.json',
       ],
       'الإنكليزي': [
-        'essays.json'
-      ]
+        'unit1_ministerials.json',
+        'unit2_ministerials.json',
+        'essays_ministerials.json'
+      ],
+      'الأحياء': ['chapter1_ministerials.json'],
+      'الرياضيات': ['chapter1_ministerials.json'],
+      'الكيمياء': ['chapter1_ministerials.json'],
+      'الفيزياء': ['chapter1_ministerials.json'],
     };
 
     try {
@@ -69,40 +89,33 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
       });
 
       final List<String> files = subjectFiles[widget.subjectName] ?? [];
+      String engSubjectName = _getSubjectEnglishName(widget.subjectName);
       
       for (var file in files) {
-        String path = '';
-        if (widget.subjectName == 'الإسلامية') {
-          path = 'assets/jsons/islamic/$file';
-        } else if (widget.subjectName == 'العربية') {
-          path = 'assets/jsons/arabic/$file';
-        } else {
-          path = 'assets/jsons/english/$file';
-        }
+        // المسار الجديد حسب طلب المستخدم: assets/jsons/Content/{Category}/{Subject}/Ministerial/{File}
+        String path = 'assets/jsons/Content/${widget.category}/$engSubjectName/Ministerial/$file';
 
-        final String response = await rootBundle.loadString(path);
-        final data = json.decode(response);
-        
-        if (widget.subjectName == 'العربية') {
-          String category = path.contains('rules') ? "القواعد" : "الأدب";
-          if (!subjectData.containsKey(category)) {
-            subjectData[category] = {'lessons': []};
-          }
-          (subjectData[category]['lessons'] as List).add({
-            'lesson_title': data['subject'] ?? data['unit'] ?? "بدون عنوان",
-            'data': data
-          });
-        } else if (widget.subjectName == 'الإنكليزي') {
-           final List<dynamic> units = data['units'] ?? [];
-           for (var unit in units) {
-             subjectData[unit['title']] = {'questions': unit['essays']};
-           }
-        } else {
-          String? chapterTitle = data['unit'] ?? data['topic'];
+        try {
+          final String response = await rootBundle.loadString(path);
+          final data = json.decode(response);
           
-          if (chapterTitle != null && chapterTitle.isNotEmpty) {
-            subjectData[chapterTitle] = data;
+          if (widget.subjectName == 'العربية') {
+            String category = path.contains('rules') ? "القواعد" : "الأدب";
+            if (!subjectData.containsKey(category)) {
+              subjectData[category] = {'lessons': []};
+            }
+            (subjectData[category]['lessons'] as List).add({
+              'lesson_title': data['subject'] ?? data['unit'] ?? data['topic'] ?? "بدون عنوان",
+              'data': data
+            });
+          } else {
+            String? chapterTitle = data['unit'] ?? data['topic'] ?? data['title'];
+            if (chapterTitle != null && chapterTitle.isNotEmpty) {
+              subjectData[chapterTitle] = data;
+            }
           }
+        } catch (e) {
+          debugPrint("Could not load file: $path");
         }
       }
       
@@ -121,7 +134,6 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
       final lessons = subjectData[selectedChapter]['lessons'] as List;
       final lesson = lessons.firstWhere((l) => l['lesson_title'] == selectedTopic, orElse: () => null);
       
-      // للمواد العربية البيانات مخزنة في مفتاح data، للإسلامية الكائن نفسه هو البيانات
       if (widget.subjectName == 'العربية') {
         data = lesson != null ? lesson['data'] : null;
       } else {
@@ -202,12 +214,21 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
-                boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20)],
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20)],
               ),
-              child: Icon(Icons.history_edu_rounded, size: 50, color: primaryColor.withValues(alpha: 0.3)),
+              child: Icon(Icons.history_edu_rounded, size: 50, color: primaryColor.withOpacity(0.3)),
             ),
             const SizedBox(height: 20),
-            const Text("يرجى اختيار المادة لعرض الوزاريات", style: TextStyle(color: Colors.grey, fontSize: 15, fontWeight: FontWeight.w600)),
+            const Text("يرجى اختيار القسم لعرض الوزاريات", style: TextStyle(color: Colors.grey, fontSize: 15, fontWeight: FontWeight.w600)),
+            const SizedBox(height: 10),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 40),
+              child: Text(
+                "تأكد من وجود ملفات الجيسون في المسار الجديد ليتم عرض البيانات",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey, fontSize: 12),
+              ),
+            ),
           ],
         ),
       );
@@ -222,7 +243,7 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
           height: 1,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.transparent, Colors.blueGrey.withValues(alpha: 0.15), Colors.transparent],
+              colors: [Colors.transparent, Colors.blueGrey.withOpacity(0.15), Colors.transparent],
             ),
           ),
         ),
@@ -263,7 +284,7 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
                 spacing: 8, runSpacing: 8,
                 children: years.map((year) => Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: secondaryColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(6)),
+                  decoration: BoxDecoration(color: secondaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
                   child: Text(year.toString(), style: TextStyle(color: secondaryColor, fontSize: 11, fontWeight: FontWeight.bold)),
                 )).toList(),
               ),
@@ -275,9 +296,9 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
               child: Container(
                 width: double.infinity, padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.green.withValues(alpha: 0.03),
+                  color: Colors.green.withOpacity(0.03),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green.withValues(alpha: 0.1)),
+                  border: Border.all(color: Colors.green.withOpacity(0.1)),
                 ),
                 child: Text(
                   item['verse'], textAlign: TextAlign.center,
@@ -306,7 +327,7 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
                     decoration: BoxDecoration(
                       color: const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+                      border: Border.all(color: Colors.grey.withOpacity(0.1)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

@@ -23,7 +23,7 @@ class _BookPassagesScreenState extends State<BookPassagesScreen> {
 
   Future<void> _loadData() async {
     try {
-      final String response = await rootBundle.loadString('assets/jsons/english/book_passages.json');
+      final String response = await rootBundle.loadString('assets/jsons/Content/Preparatory/English/book_passages.json');
       final Map<String, dynamic> data = json.decode(response);
       setState(() {
         bookData = data;

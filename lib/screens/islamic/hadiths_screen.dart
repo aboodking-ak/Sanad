@@ -22,7 +22,7 @@ class _HadithsScreenState extends State<HadithsScreen> {
 
   Future<void> _loadHadithData() async {
     try {
-      final String response = await rootBundle.loadString('assets/jsons/islamic/hadiths_questions.json');
+      final String response = await rootBundle.loadString('assets/jsons/Content/Preparatory/Islamic/hadiths_questions.json');
       final data = json.decode(response);
       setState(() {
         hadithData = data;

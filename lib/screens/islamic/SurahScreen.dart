@@ -22,7 +22,7 @@ class _SurahScreenState extends State<SurahScreen> {
 
   Future<void> _loadSurahData() async {
     try {
-      final String response = await rootBundle.loadString('assets/jsons/islamic/islamic_surah.json');
+      final String response = await rootBundle.loadString('assets/jsons/Content/Preparatory/Islamic/islamic_surah.json');
       final data = json.decode(response);
       setState(() {
         islamicData = data;

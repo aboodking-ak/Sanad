@@ -24,7 +24,7 @@ class _EssaysScreenState extends State<EssaysScreen> {
 
   Future<void> _loadEssays() async {
     try {
-      final String response = await rootBundle.loadString('assets/jsons/english/essays.json');
+      final String response = await rootBundle.loadString('assets/jsons/Content/Preparatory/English/essays.json');
       final Map<String, dynamic> data = json.decode(response);
       setState(() {
         essaysData = data;

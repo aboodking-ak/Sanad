@@ -128,11 +128,17 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         },
         '/exams': (context) {
           final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-          return ExamsScreen(subjectName: args['subjectName']);
+          return ExamsScreen(
+            subjectName: args['subjectName'],
+            category: args['category'] ?? 'Preparatory',
+          );
         },
         '/ministerials': (context) {
           final args = ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-          return MinisterialsScreen(subjectName: args['subjectName']);
+          return MinisterialsScreen(
+            subjectName: args['subjectName'],
+            category: args['category'] ?? 'Preparatory',
+          );
         },
         '/surahs': (context) => const SurahScreen(),
         '/hadiths': (context) => const HadithsScreen(),

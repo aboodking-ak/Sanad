@@ -59,6 +59,23 @@ class _HomePageScreenState extends State<HomePageScreen> {
   int _unreadCount = 0;
   StreamSubscription? _notificationsSubscription;
 
+  String _getCategoryForSubject(String label) {
+    if (['الإسلامية', 'العربية', 'الإنكليزي'].contains(label)) {
+      return 'Preparatory';
+    }
+    bool isScientific = selectedStage?.contains('علمي') ?? true;
+    if (['الأحياء', 'الكيمياء', 'الفيزياء', 'الفرنسية'].contains(label)) {
+      return 'Scientific';
+    }
+    if (['التاريخ', 'الجغرافية', 'الاقتصاد'].contains(label)) {
+      return 'Literary';
+    }
+    if (label == 'الرياضيات') {
+      return isScientific ? 'Scientific' : 'Literary';
+    }
+    return isScientific ? 'Scientific' : 'Literary';
+  }
+
   String _getInitials(String name) {
     if (name.isEmpty) return "S";
     return name.trim().substring(0, 1).toUpperCase();
@@ -1899,24 +1916,28 @@ class _HomePageScreenState extends State<HomePageScreen> {
         }
       }
 
-      // 2. البحث في الاختبارات والوزاريات (فقط لمواد معينة)
-      if (subjectLabel == 'الإسلامية' || subjectLabel == 'العربية') {
-        if (_normalizeArabic("اختبارات $subjectLabel").contains(query) || _normalizeArabic("الاختبارات").contains(query)) {
-          results.add({
-            'title': "اختبارات $subjectLabel",
-            'type': 'اختبارات',
-            'icon': Icons.assignment_turned_in_rounded,
-            'onTap': () => navigateAndClear('/exams', arguments: {'subjectName': subjectLabel}),
-          });
-        }
-        if (_normalizeArabic("وزاريات $subjectLabel").contains(query) || _normalizeArabic("الوزاريات").contains(query)) {
-          results.add({
-            'title': "وزاريات $subjectLabel",
-            'type': 'وزاريات',
-            'icon': Icons.account_balance_rounded,
-            'onTap': () => navigateAndClear('/ministerials', arguments: {'subjectName': subjectLabel}),
-          });
-        }
+      // 2. البحث في الاختبارات والوزاريات
+      if (_normalizeArabic("اختبارات $subjectLabel").contains(query) || _normalizeArabic("الاختبارات").contains(query)) {
+        results.add({
+          'title': "اختبارات $subjectLabel",
+          'type': 'اختبارات',
+          'icon': Icons.assignment_turned_in_rounded,
+          'onTap': () => navigateAndClear('/exams', arguments: {
+            'subjectName': subjectLabel,
+            'category': _getCategoryForSubject(subjectLabel),
+          }),
+        });
+      }
+      if (_normalizeArabic("وزاريات $subjectLabel").contains(query) || _normalizeArabic("الوزاريات").contains(query)) {
+        results.add({
+          'title': "وزاريات $subjectLabel",
+          'type': 'وزاريات',
+          'icon': Icons.account_balance_rounded,
+          'onTap': () => navigateAndClear('/ministerials', arguments: {
+            'subjectName': subjectLabel,
+            'category': _getCategoryForSubject(subjectLabel),
+          }),
+        });
       }
 
       // 3. الأقسام الخاصة
@@ -2973,44 +2994,44 @@ class _HomePageScreenState extends State<HomePageScreen> {
                   },
                 );
               }),
-              // زر الاختبارات الثابت (فقط لمواد معينة)
-              if (subject['label'] == 'الإسلامية' || subject['label'] == 'العربية')
-                _buildBottomSheetItem(
-                  "الاختبارات",
-                  Icons.assignment_turned_in_rounded,
-                  primaryColor,
-                  onTap: () {
-                    _adHelper.showRewardedAd(() {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(
-                        context,
-                        '/exams',
-                        arguments: {
-                          'subjectName': subject['label'],
-                        },
-                      );
-                    });
-                  },
-                ),
-              // زر الوزاريات الثابت (فقط لمواد معينة)
-              if (subject['label'] == 'الإسلامية' || subject['label'] == 'العربية')
-                _buildBottomSheetItem(
-                  "الوزاريات",
-                  Icons.account_balance_rounded,
-                  primaryColor, // جعل لونه نفس لون الكتاب (primary)
-                  onTap: () {
-                    _adHelper.showRewardedAd(() {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(
-                        context,
-                        '/ministerials',
-                        arguments: {
-                          'subjectName': subject['label'],
-                        },
-                      );
-                    });
-                  },
-                ),
+              // زر الاختبارات
+              _buildBottomSheetItem(
+                "الاختبارات",
+                Icons.assignment_turned_in_rounded,
+                primaryColor,
+                onTap: () {
+                  _adHelper.showRewardedAd(() {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(
+                      context,
+                      '/exams',
+                      arguments: {
+                        'subjectName': subject['label'],
+                        'category': _getCategoryForSubject(subject['label']),
+                      },
+                    );
+                  });
+                },
+              ),
+              // زر الوزاريات
+              _buildBottomSheetItem(
+                "الوزاريات",
+                Icons.account_balance_rounded,
+                primaryColor,
+                onTap: () {
+                  _adHelper.showRewardedAd(() {
+                    Navigator.pop(context);
+                    Navigator.pushNamed(
+                      context,
+                      '/ministerials',
+                      arguments: {
+                        'subjectName': subject['label'],
+                        'category': _getCategoryForSubject(subject['label']),
+                      },
+                    );
+                  });
+                },
+              ),
               // قسم أحكام التلاوة (فقط لمادة الإسلامية)
               if (subject['label'] == 'الإسلامية')
                 _buildBottomSheetItem(

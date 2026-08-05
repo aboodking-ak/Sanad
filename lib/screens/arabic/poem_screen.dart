@@ -22,7 +22,7 @@ class _PoemScreenState extends State<PoemScreen> {
 
   Future<void> _loadPoemsData() async {
     try {
-      final String response = await rootBundle.loadString('assets/jsons/arabic/literature/poems.json');
+      final String response = await rootBundle.loadString('assets/jsons/Content/Preparatory/Arabic/poems.json');
       final data = json.decode(response);
       setState(() {
         allPoems = data;
