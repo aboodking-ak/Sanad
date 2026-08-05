@@ -751,6 +751,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
       case 'التاريخ': supabaseKeys = ['history']; break;
       case 'الجغرافية': supabaseKeys = ['geography']; break;
       case 'الاقتصاد': supabaseKeys = ['economics']; break;
+      case 'الأدب والنقد': supabaseKeys = ['literature_literary']; break;
       case 'الفرنسية': supabaseKeys = ['french']; break;
     }
 

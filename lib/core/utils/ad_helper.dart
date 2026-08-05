@@ -8,6 +8,9 @@ class AdHelper {
   factory AdHelper() => _instance;
   AdHelper._internal();
 
+  // وضع التطوير (تعطيل الإعلانات مؤقتاً)
+  static const bool _isDevelopmentMode = true;
+
   // معرفات الوحدات الإعلانية الحقيقية الخاصة بك
   static const String appOpenAdUnitId = 'ca-app-pub-6998904301464352/5211613005';
   static const String rewardedAdUnitId = 'ca-app-pub-6998904301464352/3682908912';
@@ -22,6 +25,8 @@ class AdHelper {
 
   /// تحميل إعلان فتح التطبيق
   void loadAppOpenAd({VoidCallback? onAdLoadedCallback}) {
+    if (_isDevelopmentMode) return;
+
     AppOpenAd.load(
       adUnitId: appOpenAdUnitId,
       request: const AdRequest(),
@@ -41,6 +46,8 @@ class AdHelper {
 
   /// تحميل إعلان المكافأة في الخلفية ليكون جاهزاً
   void loadRewardedAd() {
+    if (_isDevelopmentMode) return;
+
     RewardedAd.load(
       adUnitId: rewardedAdUnitId,
       request: const AdRequest(),
@@ -62,6 +69,12 @@ class AdHelper {
 
   /// إظهار إعلان المكافأة مع تنفيذ أمر بعد انتهائه (مثل التنقل)
   Future<void> showRewardedAd(VoidCallback onComplete) async {
+    if (_isDevelopmentMode) {
+      debugPrint('Ads disabled in development mode, proceeding to action');
+      onComplete();
+      return;
+    }
+
     final prefs = await SharedPreferences.getInstance();
     final bool isAdsRemoved = prefs.getBool('user_ads_removed') ?? false;
 
@@ -116,6 +129,8 @@ class AdHelper {
 
   /// إظهار إعلان فتح التطبيق
   Future<void> showAppOpenAdIfAvailable() async {
+    if (_isDevelopmentMode) return;
+
     // التحقق أولاً إذا كان المستخدم قد اشترى ميزة إزالة الإعلانات
     final prefs = await SharedPreferences.getInstance();
     final bool isAdsRemoved = prefs.getBool('user_ads_removed') ?? false;

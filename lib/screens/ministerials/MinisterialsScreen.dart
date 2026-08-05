@@ -48,38 +48,40 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
   }
 
   Future<void> initializeData() async {
-    // هذه القائمة ستكون فارغة أو تحتوي على أسماء الملفات الجديدة التي سيقوم المستخدم بإنشائها
-    final Map<String, List<String>> subjectFiles = {
+    final Map<String, List<Map<String, String>>> subjectFiles = {
       'الإسلامية': [
-        'tajweed_ministerials.json',
-        'unit1_ministerials.json',
-        'unit2_ministerials.json',
-        'unit3_ministerials.json',
-        'unit4_ministerials.json',
-        'unit5_ministerials.json'
+        {'cat': 'Preparatory', 'sub': 'Islamic', 'file': 'tajweed_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Islamic', 'file': 'unit1_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Islamic', 'file': 'unit2_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Islamic', 'file': 'unit3_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Islamic', 'file': 'unit4_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Islamic', 'file': 'unit5_ministerials.json'},
       ],
       'العربية': [
-        'rules/istifham_ministerials.json',
-        'rules/nafi_ministerials.json',
-        'rules/takdim_ministerials.json',
-        'rules/tawkid_ministerials.json',
-        'rules/nidaa_ministerials.json',
-        'rules/taajjub_ministerials.json',
-        'rules/madh_thamm_ministerials.json',
-        'literature/unit1_ministerials.json',
-        'literature/unit2_ministerials.json',
-        'literature/unit3_ministerials.json',
+        // القواعد
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/istifham_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/nafi_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/takdim_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/tawkid_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/nidaa_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/taajjub_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/madh_thamm_ministerials.json'},
+        // الأدب (أصبح داخل مجلد العربية)
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'literature/unit1_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'literature/unit2_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'literature/unit3_ministerials.json'},
       ],
       'الإنكليزي': [
-        'unit1_ministerials.json',
-        'unit2_ministerials.json',
-        'essays_ministerials.json'
+        {'cat': 'Preparatory', 'sub': 'English', 'file': 'unit1_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'English', 'file': 'unit2_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'English', 'file': 'essays_ministerials.json'}
       ],
-      'الأحياء': ['chapter1_ministerials.json'],
-      'الرياضيات': ['chapter1_ministerials.json'],
-      'الكيمياء': ['chapter1_ministerials.json'],
-      'الفيزياء': ['chapter1_ministerials.json'],
     };
+
+    // إضافة النقد إذا كانت المادة عربية والقسم أدبي (أصبح داخل مجلد العربية أيضاً)
+    if (widget.subjectName == 'العربية' && widget.category == 'Literary') {
+      subjectFiles['العربية']?.add({'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'criticism/criticism_ministerials.json'});
+    }
 
     try {
       if (!mounted) return;
@@ -88,24 +90,36 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
         isInitialLoading = true;
       });
 
-      final List<String> files = subjectFiles[widget.subjectName] ?? [];
-      String engSubjectName = _getSubjectEnglishName(widget.subjectName);
+      List<Map<String, String>> files = [];
       
-      for (var file in files) {
-        // المسار الجديد حسب طلب المستخدم: assets/jsons/Content/{Category}/{Subject}/Ministerial/{File}
-        String path = 'assets/jsons/Content/${widget.category}/$engSubjectName/Ministerial/$file';
+      if (subjectFiles.containsKey(widget.subjectName)) {
+        files = subjectFiles[widget.subjectName]!;
+      } else {
+        String engSub = _getSubjectEnglishName(widget.subjectName);
+        files = [
+          {'cat': widget.category, 'sub': engSub, 'file': 'chapter1_ministerials.json'},
+          {'cat': widget.category, 'sub': engSub, 'file': 'chapter2_ministerials.json'},
+        ];
+      }
+      
+      for (var fileInfo in files) {
+        String path = 'assets/jsons/Content/${fileInfo['cat']}/${fileInfo['sub']}/Ministerial/${fileInfo['file']}';
 
         try {
           final String response = await rootBundle.loadString(path);
           final data = json.decode(response);
           
           if (widget.subjectName == 'العربية') {
-            String category = path.contains('rules') ? "القواعد" : "الأدب";
+            String category = "أخرى";
+            if (path.contains('/rules/')) category = "القواعد";
+            else if (path.contains('/literature/')) category = "الأدب";
+            else if (path.contains('/criticism/')) category = "النقد";
+
             if (!subjectData.containsKey(category)) {
               subjectData[category] = {'lessons': []};
             }
             (subjectData[category]['lessons'] as List).add({
-              'lesson_title': data['subject'] ?? data['unit'] ?? data['topic'] ?? "بدون عنوان",
+              'lesson_title': data['subject'] ?? data['unit'] ?? data['topic'] ?? data['title'] ?? "بدون عنوان",
               'data': data
             });
           } else {
@@ -220,15 +234,6 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
             ),
             const SizedBox(height: 20),
             const Text("يرجى اختيار القسم لعرض الوزاريات", style: TextStyle(color: Colors.grey, fontSize: 15, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 10),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 40),
-              child: Text(
-                "تأكد من وجود ملفات الجيسون في المسار الجديد ليتم عرض البيانات",
-                textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey, fontSize: 12),
-              ),
-            ),
           ],
         ),
       );
@@ -446,7 +451,7 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
             items: isEnabled && items.isNotEmpty
                 ? items.map((item) => DropdownMenuItem(
                     value: item, 
-                    child: Text(item, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500))
+                    child: Text(item, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.w500))
                   )).toList()
                 : null,
             onChanged: isEnabled ? onChanged : null,

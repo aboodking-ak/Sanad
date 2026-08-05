@@ -52,37 +52,37 @@ class _ExamsScreenState extends State<ExamsScreen> {
   }
 
   Future<void> initializeData() async {
-    final Map<String, List<String>> subjectFiles = {
+    final Map<String, List<Map<String, String>>> subjectFiles = {
       'الإسلامية': [
-        'tajweed_ministerials.json',
-        'unit1_ministerials.json',
-        'unit2_ministerials.json',
-        'unit3_ministerials.json',
-        'unit4_ministerials.json',
-        'unit5_ministerials.json'
+        {'cat': 'Preparatory', 'sub': 'Islamic', 'file': 'tajweed_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Islamic', 'file': 'unit1_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Islamic', 'file': 'unit2_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Islamic', 'file': 'unit3_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Islamic', 'file': 'unit4_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Islamic', 'file': 'unit5_ministerials.json'},
       ],
       'العربية': [
-        'rules/istifham_ministerials.json',
-        'rules/nafi_ministerials.json',
-        'rules/takdim_ministerials.json',
-        'rules/tawkid_ministerials.json',
-        'rules/nidaa_ministerials.json',
-        'rules/taajjub_ministerials.json',
-        'rules/madh_thamm_ministerials.json',
-        'literature/unit1_ministerials.json',
-        'literature/unit2_ministerials.json',
-        'literature/unit3_ministerials.json',
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/istifham_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/nafi_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/takdim_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/tawkid_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/nidaa_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/taajjub_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/madh_thamm_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'literature/unit1_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'literature/unit2_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'literature/unit3_ministerials.json'},
       ],
       'الإنكليزي': [
-        'unit1_ministerials.json',
-        'unit2_ministerials.json',
-        'essays_ministerials.json'
+        {'cat': 'Preparatory', 'sub': 'English', 'file': 'unit1_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'English', 'file': 'unit2_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'English', 'file': 'essays_ministerials.json'}
       ],
-      'الأحياء': ['chapter1_ministerials.json'],
-      'الرياضيات': ['chapter1_ministerials.json'],
-      'الكيمياء': ['chapter1_ministerials.json'],
-      'الفيزياء': ['chapter1_ministerials.json'],
     };
+
+    if (widget.subjectName == 'العربية' && widget.category == 'Literary') {
+      subjectFiles['العربية']?.add({'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'criticism/criticism_ministerials.json'});
+    }
 
     try {
       if (!mounted) return;
@@ -91,23 +91,34 @@ class _ExamsScreenState extends State<ExamsScreen> {
         isInitialLoading = true;
       });
 
-      final List<String> files = subjectFiles[widget.subjectName] ?? [];
-      String engSubjectName = _getSubjectEnglishName(widget.subjectName);
+      List<Map<String, String>> files = [];
+      if (subjectFiles.containsKey(widget.subjectName)) {
+        files = subjectFiles[widget.subjectName]!;
+      } else {
+        String engSub = _getSubjectEnglishName(widget.subjectName);
+        files = [
+          {'cat': widget.category, 'sub': engSub, 'file': 'chapter1_ministerials.json'},
+        ];
+      }
       
-      for (var file in files) {
-        String path = 'assets/jsons/Content/${widget.category}/$engSubjectName/Ministerial/$file';
+      for (var fileInfo in files) {
+        String path = 'assets/jsons/Content/${fileInfo['cat']}/${fileInfo['sub']}/Ministerial/${fileInfo['file']}';
 
         try {
           final String response = await rootBundle.loadString(path);
           final data = json.decode(response);
           
           if (widget.subjectName == 'العربية') {
-            String category = path.contains('rules') ? "القواعد" : "الأدب";
+            String category = "أخرى";
+            if (path.contains('/rules/')) category = "القواعد";
+            else if (path.contains('/literature/')) category = "الأدب";
+            else if (path.contains('/criticism/')) category = "النقد";
+
             if (!subjectData.containsKey(category)) {
               subjectData[category] = {'lessons': []};
             }
             (subjectData[category]['lessons'] as List).add({
-              'lesson_title': data['subject'] ?? data['unit'] ?? data['topic'] ?? "بدون عنوان",
+              'lesson_title': data['subject'] ?? data['unit'] ?? data['topic'] ?? data['title'] ?? "بدون عنوان",
               'data': data
             });
           } else {
@@ -222,129 +233,6 @@ class _ExamsScreenState extends State<ExamsScreen> {
               ),
             )
           : buildQuestionsList(primaryColor),
-    );
-  }
-
-  void showSelectionSheet(BuildContext context, Color primaryColor) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-      ),
-      builder: (context) {
-        String? tempChapter = selectedChapter;
-        String? tempTopic = selectedTopic;
-
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            List<String> chapters = subjectData.keys.toList();
-            List<String> topics = [];
-            if (tempChapter != null && subjectData[tempChapter] != null && subjectData[tempChapter]!.containsKey('lessons')) {
-              topics = (subjectData[tempChapter]['lessons'] as List).map((l) => l['lesson_title'].toString()).toList();
-            }
-
-            return Padding(
-              padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "اختيار مادة الاختبار",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 20),
-                  buildDropdown(
-                    "الوحدة / القسم",
-                    Icons.folder_open_rounded,
-                    chapters,
-                    tempChapter,
-                    (val) {
-                      setModalState(() {
-                        tempChapter = val;
-                        tempTopic = null;
-                      });
-                    },
-                  ),
-                  if (topics.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    buildDropdown(
-                      "الموضوع",
-                      Icons.topic_outlined,
-                      topics,
-                      tempTopic,
-                      (val) {
-                        setModalState(() => tempTopic = val);
-                      },
-                      isEnabled: tempChapter != null,
-                    ),
-                  ],
-                  const SizedBox(height: 30),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: (tempChapter != null && (topics.isEmpty || tempTopic != null))
-                          ? () {
-                              setState(() {
-                                selectedChapter = tempChapter;
-                                selectedTopic = tempTopic;
-                              });
-                              Navigator.pop(context);
-                              applyFilter();
-                            }
-                          : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: const Text("تأكيد الاختيار", style: TextStyle(fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget buildDropdown(String hint, IconData icon, List<String> items, String? value, ValueChanged<String?> onChanged, {bool isEnabled = true}) {
-    return Material(
-      color: Colors.transparent,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        decoration: BoxDecoration(
-          color: isEnabled ? Colors.grey[50] : Colors.grey[100],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!),
-        ),
-        child: DropdownButtonHideUnderline(
-          child: DropdownButton<String>(
-            isExpanded: true,
-            value: (value != null && items.contains(value)) ? value : null,
-            hint: Row(
-              children: [
-                Icon(icon, size: 20, color: Colors.grey[400]),
-                const SizedBox(width: 12),
-                Text(items.isEmpty && isEnabled ? "جاري تحميل الوحدات..." : hint, 
-                     style: TextStyle(color: Colors.grey[400], fontSize: 14)),
-              ],
-            ),
-            items: isEnabled && items.isNotEmpty
-                ? items.map((item) => DropdownMenuItem(
-                    value: item, 
-                    child: Text(item, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500))
-                  )).toList()
-                : null,
-            onChanged: isEnabled ? onChanged : null,
-          ),
-        ),
-      ),
     );
   }
 
@@ -558,6 +446,129 @@ class _ExamsScreenState extends State<ExamsScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  void showSelectionSheet(BuildContext context, Color primaryColor) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
+      builder: (context) {
+        String? tempChapter = selectedChapter;
+        String? tempTopic = selectedTopic;
+
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            List<String> chapters = subjectData.keys.toList();
+            List<String> topics = [];
+            if (tempChapter != null && subjectData[tempChapter] != null && subjectData[tempChapter]!.containsKey('lessons')) {
+              topics = (subjectData[tempChapter]['lessons'] as List).map((l) => l['lesson_title'].toString()).toList();
+            }
+
+            return Padding(
+              padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "اختيار مادة الاختبار",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 20),
+                  buildDropdown(
+                    "الوحدة / القسم",
+                    Icons.folder_open_rounded,
+                    chapters,
+                    tempChapter,
+                    (val) {
+                      setModalState(() {
+                        tempChapter = val;
+                        tempTopic = null;
+                      });
+                    },
+                  ),
+                  if (topics.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    buildDropdown(
+                      "الموضوع",
+                      Icons.topic_outlined,
+                      topics,
+                      tempTopic,
+                      (val) {
+                        setModalState(() => tempTopic = val);
+                      },
+                      isEnabled: tempChapter != null,
+                    ),
+                  ],
+                  const SizedBox(height: 30),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: (tempChapter != null && (topics.isEmpty || tempTopic != null))
+                          ? () {
+                              setState(() {
+                                selectedChapter = tempChapter;
+                                selectedTopic = tempTopic;
+                              });
+                              Navigator.pop(context);
+                              applyFilter();
+                            }
+                          : null,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                      child: const Text("تأكيد الاختيار", style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget buildDropdown(String hint, IconData icon, List<String> items, String? value, ValueChanged<String?> onChanged, {bool isEnabled = true}) {
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: isEnabled ? Colors.grey[50] : Colors.grey[100],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[200]!),
+        ),
+        child: DropdownButtonHideUnderline(
+          child: DropdownButton<String>(
+            isExpanded: true,
+            value: (value != null && items.contains(value)) ? value : null,
+            hint: Row(
+              children: [
+                Icon(icon, size: 20, color: Colors.grey[400]),
+                const SizedBox(width: 12),
+                Text(items.isEmpty && isEnabled ? "جاري تحميل الوحدات..." : hint, 
+                     style: TextStyle(color: Colors.grey[400], fontSize: 14)),
+              ],
+            ),
+            items: isEnabled && items.isNotEmpty
+                ? items.map((item) => DropdownMenuItem(
+                    value: item, 
+                    child: Text(item, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.w500))
+                  )).toList()
+                : null,
+            onChanged: isEnabled ? onChanged : null,
+          ),
+        ),
+      ),
     );
   }
 

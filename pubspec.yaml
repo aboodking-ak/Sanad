@@ -53,6 +53,8 @@ flutter:
     - assets/jsons/Content/Preparatory/English/
     - assets/jsons/Content/Preparatory/Islamic/Ministerial/
     - assets/jsons/Content/Preparatory/Arabic/Ministerial/
+    - assets/jsons/Content/Preparatory/Arabic/Ministerial/literature/
+    - assets/jsons/Content/Preparatory/Arabic/Ministerial/criticism/
     - assets/jsons/Content/Preparatory/English/Ministerial/
     - assets/jsons/Content/Scientific/Mathematics/Ministerial/
     - assets/jsons/Content/Scientific/Physics/Ministerial/
