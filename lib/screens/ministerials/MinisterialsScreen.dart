@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -7,9 +8,9 @@ class MinisterialsScreen extends StatefulWidget {
   final String category;
 
   const MinisterialsScreen({
-    super.key, 
-    required this.subjectName, 
-    required this.category
+    super.key,
+    required this.subjectName,
+    required this.category,
   });
 
   @override
@@ -20,8 +21,8 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
   String? selectedChapter;
   String? selectedTopic;
   bool isInitialLoading = true;
-  
-  Map<String, dynamic> subjectData = {}; 
+
+  Map<String, dynamic> subjectData = {};
   List<dynamic> filteredQuestions = [];
 
   @override
@@ -32,98 +33,213 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
 
   String _getSubjectEnglishName(String label) {
     switch (label) {
-      case 'الإسلامية': return 'Islamic';
-      case 'العربية': return 'Arabic';
-      case 'الإنكليزي': return 'English';
-      case 'الأحياء': return 'Biology';
-      case 'الرياضيات': return 'Mathematics';
-      case 'الكيمياء': return 'Chemistry';
-      case 'الفيزياء': return 'Physics';
-      case 'التاريخ': return 'History';
-      case 'الجغرافية': return 'Geography';
-      case 'الاقتصاد': return 'Economics';
-      case 'الفرنسية': return 'French';
-      default: return label;
+      case 'الإسلامية':
+        return 'Islamic';
+      case 'العربية':
+        return 'Arabic';
+      case 'الإنكليزي':
+        return 'English';
+      case 'الأحياء':
+        return 'Biology';
+      case 'الرياضيات':
+        return 'Mathematics';
+      case 'الكيمياء':
+        return 'Chemistry';
+      case 'الفيزياء':
+        return 'Physics';
+      case 'التاريخ':
+        return 'History';
+      case 'الجغرافية':
+        return 'Geography';
+      case 'الاقتصاد':
+        return 'Economics';
+      case 'الفرنسية':
+        return 'French';
+      default:
+        return label;
     }
   }
 
   Future<void> initializeData() async {
     final Map<String, List<Map<String, String>>> subjectFiles = {
       'الإسلامية': [
-        {'cat': 'Preparatory', 'sub': 'Islamic', 'file': 'tajweed_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Islamic', 'file': 'unit1_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Islamic', 'file': 'unit2_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Islamic', 'file': 'unit3_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Islamic', 'file': 'unit4_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Islamic', 'file': 'unit5_ministerials.json'},
+        {
+          'cat': 'Preparatory',
+          'sub': 'Islamic',
+          'file': 'tajweed_ministerials.json',
+        },
+        {
+          'cat': 'Preparatory',
+          'sub': 'Islamic',
+          'file': 'unit1_ministerials.json',
+        },
+        {
+          'cat': 'Preparatory',
+          'sub': 'Islamic',
+          'file': 'unit2_ministerials.json',
+        },
+        {
+          'cat': 'Preparatory',
+          'sub': 'Islamic',
+          'file': 'unit3_ministerials.json',
+        },
+        {
+          'cat': 'Preparatory',
+          'sub': 'Islamic',
+          'file': 'unit4_ministerials.json',
+        },
+        {
+          'cat': 'Preparatory',
+          'sub': 'Islamic',
+          'file': 'unit5_ministerials.json',
+        },
       ],
       'العربية': [
         // القواعد
-        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/istifham_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/nafi_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/takdim_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/tawkid_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/nidaa_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/taajjub_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/madh_thamm_ministerials.json'},
-        // الأدب (أصبح داخل مجلد العربية)
-        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'literature/unit1_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'literature/unit2_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'literature/unit3_ministerials.json'},
+        {
+          'cat': 'Preparatory',
+          'sub': 'Arabic',
+          'file': 'rules/istifham_ministerials.json',
+        },
+        {
+          'cat': 'Preparatory',
+          'sub': 'Arabic',
+          'file': 'rules/nafi_ministerials.json',
+        },
+        {
+          'cat': 'Preparatory',
+          'sub': 'Arabic',
+          'file': 'rules/takdim_ministerials.json',
+        },
+        {
+          'cat': 'Preparatory',
+          'sub': 'Arabic',
+          'file': 'rules/tawkid_ministerials.json',
+        },
+        {
+          'cat': 'Preparatory',
+          'sub': 'Arabic',
+          'file': 'rules/nidaa_ministerials.json',
+        },
+        {
+          'cat': 'Preparatory',
+          'sub': 'Arabic',
+          'file': 'rules/taajjub_ministerials.json',
+        },
+        {
+          'cat': 'Preparatory',
+          'sub': 'Arabic',
+          'file': 'rules/madh_thamm_ministerials.json',
+        },
+        // الأدب
+        {
+          'cat': 'Preparatory',
+          'sub': 'Arabic',
+          'file': 'literature/literature_ministerials.json',
+        },
       ],
       'الإنكليزي': [
-        {'cat': 'Preparatory', 'sub': 'English', 'file': 'unit1_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'English', 'file': 'unit2_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'English', 'file': 'essays_ministerials.json'}
+        {
+          'cat': 'Preparatory',
+          'sub': 'English',
+          'file': 'unit1_ministerials.json',
+        },
+        {
+          'cat': 'Preparatory',
+          'sub': 'English',
+          'file': 'unit2_ministerials.json',
+        },
+        {
+          'cat': 'Preparatory',
+          'sub': 'English',
+          'file': 'essays_ministerials.json',
+        },
       ],
     };
 
     // إضافة النقد إذا كانت المادة عربية والقسم أدبي (أصبح داخل مجلد العربية أيضاً)
     if (widget.subjectName == 'العربية' && widget.category == 'Literary') {
-      subjectFiles['العربية']?.add({'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'criticism/criticism_ministerials.json'});
+      subjectFiles['العربية']?.add({
+        'cat': 'Preparatory',
+        'sub': 'Arabic',
+        'file': 'criticism/criticism_ministerials.json',
+      });
     }
 
     try {
       if (!mounted) return;
       setState(() {
-        subjectData = {}; 
+        subjectData = {};
         isInitialLoading = true;
       });
 
       List<Map<String, String>> files = [];
-      
+
       if (subjectFiles.containsKey(widget.subjectName)) {
         files = subjectFiles[widget.subjectName]!;
       } else {
         String engSub = _getSubjectEnglishName(widget.subjectName);
         files = [
-          {'cat': widget.category, 'sub': engSub, 'file': 'chapter1_ministerials.json'},
-          {'cat': widget.category, 'sub': engSub, 'file': 'chapter2_ministerials.json'},
+          {
+            'cat': widget.category,
+            'sub': engSub,
+            'file': 'chapter1_ministerials.json',
+          },
+          {
+            'cat': widget.category,
+            'sub': engSub,
+            'file': 'chapter2_ministerials.json',
+          },
         ];
       }
-      
+
       for (var fileInfo in files) {
-        String path = 'assets/jsons/Content/${fileInfo['cat']}/${fileInfo['sub']}/Ministerial/${fileInfo['file']}';
+        String path =
+            'assets/jsons/Content/${fileInfo['cat']}/${fileInfo['sub']}/Ministerial/${fileInfo['file']}';
 
         try {
           final String response = await rootBundle.loadString(path);
           final data = json.decode(response);
-          
+
           if (widget.subjectName == 'العربية') {
             String category = "أخرى";
-            if (path.contains('/rules/')) category = "القواعد";
-            else if (path.contains('/literature/')) category = "الأدب";
-            else if (path.contains('/criticism/')) category = "النقد";
+            if (path.contains('/rules/'))
+              category = "القواعد";
+            else if (path.contains('/literature/'))
+              category = "الأدب";
+            else if (path.contains('/criticism/'))
+              category = "النقد";
 
             if (!subjectData.containsKey(category)) {
               subjectData[category] = {'lessons': []};
             }
-            (subjectData[category]['lessons'] as List).add({
-              'lesson_title': data['subject'] ?? data['unit'] ?? data['topic'] ?? data['title'] ?? "بدون عنوان",
-              'data': data
-            });
+            
+            if (data is List) {
+              for (var item in data) {
+                (subjectData[category]['lessons'] as List).add({
+                  'lesson_title':
+                      item['subject'] ??
+                      item['unit'] ??
+                      item['topic'] ??
+                      item['title'] ??
+                      "بدون عنوان",
+                  'data': item,
+                });
+              }
+            } else {
+              (subjectData[category]['lessons'] as List).add({
+                'lesson_title':
+                    data['subject'] ??
+                    data['unit'] ??
+                    data['topic'] ??
+                    data['title'] ??
+                    "بدون عنوان",
+                'data': data,
+              });
+            }
           } else {
-            String? chapterTitle = data['unit'] ?? data['topic'] ?? data['title'];
+            String? chapterTitle =
+                data['unit'] ?? data['topic'] ?? data['title'];
             if (chapterTitle != null && chapterTitle.isNotEmpty) {
               subjectData[chapterTitle] = data;
             }
@@ -132,7 +248,7 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
           debugPrint("Could not load file: $path");
         }
       }
-      
+
       if (mounted) setState(() => isInitialLoading = false);
     } catch (e) {
       debugPrint("Error loading assets: $e");
@@ -142,12 +258,17 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
 
   void applyFilter() {
     if (selectedChapter == null) return;
-    
+
     dynamic data;
-    if (selectedTopic != null && subjectData[selectedChapter] is Map && subjectData[selectedChapter].containsKey('lessons')) {
+    if (selectedTopic != null &&
+        subjectData[selectedChapter] is Map &&
+        subjectData[selectedChapter].containsKey('lessons')) {
       final lessons = subjectData[selectedChapter]['lessons'] as List;
-      final lesson = lessons.firstWhere((l) => l['lesson_title'] == selectedTopic, orElse: () => null);
-      
+      final lesson = lessons.firstWhere(
+        (l) => l['lesson_title'] == selectedTopic,
+        orElse: () => null,
+      );
+
       if (widget.subjectName == 'العربية') {
         data = lesson != null ? lesson['data'] : null;
       } else {
@@ -176,11 +297,11 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
     } else if (data.containsKey('extracted_questions')) {
       questionsList = List.from(data['extracted_questions']);
     } else if (data.containsKey('sections')) {
-       for (var section in data['sections']) {
-          if (section['questions'] != null) {
-            questionsList.addAll(List.from(section['questions']));
-          }
-       }
+      for (var section in data['sections']) {
+        if (section['questions'] != null) {
+          questionsList.addAll(List.from(section['questions']));
+        }
+      }
     }
 
     setState(() => filteredQuestions = questionsList);
@@ -195,7 +316,10 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF1F5F9),
       appBar: AppBar(
-        title: Text("وزاريات ${widget.subjectName}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: Text(
+          "وزاريات ${widget.subjectName}",
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        ),
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -207,12 +331,23 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list_rounded),
-            onPressed: isInitialLoading ? null : () => showSelectionSheet(context, primaryColor),
+            onPressed: isInitialLoading
+                ? null
+                : () => showSelectionSheet(context, primaryColor),
           ),
         ],
       ),
-      body: isInitialLoading 
-          ? Center(child: SizedBox(width: 40, height: 40, child: CircularProgressIndicator(strokeWidth: 3, color: primaryColor)))
+      body: isInitialLoading
+          ? Center(
+              child: SizedBox(
+                width: 40,
+                height: 40,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  color: primaryColor,
+                ),
+              ),
+            )
           : buildQuestionsList(primaryColor, secondaryColor),
     );
   }
@@ -228,12 +363,28 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
               decoration: BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
-                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20)],
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 20,
+                  ),
+                ],
               ),
-              child: Icon(Icons.history_edu_rounded, size: 50, color: primaryColor.withOpacity(0.3)),
+              child: Icon(
+                Icons.history_edu_rounded,
+                size: 50,
+                color: primaryColor.withOpacity(0.3),
+              ),
             ),
             const SizedBox(height: 20),
-            const Text("يرجى اختيار القسم لعرض الوزاريات", style: TextStyle(color: Colors.grey, fontSize: 15, fontWeight: FontWeight.w600)),
+            const Text(
+              "يرجى اختيار القسم لعرض الوزاريات",
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       );
@@ -248,16 +399,30 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
           height: 1,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.transparent, Colors.blueGrey.withOpacity(0.15), Colors.transparent],
+              colors: [
+                Colors.transparent,
+                Colors.blueGrey.withOpacity(0.15),
+                Colors.transparent,
+              ],
             ),
           ),
         ),
       ),
-      itemBuilder: (context, index) => buildMinisterialItem(filteredQuestions[index], index, primaryColor, secondaryColor),
+      itemBuilder: (context, index) => buildMinisterialItem(
+        filteredQuestions[index],
+        index,
+        primaryColor,
+        secondaryColor,
+      ),
     );
   }
 
-  Widget buildMinisterialItem(Map<String, dynamic> item, int index, Color primaryColor, Color secondaryColor) {
+  Widget buildMinisterialItem(
+    Map<String, dynamic> item,
+    int index,
+    Color primaryColor,
+    Color secondaryColor,
+  ) {
     final List<dynamic> years = item['years'] ?? [];
     final String? tag = item['section_tag'];
     final bool isHeader = item['isHeader'] ?? false;
@@ -276,7 +441,11 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
                 const SizedBox(width: 10),
                 Text(
                   tag ?? "سؤال وزاري ${index + 1}",
-                  style: TextStyle(color: Colors.blueGrey[800], fontWeight: FontWeight.bold, fontSize: 14),
+                  style: TextStyle(
+                    color: Colors.blueGrey[800],
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
               ],
             ),
@@ -286,12 +455,30 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Wrap(
-                spacing: 8, runSpacing: 8,
-                children: years.map((year) => Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: secondaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
-                  child: Text(year.toString(), style: TextStyle(color: secondaryColor, fontSize: 11, fontWeight: FontWeight.bold)),
-                )).toList(),
+                spacing: 8,
+                runSpacing: 8,
+                children: years
+                    .map(
+                      (year) => Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: secondaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          year.toString(),
+                          style: TextStyle(
+                            color: secondaryColor,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    )
+                    .toList(),
               ),
             ),
           ],
@@ -299,36 +486,59 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
               child: Container(
-                width: double.infinity, padding: const EdgeInsets.all(12),
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
                   color: Colors.green.withOpacity(0.03),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Colors.green.withOpacity(0.1)),
                 ),
                 child: Text(
-                  item['verse'], textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFF15803D), fontFamily: 'Amiri', height: 1.8),
+                  item['verse'],
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF15803D),
+                    fontFamily: 'Amiri',
+                    height: 1.8,
+                  ),
                 ),
               ),
             ),
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 15, 20, 10),
             child: Text(
-              item['question'] ?? (item['word'] != null ? "ما معنى كلمة: ${item['word']}" : ""),
-              style: TextStyle(fontSize: 16, fontWeight: isHeader ? FontWeight.bold : FontWeight.w600, height: 1.6, color: const Color(0xFF1E293B)),
+              item['question'] ??
+                  (item['word'] != null ? "ما معنى كلمة: ${item['word']}" : ""),
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: isHeader ? FontWeight.bold : FontWeight.w600,
+                height: 1.6,
+                color: const Color(0xFF1E293B),
+              ),
             ),
           ),
           Theme(
             data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
             child: ExpansionTile(
-              title: Text("عرض الجواب النموذجي", style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: secondaryColor)),
-              iconColor: secondaryColor, collapsedIconColor: secondaryColor,
+              title: Text(
+                "عرض الجواب النموذجي",
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: secondaryColor,
+                ),
+              ),
+              iconColor: secondaryColor,
+              collapsedIconColor: secondaryColor,
               tilePadding: const EdgeInsets.symmetric(horizontal: 20),
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 15),
                   child: Container(
-                    width: double.infinity, padding: const EdgeInsets.all(15),
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(15),
                     decoration: BoxDecoration(
                       color: const Color(0xFFF8FAFC),
                       borderRadius: BorderRadius.circular(12),
@@ -337,18 +547,38 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (item['answers'] != null) buildTajweedTable(item['answers']),
+                        if (item['answers'] != null)
+                          buildTajweedTable(item['answers']),
                         if (item['answer'] != null || item['meaning'] != null)
-                          Text(item['answer'] ?? item['meaning'], style: const TextStyle(fontSize: 14, height: 1.7, color: Colors.black87)),
+                          Text(
+                            item['answer'] ?? item['meaning'],
+                            style: const TextStyle(
+                              fontSize: 14,
+                              height: 1.7,
+                              color: Colors.black87,
+                            ),
+                          ),
                         if (item['note'] != null)
                           Padding(
                             padding: const EdgeInsets.only(top: 8),
-                            child: Text("• ملاحظة: ${item['note']}", style: const TextStyle(color: Colors.redAccent, fontSize: 12, fontWeight: FontWeight.bold)),
+                            child: Text(
+                              "• ملاحظة: ${item['note']}",
+                              style: const TextStyle(
+                                color: Colors.redAccent,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         if (item['extra_answer'] != null) ...[
                           const Divider(height: 25),
-                          Text(item['extra_answer']['definition'] ?? item['extra_answer']['text'] ?? "", style: const TextStyle(fontSize: 14, height: 1.7)),
-                        ]
+                          Text(
+                            item['extra_answer']['definition'] ??
+                                item['extra_answer']['text'] ??
+                                "",
+                            style: const TextStyle(fontSize: 14, height: 1.7),
+                          ),
+                        ],
                       ],
                     ),
                   ),
@@ -366,7 +596,9 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+      ),
       builder: (context) {
         String? tempChapter = selectedChapter;
         String? tempTopic = selectedTopic;
@@ -375,32 +607,63 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
           builder: (context, setModalState) {
             List<String> chapters = subjectData.keys.toList();
             List<String> topics = [];
-            if (tempChapter != null && subjectData[tempChapter] is Map && subjectData[tempChapter].containsKey('lessons')) {
-              topics = (subjectData[tempChapter]['lessons'] as List).map((l) => l['lesson_title'].toString()).toList();
+            if (tempChapter != null &&
+                subjectData[tempChapter] is Map &&
+                subjectData[tempChapter].containsKey('lessons')) {
+              topics = (subjectData[tempChapter]['lessons'] as List)
+                  .map((l) => l['lesson_title'].toString())
+                  .toList();
             }
 
             return Padding(
-              padding: EdgeInsets.fromLTRB(24, 24, 24, MediaQuery.of(context).viewInsets.bottom + 24),
+              padding: EdgeInsets.fromLTRB(
+                24,
+                24,
+                24,
+                MediaQuery.of(context).viewInsets.bottom + 24,
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("اختيار مادة الوزاريات", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text(
+                    "اختيار مادة الوزاريات",
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 20),
-                  buildDropdown("الوحدة / القسم", Icons.folder_open_rounded, chapters, tempChapter, (val) {
-                    setModalState(() { tempChapter = val; tempTopic = null; });
-                  }),
+                  buildDropdown(
+                    "الوحدة / القسم",
+                    Icons.folder_open_rounded,
+                    chapters,
+                    tempChapter,
+                    (val) {
+                      setModalState(() {
+                        tempChapter = val;
+                        tempTopic = null;
+                      });
+                    },
+                  ),
                   if (topics.isNotEmpty) ...[
                     const SizedBox(height: 16),
-                    buildDropdown("الموضوع", Icons.topic_outlined, topics, tempTopic, (val) {
-                      setModalState(() => tempTopic = val);
-                    }, isEnabled: tempChapter != null),
+                    buildDropdown(
+                      "الموضوع",
+                      Icons.topic_outlined,
+                      topics,
+                      tempTopic,
+                      (val) {
+                        setModalState(() => tempTopic = val);
+                      },
+                      isEnabled: tempChapter != null,
+                    ),
                   ],
                   const SizedBox(height: 30),
                   SizedBox(
-                    width: double.infinity, height: 50,
+                    width: double.infinity,
+                    height: 50,
                     child: ElevatedButton(
-                      onPressed: (tempChapter != null && (topics.isEmpty || tempTopic != null))
+                      onPressed:
+                          (tempChapter != null &&
+                              (topics.isEmpty || tempTopic != null))
                           ? () {
                               setState(() {
                                 selectedChapter = tempChapter;
@@ -411,10 +674,16 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
                             }
                           : null,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor, foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        backgroundColor: primaryColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      child: const Text("تأكيد الاختيار", style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        "تأكيد الاختيار",
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
                 ],
@@ -426,7 +695,14 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
     );
   }
 
-  Widget buildDropdown(String hint, IconData icon, List<String> items, String? value, ValueChanged<String?> onChanged, {bool isEnabled = true}) {
+  Widget buildDropdown(
+    String hint,
+    IconData icon,
+    List<String> items,
+    String? value,
+    ValueChanged<String?> onChanged, {
+    bool isEnabled = true,
+  }) {
     return Material(
       color: Colors.transparent,
       child: Container(
@@ -444,15 +720,28 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
               children: [
                 Icon(icon, size: 20, color: Colors.grey[400]),
                 const SizedBox(width: 12),
-                Text(items.isEmpty && isEnabled ? "جاري تحميل الوحدات..." : hint, 
-                     style: TextStyle(color: Colors.grey[400], fontSize: 14)),
+                Text(
+                  items.isEmpty && isEnabled ? "جاري تحميل الوحدات..." : hint,
+                  style: TextStyle(color: Colors.grey[400], fontSize: 14),
+                ),
               ],
             ),
             items: isEnabled && items.isNotEmpty
-                ? items.map((item) => DropdownMenuItem(
-                    value: item, 
-                    child: Text(item, style: const TextStyle(fontFamily: 'Tajawal', fontSize: 14, fontWeight: FontWeight.w500))
-                  )).toList()
+                ? items
+                      .map(
+                        (item) => DropdownMenuItem(
+                          value: item,
+                          child: Text(
+                            item,
+                            style: const TextStyle(
+                              fontFamily: 'Tajawal',
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList()
                 : null,
             onChanged: isEnabled ? onChanged : null,
           ),
@@ -465,13 +754,37 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
-        columnSpacing: 15, headingRowHeight: 35,
-        columns: const [DataColumn(label: Text("الكلمة")), DataColumn(label: Text("الحكم")), DataColumn(label: Text("السبب"))],
-        rows: answers.map((a) => DataRow(cells: [
-          DataCell(Text(a['word']??"", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue))),
-          DataCell(Text(a['ruling']??"")),
-          DataCell(Text(a['reason']??"", style: const TextStyle(fontSize: 11))),
-        ])).toList(),
+        columnSpacing: 15,
+        headingRowHeight: 35,
+        columns: const [
+          DataColumn(label: Text("الكلمة")),
+          DataColumn(label: Text("الحكم")),
+          DataColumn(label: Text("السبب")),
+        ],
+        rows: answers
+            .map(
+              (a) => DataRow(
+                cells: [
+                  DataCell(
+                    Text(
+                      a['word'] ?? "",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                      ),
+                    ),
+                  ),
+                  DataCell(Text(a['ruling'] ?? "")),
+                  DataCell(
+                    Text(
+                      a['reason'] ?? "",
+                      style: const TextStyle(fontSize: 11),
+                    ),
+                  ),
+                ],
+              ),
+            )
+            .toList(),
       ),
     );
   }
