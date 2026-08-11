@@ -60,7 +60,9 @@ class _HomePageScreenState extends State<HomePageScreen> {
   StreamSubscription? _notificationsSubscription;
 
   String _getCategoryForSubject(String label) {
+    bool isLiterary = selectedStage?.contains('أدبي') ?? false;
     if (['الإسلامية', 'العربية', 'الإنكليزي'].contains(label)) {
+      if (label == 'العربية' && isLiterary) return 'Literary';
       return 'Preparatory';
     }
     bool isScientific = selectedStage?.contains('علمي') ?? true;

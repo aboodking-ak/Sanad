@@ -69,9 +69,7 @@ class _ExamsScreenState extends State<ExamsScreen> {
         {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/nidaa_ministerials.json'},
         {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/taajjub_ministerials.json'},
         {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/madh_thamm_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'literature/unit1_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'literature/unit2_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'literature/unit3_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'literature/literature_ministerials.json'},
       ],
       'الإنكليزي': [
         {'cat': 'Preparatory', 'sub': 'English', 'file': 'unit1_ministerials.json'},
@@ -117,10 +115,20 @@ class _ExamsScreenState extends State<ExamsScreen> {
             if (!subjectData.containsKey(category)) {
               subjectData[category] = {'lessons': []};
             }
-            (subjectData[category]['lessons'] as List).add({
-              'lesson_title': data['subject'] ?? data['unit'] ?? data['topic'] ?? data['title'] ?? "بدون عنوان",
-              'data': data
-            });
+            
+            if (data is List) {
+              for (var item in data) {
+                (subjectData[category]['lessons'] as List).add({
+                  'lesson_title': item['subject'] ?? item['unit'] ?? item['topic'] ?? item['title'] ?? "بدون عنوان",
+                  'data': item
+                });
+              }
+            } else {
+              (subjectData[category]['lessons'] as List).add({
+                'lesson_title': data['subject'] ?? data['unit'] ?? data['topic'] ?? data['title'] ?? "بدون عنوان",
+                'data': data
+              });
+            }
           } else {
             String? chapterTitle = data['unit'] ?? data['topic'] ?? data['title'];
             if (chapterTitle != null && chapterTitle.isNotEmpty) {
