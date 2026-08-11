@@ -201,48 +201,44 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
           final String response = await rootBundle.loadString(path);
           final data = json.decode(response);
 
+          String mainCategory = widget.subjectName;
           if (widget.subjectName == 'العربية') {
-            String category = "أخرى";
             if (path.contains('/rules/'))
-              category = "القواعد";
+              mainCategory = "القواعد";
             else if (path.contains('/literature/'))
-              category = "الأدب";
+              mainCategory = "الأدب";
             else if (path.contains('/criticism/'))
-              category = "النقد";
+              mainCategory = "النقد";
+            else
+              mainCategory = "أخرى";
+          }
 
-            if (!subjectData.containsKey(category)) {
-              subjectData[category] = {'lessons': []};
-            }
-            
-            if (data is List) {
-              for (var item in data) {
-                (subjectData[category]['lessons'] as List).add({
-                  'lesson_title':
-                      item['subject'] ??
-                      item['unit'] ??
-                      item['topic'] ??
-                      item['title'] ??
-                      "بدون عنوان",
-                  'data': item,
-                });
-              }
-            } else {
-              (subjectData[category]['lessons'] as List).add({
+          if (!subjectData.containsKey(mainCategory)) {
+            subjectData[mainCategory] = {'lessons': []};
+          }
+
+          if (data is List) {
+            for (var item in data) {
+              (subjectData[mainCategory]['lessons'] as List).add({
                 'lesson_title':
-                    data['subject'] ??
-                    data['unit'] ??
-                    data['topic'] ??
-                    data['title'] ??
+                    item['subject'] ??
+                    item['unit'] ??
+                    item['topic'] ??
+                    item['title'] ??
                     "بدون عنوان",
-                'data': data,
+                'data': item,
               });
             }
           } else {
-            String? chapterTitle =
-                data['unit'] ?? data['topic'] ?? data['title'];
-            if (chapterTitle != null && chapterTitle.isNotEmpty) {
-              subjectData[chapterTitle] = data;
-            }
+            (subjectData[mainCategory]['lessons'] as List).add({
+              'lesson_title':
+                  data['subject'] ??
+                  data['unit'] ??
+                  data['topic'] ??
+                  data['title'] ??
+                  "بدون عنوان",
+              'data': data,
+            });
           }
         } catch (e) {
           debugPrint("Could not load file: $path");
