@@ -263,7 +263,9 @@ class _SurahScreenState extends State<SurahScreen> {
   }
 
   Widget _buildMergedSurahTextCard() {
-    final verses = selectedUnit!['verses'] as List? ?? [];
+    final verses = (selectedUnit!['verses'] as List? ?? [])
+        .where((v) => v['is_memorization'] == true)
+        .toList();
 
     return Container(
       width: double.infinity,
@@ -274,10 +276,20 @@ class _SurahScreenState extends State<SurahScreen> {
       ),
       child: Text.rich(
         TextSpan(
-          children: List.generate(verses.length, (index) {
-            final v = verses[index];
-            return TextSpan(text: "${v['text']} ﴿${v['number']}﴾ ");
-          }),
+          children: [
+            const TextSpan(
+              text: "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\n\n",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black),
+            ),
+            ...List.generate(verses.length, (index) {
+              final v = verses[index];
+              return TextSpan(text: "${v['text']} ﴿${v['number']}﴾ ");
+            }),
+            const TextSpan(
+              text: "\n\nصَدَقَ اللَّهُ الْعَلِيُّ الْعَظِيمُ",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.blueGrey),
+            ),
+          ],
         ),
         textAlign: TextAlign.center,
         textDirection: TextDirection.rtl,
@@ -402,10 +414,14 @@ class _SurahScreenState extends State<SurahScreen> {
         var parts = range.split('-');
         int start = int.parse(parts[0].trim());
         int end = int.parse(parts[1].trim());
-        return allVerses.where((v) => v['number'] >= start && v['number'] <= end).map((v) => v['text']).join(" ");
+        return allVerses
+            .where((v) => v['number'] >= start && v['number'] <= end)
+            .map((v) => "${v['text']} ﴿${v['number']}﴾")
+            .join(" ");
       } else {
         int num = int.parse(range.trim());
-        return allVerses.firstWhere((v) => v['number'] == num)['text'];
+        var v = allVerses.firstWhere((v) => v['number'] == num);
+        return "${v['text']} ﴿${v['number']}﴾";
       }
     } catch (e) {
       return "";
