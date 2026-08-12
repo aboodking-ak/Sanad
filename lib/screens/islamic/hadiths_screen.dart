@@ -275,11 +275,25 @@ class _HadithsScreenState extends State<HadithsScreen> {
         color: Colors.white,
         boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), offset: const Offset(0, 2), blurRadius: 5)],
       ),
-      child: Text(
-        selectedLesson!['hadith_text'],
+      child: Text.rich(
+        TextSpan(
+          children: [
+            const TextSpan(
+              text: "قَالَ رَسُولُ اللَّهِ (صَلَّى اللَّهُ عَلَيْهِ وَآلِهِ وَسَلَّمَ):\n\n",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black, fontFamily: 'Tajawal'),
+            ),
+            TextSpan(
+              text: selectedLesson!['hadith_text'],
+              style: const TextStyle(fontSize: 18, height: 2.0, fontWeight: FontWeight.w600, fontFamily: 'Amiri', color: Color(0xFF1E293B)),
+            ),
+            const TextSpan(
+              text: "\n\nصَدَقَ رَسُولُ اللَّهِ",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.blueGrey, fontFamily: 'Tajawal'),
+            ),
+          ],
+        ),
         textAlign: TextAlign.center,
         textDirection: TextDirection.rtl,
-        style: const TextStyle(fontSize: 17, height: 2.0, fontWeight: FontWeight.w600, fontFamily: 'Amiri', color: Color(0xFF1E293B)),
       ),
     );
   }
