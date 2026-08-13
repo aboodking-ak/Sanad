@@ -3113,6 +3113,19 @@ class _HomePageScreenState extends State<HomePageScreen> {
                     });
                   },
                 ),
+              // قسم الرسومات (فقط لمادة الأحياء)
+              if (subject['label'] == 'الأحياء')
+                _buildBottomSheetItem(
+                  "الرسومات",
+                  Icons.palette_rounded,
+                  primaryColor,
+                  onTap: () {
+                    _adHelper.showRewardedAd(() {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(context, '/biology_diagrams');
+                    });
+                  },
+                ),
               const SizedBox(height: 20),
             ],
           ),
@@ -3331,7 +3344,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
     } else if (subject['label'] == 'الإنكليزي') {
       sectionCount += 2; // الإنشاءات + قطع الكتاب
     } else if (subject['label'] == 'الأحياء') {
-      // لا توجد أقسام إضافية حالياً
+      sectionCount += 1; // الرسومات
     }
 
     return GestureDetector(

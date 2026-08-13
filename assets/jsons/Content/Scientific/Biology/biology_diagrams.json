@@ -1,0 +1,102 @@
+{
+  "subject": "الأحياء",
+  "chapters": [
+    {
+      "title": "الفصل الأول: الخلية",
+      "diagrams": [
+        {
+          "title": "الخلية بدائية النواة",
+          "type": "حفظ",
+          "imagePath": "assets/jsons/Content/Scientific/Biology/Drawings/Chapter1/prokaryotic_cell.jpg",
+          "years": ["2013/تمهيدي", "1/2019 خارج القطر", "2021/تمهيدي", "2015/تمهيدي", "1/2016", "2/2021 تكميلي", "2024/تمهيدي"]
+        },
+        {
+          "title": "الخلية النباتية",
+          "type": "حفظ",
+          "imagePath": "assets/jsons/Content/Scientific/Biology/Drawings/Chapter1/plant_cell.jpg",
+          "years": []
+        },
+        {
+          "title": "الخلية الحيوانية",
+          "type": "حفظ",
+          "imagePath": "assets/jsons/Content/Scientific/Biology/Drawings/Chapter1/animal_cell.jpg",
+          "years": ["2/1998", "2014/تمهيدي"]
+        },
+        {
+          "title": "الغشاء البلازمي",
+          "type": "حفظ",
+          "imagePath": "assets/jsons/Content/Scientific/Biology/Drawings/Chapter1/plasma_membrane.jpg",
+          "years": [
+            "1/1988", "1/1993", "1/1995", "2/2004", "2/2005", "1/2014",
+            "1/2015 خارج القطر", "2/2016", "1/2017", "2018 تمهيدي",
+            "1/2019", "1/2020", "2/2021", "2/2023", "1/2024"
+          ]
+        },
+        {
+          "title": "المايتوكوندريا",
+          "type": "حفظ",
+          "imagePath": "assets/jsons/Content/Scientific/Biology/Drawings/Chapter1/mitochondria.jpg",
+          "years": ["1/2000", "1/2003", "1/2005", "1/2018", "3/2019", "2020/تمهيدي", "1/2021", "3/2023", "3/2024"]
+        },
+        {
+          "title": "تركيب البلاستيدة الخضراء",
+          "type": "حفظ",
+          "imagePath": "assets/jsons/Content/Scientific/Biology/Drawings/Chapter1/chloroplast.jpg",
+          "years": [
+            "1/1991", "2/1994", "2/1996", "2/1997", "1/2008",
+            "2016/تمهيدي", "1/2017 اسئلة الموصل", "2022/تمهيدي",
+            "2023/تمهيدي", "2/2024", "2025/تمهيدي"
+          ]
+        },
+        {
+          "title": "الكروموسوم",
+          "type": "حفظ",
+          "imagePath": "assets/jsons/Content/Scientific/Biology/Drawings/Chapter1/chromosomes.jpg",
+          "years": []
+        },
+        {
+          "title": "التناضح في الخلية الحيوانية والنباتية",
+          "type": "حفظ",
+          "imagePath": "assets/jsons/Content/Scientific/Biology/Drawings/Chapter1/osmosis.jpg",
+          "years": ["1/2016 اسئلة خارج القطر", "1/2025"]
+        },
+        {
+          "title": "خطوات عملية النقل الفعال",
+          "type": "حفظ",
+          "imagePath": "assets/jsons/Content/Scientific/Biology/Drawings/Chapter1/efficient_transport.jpg",
+          "years": ["2/2016 اسئلة خارج القطر"]
+        },
+        {
+          "title": "الالتهام او الاكل الخلوي",
+          "type": "حفظ",
+          "imagePath": "assets/jsons/Content/Scientific/Biology/Drawings/Chapter1/cellular_eating.jpg",
+          "years": ["2/2018 اسئلة خارج القطر", "2/2020", "1/2022"]
+        },
+        {
+          "title": "الشرب الخلوي",
+          "type": "حفظ",
+          "imagePath": "assets/jsons/Content/Scientific/Biology/Drawings/Chapter1/cellular_drinking.jpg",
+          "years": ["2014/تمهيدي", "1/2019 اسئلة خارج القطر", "1/2024"]
+        },
+        {
+          "title": "الاخراج الخلوي",
+          "type": "حفظ",
+          "imagePath": "assets/jsons/Content/Scientific/Biology/Drawings/Chapter1/cellular_excretion.jpg",
+          "years": ["2/2013", "3/2014", "1/2015 اسئلة النازحين", "1/2018", "2019/تمهيدي", "3/2020"]
+        },
+        {
+          "title": "مخطط التحلل السكري",
+          "type": "حفظ",
+          "imagePath": "assets/jsons/Content/Scientific/Biology/Drawings/Chapter1/glycolysis_diagram.jpg",
+          "years": ["2/1990", "2/1995", "1/1997", "2/2011", "1/2018 اسئلة خارج القطر"]
+        },
+        {
+          "title": "مخطط دورة كريبس",
+          "type": "حفظ",
+          "imagePath": "assets/jsons/Content/Scientific/Biology/Drawings/Chapter1/krebs_cycle_diagram.jpg",
+          "years": ["1/1990", "1/1993", "1/1995", "2/1995", "2/2011", "1/2016 خارج القطر", "1/2017"]
+        }
+      ]
+    }
+  ]
+}

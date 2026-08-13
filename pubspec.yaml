@@ -60,7 +60,10 @@ flutter:
     - assets/jsons/Content/Scientific/Mathematics/Ministerial/
     - assets/jsons/Content/Scientific/Physics/Ministerial/
     - assets/jsons/Content/Scientific/Chemistry/Ministerial/
+    - assets/jsons/Content/Scientific/Biology/
     - assets/jsons/Content/Scientific/Biology/Ministerial/
+    - assets/jsons/Content/Scientific/Biology/Drawings/
+    - assets/jsons/Content/Scientific/Biology/Drawings/Chapter1/
     - assets/jsons/Content/Scientific/French/Ministerial/
     - assets/jsons/Content/Literary/Mathematics/Ministerial/
     - assets/jsons/Content/Literary/History/Ministerial/

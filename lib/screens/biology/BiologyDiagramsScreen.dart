@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class BiologyDiagramsScreen extends StatefulWidget {
   const BiologyDiagramsScreen({super.key});
@@ -8,33 +10,41 @@ class BiologyDiagramsScreen extends StatefulWidget {
 }
 
 class _BiologyDiagramsScreenState extends State<BiologyDiagramsScreen> {
+  Map<String, dynamic>? biologyData;
   String? selectedChapter;
-  String? selectedDiagram;
+  Map<String, dynamic>? selectedDiagram;
+  bool isLoading = true;
 
-  final List<String> chapters = [
-    "الفصل الأول: الخلية",
-    "الفصل الثاني: الأنسجة",
-    "الفصل الثالث: التكاثر",
-    "الفصل الرابع: التكوين الجنيني",
-    "الفصل الخامس: الوراثة"
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
 
-  final Map<String, List<Map<String, dynamic>>> diagramsData = {
-    "الفصل الأول: الخلية": [
-      {"title": "الخلية البدائية", "type": "حفظ", "imageUrl": ""},
-      {"title": "الغشاء البلازمي", "type": "حفظ", "imageUrl": ""},
-      {"title": "الميتوكوندريا", "type": "اطلاع", "imageUrl": ""},
-      {"title": "جهاز كولجي", "type": "اطلاع", "imageUrl": ""},
-    ],
-    "الفصل الثاني: الأنسجة": [
-      {"title": "النسيج الظهاري المطبق", "type": "حفظ", "imageUrl": ""},
-      {"title": "نسيج العظم", "type": "حفظ", "imageUrl": ""},
-    ]
-  };
+  Future<void> _loadData() async {
+    try {
+      final String response = await rootBundle.loadString('assets/jsons/Content/Scientific/Biology/biology_diagrams.json');
+      final data = json.decode(response);
+      setState(() {
+        biologyData = data;
+        isLoading = false;
+      });
+    } catch (e) {
+      debugPrint("Error loading biology diagrams: $e");
+      setState(() => isLoading = false);
+    }
+  }
 
-  List<String> get currentDiagrams {
+  List<String> get chapters {
+    final chaptersList = biologyData?['chapters'] as List? ?? [];
+    return chaptersList.map((c) => c['title'] as String).toList();
+  }
+
+  List<Map<String, dynamic>> get currentDiagrams {
     if (selectedChapter == null) return [];
-    return diagramsData[selectedChapter]?.map((d) => d['title'] as String).toList() ?? [];
+    final chaptersList = biologyData?['chapters'] as List? ?? [];
+    final chapter = chaptersList.firstWhere((c) => c['title'] == selectedChapter, orElse: () => null);
+    return List<Map<String, dynamic>>.from(chapter?['diagrams'] ?? []);
   }
 
   @override
@@ -46,7 +56,7 @@ class _BiologyDiagramsScreenState extends State<BiologyDiagramsScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text("رسومات الأحياء", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        title: const Text("رسومات الأحياء", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, fontFamily: 'Tajawal')),
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -59,11 +69,13 @@ class _BiologyDiagramsScreenState extends State<BiologyDiagramsScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_list_rounded),
-            onPressed: () => _showSelectionBottomSheet(context, primaryColor),
+            onPressed: isLoading ? null : () => _showSelectionBottomSheet(context, primaryColor),
           ),
         ],
       ),
-      body: _buildContent(primaryColor),
+      body: isLoading 
+          ? Center(child: CircularProgressIndicator(color: primaryColor))
+          : _buildContent(primaryColor),
     );
   }
 
@@ -75,8 +87,17 @@ class _BiologyDiagramsScreenState extends State<BiologyDiagramsScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
       ),
       builder: (context) {
+        String? tempChapter = selectedChapter;
+        Map<String, dynamic>? tempDiagram = selectedDiagram;
+
         return StatefulBuilder(
           builder: (context, setModalState) {
+            final filteredDiagrams = tempChapter == null 
+                ? <Map<String, dynamic>>[] 
+                : List<Map<String, dynamic>>.from(
+                    (biologyData?['chapters'] as List).firstWhere((c) => c['title'] == tempChapter)['diagrams']
+                  );
+
             return Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
@@ -85,22 +106,18 @@ class _BiologyDiagramsScreenState extends State<BiologyDiagramsScreen> {
                 children: [
                   const Text(
                     "اختيار الرسمة",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
                   ),
                   const SizedBox(height: 20),
                   _buildModalDropdown(
                     "الفصل",
                     Icons.folder_open_rounded,
                     chapters,
-                    selectedChapter,
+                    tempChapter,
                     (val) {
                       setModalState(() {
-                        selectedChapter = val;
-                        selectedDiagram = null;
-                      });
-                      setState(() {
-                        selectedChapter = val;
-                        selectedDiagram = null;
+                        tempChapter = val;
+                        tempDiagram = null;
                       });
                     },
                   ),
@@ -108,28 +125,35 @@ class _BiologyDiagramsScreenState extends State<BiologyDiagramsScreen> {
                   _buildModalDropdown(
                     "الرسمة",
                     Icons.image_outlined,
-                    currentDiagrams,
-                    selectedDiagram,
+                    filteredDiagrams.map((d) => d['title'] as String).toList(),
+                    tempDiagram?['title'],
                     (val) {
-                      setModalState(() => selectedDiagram = val);
-                      setState(() => selectedDiagram = val);
+                      setModalState(() {
+                        tempDiagram = filteredDiagrams.firstWhere((d) => d['title'] == val);
+                      });
                     },
-                    isEnabled: selectedChapter != null,
+                    isEnabled: tempChapter != null,
                   ),
                   const SizedBox(height: 30),
                   SizedBox(
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: (selectedChapter != null && selectedDiagram != null)
-                          ? () => Navigator.pop(context)
+                      onPressed: (tempChapter != null && tempDiagram != null)
+                          ? () {
+                              setState(() {
+                                selectedChapter = tempChapter;
+                                selectedDiagram = tempDiagram;
+                              });
+                              Navigator.pop(context);
+                            }
                           : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
                         foregroundColor: Colors.white,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      child: const Text("تأكيد الاختيار", style: TextStyle(fontWeight: FontWeight.bold)),
+                      child: const Text("تأكيد الاختيار", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal')),
                     ),
                   ),
                 ],
@@ -157,10 +181,10 @@ class _BiologyDiagramsScreenState extends State<BiologyDiagramsScreen> {
             children: [
               Icon(icon, size: 20, color: Colors.grey[400]),
               const SizedBox(width: 12),
-              Text(hint, style: TextStyle(color: Colors.grey[400])),
+              Text(hint, style: TextStyle(color: Colors.grey[400], fontFamily: 'Tajawal')),
             ],
           ),
-          items: isEnabled ? items.map((item) => DropdownMenuItem(value: item, child: Text(item))).toList() : null,
+          items: isEnabled ? items.map((item) => DropdownMenuItem(value: item, child: Text(item, style: const TextStyle(fontFamily: 'Tajawal')))).toList() : null,
           onChanged: isEnabled ? onChanged : null,
         ),
       ),
@@ -187,109 +211,114 @@ class _BiologyDiagramsScreenState extends State<BiologyDiagramsScreen> {
             const SizedBox(height: 20),
             const Text(
               "يرجى اختيار الرسمة للعرض",
-              style: TextStyle(color: Colors.grey, fontSize: 15, fontWeight: FontWeight.w600),
+              style: TextStyle(color: Colors.grey, fontSize: 15, fontWeight: FontWeight.w600, fontFamily: 'Tajawal'),
             ),
           ],
         ),
       );
     }
 
-    final diagram = diagramsData[selectedChapter]!.firstWhere((d) => d['title'] == selectedDiagram);
-    final bool isHifth = diagram['type'] == 'حفظ';
+    final bool isHifth = selectedDiagram!['type'] == 'حفظ';
 
-    return SingleChildScrollView(
-      child: Column(
-        children: [
-          _buildSectionHeader(selectedChapter!, primaryColor),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              boxShadow: [
-                BoxShadow(color: Colors.black.withValues(alpha: 0.02), offset: const Offset(0, 2), blurRadius: 5),
-              ],
-            ),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      diagram['title'],
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: primaryColor),
+    return Column(
+      children: [
+        _buildSectionHeader(selectedChapter!, primaryColor),
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    selectedDiagram!['title'],
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: primaryColor, fontFamily: 'Tajawal'),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isHifth ? Colors.red.withValues(alpha: 0.1) : Colors.blue.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: isHifth ? Colors.red : Colors.blue, width: 1),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    child: Text(
+                      selectedDiagram!['type'],
+                      style: TextStyle(
+                        color: isHifth ? Colors.red : Colors.blue,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                        fontFamily: 'Tajawal'
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              if (selectedDiagram!['years'] != null && (selectedDiagram!['years'] as List).isNotEmpty) ...[
+                const SizedBox(height: 12),
+                const Text(
+                  "السنوات الوزارية:",
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.grey, fontFamily: 'Tajawal'),
+                ),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: (selectedDiagram!['years'] as List).map((year) {
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: isHifth ? Colors.red.withValues(alpha: 0.1) : Colors.blue.withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: isHifth ? Colors.red : Colors.blue, width: 1),
+                        color: Colors.amber.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.amber.withValues(alpha: 0.5)),
                       ),
                       child: Text(
-                        diagram['type'],
-                        style: TextStyle(
-                          color: isHifth ? Colors.red : Colors.blue,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
-                        ),
+                        year.toString(),
+                        style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.orange, fontFamily: 'Tajawal'),
                       ),
-                    ),
-                  ],
-                ),
-                const Divider(height: 40, thickness: 1),
-                // مساحة الصورة
-                Container(
-                  height: 400,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[50],
-                    borderRadius: BorderRadius.circular(15),
-                    border: Border.all(color: Colors.grey[200]!),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.image_outlined, size: 80, color: Colors.grey[300]),
-                      const SizedBox(height: 10),
-                      Text("سيتم عرض صورة الرسمة هنا", style: TextStyle(color: Colors.grey[400], fontSize: 14)),
-                    ],
-                  ),
+                    );
+                  }).toList(),
                 ),
               ],
-            ),
+            ],
           ),
-          const SizedBox(height: 20),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: SizedBox(
-              width: double.infinity,
-              height: 55,
-              child: ElevatedButton.icon(
-                onPressed: () => _openFullScreen(context, diagram['title']),
-                icon: const Icon(Icons.zoom_in_rounded),
-                label: const Text("عرض ملء الشاشة", style: TextStyle(fontWeight: FontWeight.bold)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: primaryColor,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                  elevation: 0,
+        ),
+        const Divider(height: 1, thickness: 1),
+        Expanded(
+          child: Container(
+            width: double.infinity,
+            color: Colors.white,
+            child: InteractiveViewer(
+              panEnabled: true,
+              minScale: 1.0,
+              maxScale: 5.0,
+              clipBehavior: Clip.none,
+              child: Center(
+                child: Image.asset(
+                  selectedDiagram!['imagePath'],
+                  width: MediaQuery.of(context).size.width,
+                  fit: BoxFit.fitWidth,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.broken_image_rounded, size: 80, color: Colors.grey[300]),
+                        const SizedBox(height: 10),
+                        const Text("لم يتم العثور على ملف الصورة", style: TextStyle(color: Colors.grey, fontFamily: 'Tajawal')),
+                        Text(selectedDiagram!['imagePath'].split('/').last, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                      ],
+                    );
+                  },
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 40),
-        ],
-      ),
-    );
-  }
-
-  void _openFullScreen(BuildContext context, String title) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => FullScreenDiagram(title: title),
-      ),
+        ),
+      ],
     );
   }
 
@@ -310,48 +339,9 @@ class _BiologyDiagramsScreenState extends State<BiologyDiagramsScreen> {
           const SizedBox(width: 10),
           Text(
             title,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E293B)),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E293B), fontFamily: 'Tajawal'),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class FullScreenDiagram extends StatelessWidget {
-  final String title;
-  const FullScreenDiagram({super.key, required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        title: Text(title, style: const TextStyle(fontSize: 16)),
-        leading: IconButton(
-          icon: const Icon(Icons.close_rounded),
-          onPressed: () => Navigator.pop(context),
-        ),
-      ),
-      body: Center(
-        child: InteractiveViewer(
-          panEnabled: true,
-          minScale: 0.5,
-          maxScale: 4.0,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.image_outlined, size: 150, color: Colors.white.withValues(alpha: 0.2)),
-              const SizedBox(height: 20),
-              const Text(
-                "عرض الصورة بملء الشاشة مع إمكانية الزووم",
-                style: TextStyle(color: Colors.white54),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
