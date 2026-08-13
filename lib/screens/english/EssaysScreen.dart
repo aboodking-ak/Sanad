@@ -14,7 +14,6 @@ class _EssaysScreenState extends State<EssaysScreen> {
   Map<String, dynamic>? selectedEssayData;
   int? selectedUnit; // لتعقب الوحدة المختارة
   bool isInitialLoading = true;
-  bool isShortened = false; // Toggle for short version
 
   @override
   void initState() {
@@ -56,12 +55,6 @@ class _EssaysScreenState extends State<EssaysScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
-          if (selectedEssayData != null)
-            IconButton(
-              icon: Icon(isShortened ? Icons.compress_rounded : Icons.expand_rounded),
-              tooltip: isShortened ? "عرض النص الكامل" : "اختصار النص",
-              onPressed: () => setState(() => isShortened = !isShortened),
-            ),
           IconButton(
             icon: const Icon(Icons.filter_list_rounded),
             onPressed: isInitialLoading ? null : () => _showSelectionBottomSheet(context, primaryColor),
@@ -146,7 +139,6 @@ class _EssaysScreenState extends State<EssaysScreen> {
                               setState(() {
                                 selectedUnit = tempUnit;
                                 selectedEssayData = tempEssay;
-                                isShortened = false; // Reset shortening when new essay selected
                               });
                               Navigator.pop(context);
                             }
@@ -307,9 +299,7 @@ class _EssaysScreenState extends State<EssaysScreen> {
   }
 
   Widget _buildEssayTextCard(Color primaryColor) {
-    final String essayText = isShortened 
-        ? (selectedEssayData!['short_answer'] ?? selectedEssayData!['answer']) 
-        : selectedEssayData!['answer'];
+    final String essayText = selectedEssayData!['answer'];
     final int wordCount = essayText.split(' ').where((w) => w.isNotEmpty).length;
 
     return Container(
@@ -359,9 +349,7 @@ class _EssaysScreenState extends State<EssaysScreen> {
   }
 
   Widget _buildTranslationCard(Color primaryColor) {
-    final String translationText = isShortened 
-        ? (selectedEssayData!['short_translation'] ?? selectedEssayData!['translation']) 
-        : selectedEssayData!['translation'];
+    final String translationText = selectedEssayData!['translation'];
 
     return Container(
       width: double.infinity,
