@@ -3599,44 +3599,46 @@ class _HomePageScreenState extends State<HomePageScreen> {
                   },
                 );
               }),
-              // زر الاختبارات
-              _buildBottomSheetItem(
-                "الاختبارات",
-                Icons.assignment_turned_in_rounded,
-                primaryColor,
-                onTap: () {
-                  _adHelper.showRewardedAd(() {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(
-                      context,
-                      '/exams',
-                      arguments: {
-                        'subjectName': subject['label'],
-                        'category': _getCategoryForSubject(subject['label']),
-                      },
-                    );
-                  });
-                },
-              ),
-              // زر الوزاريات
-              _buildBottomSheetItem(
-                "الوزاريات",
-                Icons.account_balance_rounded,
-                primaryColor,
-                onTap: () {
-                  _adHelper.showRewardedAd(() {
-                    Navigator.pop(context);
-                    Navigator.pushNamed(
-                      context,
-                      '/ministerials',
-                      arguments: {
-                        'subjectName': subject['label'],
-                        'category': _getCategoryForSubject(subject['label']),
-                      },
-                    );
-                  });
-                },
-              ),
+              // زر الاختبارات (مخفي لمواد معينة)
+              if (!['الرياضيات', 'الفيزياء', 'الكيمياء', 'الفرنسية'].contains(subject['label']))
+                _buildBottomSheetItem(
+                  "الاختبارات",
+                  Icons.assignment_turned_in_rounded,
+                  primaryColor,
+                  onTap: () {
+                    _adHelper.showRewardedAd(() {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(
+                        context,
+                        '/exams',
+                        arguments: {
+                          'subjectName': subject['label'],
+                          'category': _getCategoryForSubject(subject['label']),
+                        },
+                      );
+                    });
+                  },
+                ),
+              // زر الوزاريات (مخفي لمواد معينة)
+              if (!['الرياضيات', 'الفيزياء', 'الكيمياء', 'الفرنسية'].contains(subject['label']))
+                _buildBottomSheetItem(
+                  "الوزاريات",
+                  Icons.account_balance_rounded,
+                  primaryColor,
+                  onTap: () {
+                    _adHelper.showRewardedAd(() {
+                      Navigator.pop(context);
+                      Navigator.pushNamed(
+                        context,
+                        '/ministerials',
+                        arguments: {
+                          'subjectName': subject['label'],
+                          'category': _getCategoryForSubject(subject['label']),
+                        },
+                      );
+                    });
+                  },
+                ),
               // قسم أحكام التلاوة (فقط لمادة الإسلامية)
               if (subject['label'] == 'الإسلامية')
                 _buildBottomSheetItem(
@@ -4020,27 +4022,40 @@ class _HomePageScreenState extends State<HomePageScreen> {
     );
   }
 
+  int _getSectionsCount(Map<String, dynamic> subject) {
+    int count = 0;
+    final String label = subject['label'] ?? "";
+
+    // 1. الكتب (PDFs)
+    if (subject['pdfs'] != null) {
+      count += (subject['pdfs'] as List).length;
+    }
+
+    // 2. الاختبارات والوزاريات (موجودة لبعض المواد فقط حالياً)
+    final List<String> excludedSubjects = ['الرياضيات', 'الفيزياء', 'الكيمياء', 'الفرنسية'];
+    if (!excludedSubjects.contains(label)) {
+      count += 2; // الاختبارات + الوزاريات
+    }
+
+    // 4. أقسام إضافية تختلف حسب المادة
+    if (label == 'الإسلامية') {
+      count += 3; // أحكام التلاوة، سور الحفظ، الأحاديث النبوية
+    } else if (label == 'العربية') {
+      count += 1; // قصائد الأدب
+    } else if (label == 'الإنكليزي') {
+      count += 2; // الإنشاءات، قطع الكتاب
+    } else if (label == 'الأحياء') {
+      count += 1; // الرسومات
+    }
+
+    return count;
+  }
+
   Widget _buildSubjectCard(Map<String, dynamic> subject) {
     final primaryColor = Theme.of(context).colorScheme.primary;
     final secondaryColor = Theme.of(context).colorScheme.secondary;
 
-    int sectionCount = 0;
-    if (subject['pdfs'] != null) {
-      sectionCount += (subject['pdfs'] as List).length;
-    }
-    if (subject['label'] == 'الإسلامية' || subject['label'] == 'العربية') {
-      sectionCount += 2; // الاختبارات + الوزاريات
-    }
-
-    if (subject['label'] == 'الإسلامية') {
-      sectionCount += 3;
-    } else if (subject['label'] == 'العربية') {
-      sectionCount += 1;
-    } else if (subject['label'] == 'الإنكليزي') {
-      sectionCount += 2; // الإنشاءات + قطع الكتاب
-    } else if (subject['label'] == 'الأحياء') {
-      sectionCount += 1; // الرسومات
-    }
+    final int sectionCount = _getSectionsCount(subject);
 
     return GestureDetector(
       onTap: () => _showSubjectDetails(context, subject),
