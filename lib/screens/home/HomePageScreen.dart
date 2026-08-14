@@ -117,10 +117,9 @@ class _HomePageScreenState extends State<HomePageScreen> {
     _loadAppVersion();
     _initializeInAppPurchase();
 
-    // إظهار إعلان الفتح بمجرد الدخول للصفحة الرئيسية
+    // التأكد من تحميل إعلان المكافأة للأقسام
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _adHelper.showAppOpenAdIfAvailable();
-      _adHelper.loadRewardedAd(); // التأكد من تحميل إعلان المكافأة للأقسام
+      _adHelper.loadRewardedAd();
     });
   }
 

@@ -64,7 +64,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     _setupAuthListener();
     
     // تحميل الإعلانات في الخلفية فقط بدون إظهار تلقائي هنا
-    _adHelper.loadAppOpenAd();
     _adHelper.loadRewardedAd();
   }
 
@@ -76,10 +75,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // إظهار الإعلان عندما يعود المستخدم للتطبيق من الخلفية
-    if (state == AppLifecycleState.resumed) {
-      _adHelper.showAppOpenAdIfAvailable();
-    }
+    // تم إلغاء إعلان فتح التطبيق
   }
 
   Future<void> _checkLoginStatus() async {
