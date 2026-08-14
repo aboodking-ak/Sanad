@@ -93,6 +93,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
   bool _isTyping = false;
   bool _isAiInitialized = false;
   String? _groqApiKey;
+  String _appVersion = "1.1.0";
 
   @override
   void initState() {
@@ -113,6 +114,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
     _fetchSupabaseData();
     _fetchLeaderboard();
     _fetchNotifications();
+    _loadAppVersion();
     _initializeInAppPurchase();
 
     // إظهار إعلان الفتح بمجرد الدخول للصفحة الرئيسية
@@ -145,6 +147,19 @@ class _HomePageScreenState extends State<HomePageScreen> {
   Future<void> _updateStudyTime() async {
     // تم نقل هذا المنطق إلى TimeTrackingWrapper
     // سنتركه فارغاً أو نقوم باستدعاء المزامنة من الـ Wrapper إذا لزم الأمر
+  }
+
+  Future<void> _loadAppVersion() async {
+    try {
+      final PackageInfo packageInfo = await PackageInfo.fromPlatform();
+      if (mounted) {
+        setState(() {
+          _appVersion = packageInfo.version;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error loading app version: $e");
+    }
   }
 
   Future<void> _fetchLeaderboard() async {
@@ -1934,7 +1949,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
                                     ),
                                   ),
                                   Text(
-                                    "الإصدار 1.0.1",
+                                    "الإصدار $_appVersion",
                                     style: TextStyle(
                                       color: Colors.grey[500],
                                       fontSize: 12,
@@ -1995,7 +2010,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
                     Padding(
                       padding: const EdgeInsets.all(25.0),
                       child: Text(
-                        "الإصدار 1.0.1",
+                        "الإصدار $_appVersion",
                         style: TextStyle(
                           color: Colors.grey[400],
                           fontSize: 12,
