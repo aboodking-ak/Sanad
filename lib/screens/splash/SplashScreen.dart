@@ -208,17 +208,17 @@ class _SplashScreenState extends State<SplashScreen> {
               await _forceLogout(prefs);
             }
           } else {
-            Navigator.pushReplacementNamed(context, "/signup");
+            Navigator.pushReplacementNamed(context, "/signin");
           }
         } catch (e) {
           // في حال حدوث أي خطأ في الاتصال بالسيرفر، نذهب لصفحة التسجيل
           debugPrint("Splash Navigation Error: $e");
-          Navigator.pushReplacementNamed(context, "/signup");
+          Navigator.pushReplacementNamed(context, "/signin");
         }
       });
     } catch (e) {
       debugPrint("Outer Splash Error: $e");
-      if (mounted) Navigator.pushReplacementNamed(context, "/signup");
+      if (mounted) Navigator.pushReplacementNamed(context, "/signin");
     }
   }
 
@@ -226,7 +226,7 @@ class _SplashScreenState extends State<SplashScreen> {
     await prefs.clear();
     await Supabase.instance.client.auth.signOut();
     if (mounted) {
-      Navigator.pushReplacementNamed(context, "/signup");
+      Navigator.pushReplacementNamed(context, "/signin");
     }
   }
 

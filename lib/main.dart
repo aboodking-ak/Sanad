@@ -6,8 +6,7 @@ import 'core/theme/app_theme.dart';
 import 'core/utils/time_tracking_wrapper.dart';
 import 'core/utils/ad_helper.dart';
 import 'screens/splash/SplashScreen.dart';
-import 'screens/auth/SignUpScreen.dart';
-import 'screens/auth/SignInScreen.dart';
+import 'screens/auth/RegisterScreen.dart';
 import 'screens/stages/StagesScreen.dart';
 import 'screens/home/HomePageScreen.dart';
 import 'screens/pdf/pdf_viewer_screen.dart';
@@ -113,8 +112,8 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       initialRoute: _isLoggedIn ? '/home' : '/',
       routes: {
         '/': (context) => const SplashScreen(),
-        '/signup': (context) => const SignUpScreen(),
-        '/signin': (context) => const SignInScreen(),
+        '/signup': (context) => const RegisterScreen(initialIsLogin: false),
+        '/signin': (context) => const RegisterScreen(initialIsLogin: true),
         '/change-password': (context) => const ChangePasswordScreen(),
         '/stages': (context) => const StagesScreen(),
         '/home': (context) => const HomePageScreen(),
