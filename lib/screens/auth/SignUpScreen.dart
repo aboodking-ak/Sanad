@@ -264,6 +264,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                             _buildTermsCheckbox(secondaryColor),
                             const SizedBox(height: 12),
                             _buildSignUpButton(context, primaryColor),
+                            const SizedBox(height: 20),
+                            _buildDivider(),
+                            const SizedBox(height: 20),
+                            _buildGoogleButton(),
                             const Expanded(flex: 2, child: SizedBox()),
                             _buildBottomLink(context, secondaryColor),
                             const SizedBox(height: 15),
@@ -521,5 +525,70 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ),
       ],
     );
+  }
+
+  Widget _buildDivider() {
+    return Row(
+      children: [
+        Expanded(child: Divider(color: Colors.grey[200])),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 15),
+          child: Text("أو", style: TextStyle(color: Colors.grey[400], fontSize: 12)),
+        ),
+        Expanded(child: Divider(color: Colors.grey[200])),
+      ],
+    );
+  }
+
+  Widget _buildGoogleButton() {
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: OutlinedButton.icon(
+        onPressed: _isLoading ? null : _signInWithGoogle,
+        icon: Image.asset('assets/icons/auth/google.png', width: 20, height: 20, errorBuilder: (context, error, stackTrace) => const Icon(Icons.g_mobiledata, color: Colors.red)),
+        label: const Text(
+          "تسجيل الدخول باستخدام جوجل",
+          style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold, fontSize: 14),
+        ),
+        style: OutlinedButton.styleFrom(
+          side: BorderSide(color: Colors.grey[200]!),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          backgroundColor: Colors.white,
+        ),
+      ),
+    );
+  }
+
+  void _signInWithGoogle() async {
+    setState(() => _isLoading = true);
+    try {
+      final response = await _authService.signInWithGoogle();
+      if (response.user != null) {
+        final userStage = response.user!.userMetadata?['user_stage'];
+        if (mounted) {
+          if (userStage != null) {
+            Navigator.pushReplacementNamed(context, '/home', arguments: userStage);
+          } else {
+            Navigator.pushReplacementNamed(context, '/stages');
+          }
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        String errorMsg = "فشل تسجيل الدخول باستخدام جوجل";
+        if (e.toString().contains('canceled')) errorMsg = "تم إلغاء تسجيل الدخول";
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMsg),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 }

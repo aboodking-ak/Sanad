@@ -2,9 +2,50 @@ import 'dart:io';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
   final SupabaseClient _supabase = Supabase.instance.client;
+
+  // تسجيل الدخول باستخدام جوجل
+  Future<AuthResponse> signInWithGoogle() async {
+    try {
+      // 1. إعداد GoogleSignIn
+      // ملاحظة: لـ Android يجب استخدام webClientId من Google Cloud Console (Web application)
+      const webClientId = '218216743464-4o6489e2bde76j4f8cvqm2n8gunib55d.apps.googleusercontent.com';
+      
+      // في Supabase، لـ Native Android نحتاج لـ idToken
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        serverClientId: webClientId,
+      );
+      
+      final googleUser = await googleSignIn.signIn();
+      if (googleUser == null) throw 'تم إلغاء عملية تسجيل الدخول';
+
+      final googleAuth = await googleUser.authentication;
+      final accessToken = googleAuth.accessToken;
+      final idToken = googleAuth.idToken;
+
+      if (idToken == null) {
+        throw 'لم يتم العثور على ID Token من جوجل';
+      }
+
+      final response = await _supabase.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken,
+        accessToken: accessToken,
+      );
+
+      if (response.user != null) {
+        await _saveLocalData(response.user!);
+      }
+
+      return response;
+    } catch (e) {
+      print('Google Sign-In Error: $e');
+      rethrow;
+    }
+  }
 
   // الحصول على المستخدم الحالي
   User? get currentUser => _supabase.auth.currentUser;
