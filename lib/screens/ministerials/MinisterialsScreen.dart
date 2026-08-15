@@ -73,70 +73,17 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
           'sub': 'Islamic',
           'file': 'unit1_ministerials.json',
         },
-        {
-          'cat': 'Preparatory',
-          'sub': 'Islamic',
-          'file': 'unit2_ministerials.json',
-        },
-        {
-          'cat': 'Preparatory',
-          'sub': 'Islamic',
-          'file': 'unit3_ministerials.json',
-        },
-        {
-          'cat': 'Preparatory',
-          'sub': 'Islamic',
-          'file': 'unit4_ministerials.json',
-        },
-        {
-          'cat': 'Preparatory',
-          'sub': 'Islamic',
-          'file': 'unit5_ministerials.json',
-        },
       ],
       'العربية': [
-        // القواعد
-        {
-          'cat': 'Preparatory',
-          'sub': 'Arabic',
-          'file': 'rules/istifham_ministerials.json',
-        },
-        {
-          'cat': 'Preparatory',
-          'sub': 'Arabic',
-          'file': 'rules/nafi_ministerials.json',
-        },
-        {
-          'cat': 'Preparatory',
-          'sub': 'Arabic',
-          'file': 'rules/takdim_ministerials.json',
-        },
-        {
-          'cat': 'Preparatory',
-          'sub': 'Arabic',
-          'file': 'rules/tawkid_ministerials.json',
-        },
-        {
-          'cat': 'Preparatory',
-          'sub': 'Arabic',
-          'file': 'rules/nidaa_ministerials.json',
-        },
-        {
-          'cat': 'Preparatory',
-          'sub': 'Arabic',
-          'file': 'rules/taajjub_ministerials.json',
-        },
-        {
-          'cat': 'Preparatory',
-          'sub': 'Arabic',
-          'file': 'rules/madh_thamm_ministerials.json',
-        },
-        // الأدب
-        {
-          'cat': 'Preparatory',
-          'sub': 'Arabic',
-          'file': 'literature/literature_ministerials.json',
-        },
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/istifham_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/nafi_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/takdim_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/tawkid_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/nidaa_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/taajjub_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/madh_thamm_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'literature/literature_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'criticism/criticism_ministerials.json'},
       ],
       'الإنكليزي': [
         {
@@ -144,15 +91,12 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
           'sub': 'English',
           'file': 'unit1_ministerials.json',
         },
+      ],
+      'الأحياء': [
         {
-          'cat': 'Preparatory',
-          'sub': 'English',
-          'file': 'unit2_ministerials.json',
-        },
-        {
-          'cat': 'Preparatory',
-          'sub': 'English',
-          'file': 'essays_ministerials.json',
+          'cat': 'Scientific',
+          'sub': 'Biology',
+          'file': 'chapter1_ministerials.json',
         },
       ],
     };
@@ -185,11 +129,6 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
             'sub': engSub,
             'file': 'chapter1_ministerials.json',
           },
-          {
-            'cat': widget.category,
-            'sub': engSub,
-            'file': 'chapter2_ministerials.json',
-          },
         ];
       }
 
@@ -203,14 +142,25 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
 
           String mainCategory = widget.subjectName;
           if (widget.subjectName == 'العربية') {
-            if (path.contains('/rules/'))
+            if (path.contains('/rules/')) {
               mainCategory = "القواعد";
-            else if (path.contains('/literature/'))
+            } else if (path.contains('/literature/')) {
               mainCategory = "الأدب";
-            else if (path.contains('/criticism/'))
+            } else if (path.contains('/criticism/')) {
               mainCategory = "النقد";
-            else
+            } else {
               mainCategory = "أخرى";
+            }
+          } else {
+            // تسمية القسم بناءً على اسم الملف (فصل أو وحدة)
+            String fileName = fileInfo['file']!;
+            if (fileName.contains('tajweed')) {
+              mainCategory = "أحكام التلاوة";
+            } else if (fileName.contains('unit1')) {
+              mainCategory = widget.subjectName == 'الإنكليزي' ? "Unit 1" : "الوحدة الأولى";
+            } else if (fileName.contains('chapter1')) {
+              mainCategory = "الفصل الأول";
+            }
           }
 
           if (!subjectData.containsKey(mainCategory)) {
@@ -229,6 +179,18 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
                 'data': item,
               });
             }
+          } else if (data is Map && data.containsKey('lessons') && data['lessons'] is List) {
+            // التعامل مع هيكل ملفات الإسلامية التي تحتوي على دروس بداخلها
+            for (var subLesson in data['lessons']) {
+              (subjectData[mainCategory]['lessons'] as List).add({
+                'lesson_title':
+                    subLesson['lesson_title'] ??
+                    subLesson['title'] ??
+                    subLesson['subject'] ??
+                    "بدون عنوان",
+                'data': subLesson,
+              });
+            }
           } else {
             (subjectData[mainCategory]['lessons'] as List).add({
               'lesson_title':
@@ -245,7 +207,12 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
         }
       }
 
-      if (mounted) setState(() => isInitialLoading = false);
+      if (mounted) {
+        setState(() {
+          isInitialLoading = false;
+          // تم إلغاء الاختيار التلقائي بناءً على طلبك
+        });
+      }
     } catch (e) {
       debugPrint("Error loading assets: $e");
       if (mounted) setState(() => isInitialLoading = false);
@@ -255,48 +222,73 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
   void applyFilter() {
     if (selectedChapter == null) return;
 
-    dynamic data;
-    if (selectedTopic != null &&
-        subjectData[selectedChapter] is Map &&
-        subjectData[selectedChapter].containsKey('lessons')) {
-      final lessons = subjectData[selectedChapter]['lessons'] as List;
-      final lesson = lessons.firstWhere(
-        (l) => l['lesson_title'] == selectedTopic,
-        orElse: () => null,
-      );
-
-      if (widget.subjectName == 'العربية') {
-        data = lesson != null ? lesson['data'] : null;
-      } else {
-        data = lesson;
-      }
-    } else {
-      data = subjectData[selectedChapter];
-    }
-
-    if (data == null) return;
-
     List<dynamic> questionsList = [];
-    if (data.containsKey('questions')) {
-      questionsList = List.from(data['questions']);
-    } else if (data.containsKey('parts')) {
-      for (var part in data['parts']) {
-        String partName = part['part'] ?? "";
-        if (part['questions'] != null) {
-          for (var q in part['questions']) {
-            Map<String, dynamic> qWithTag = Map<String, dynamic>.from(q);
-            qWithTag['section_tag'] = partName;
-            questionsList.add(qWithTag);
+    final lessons = subjectData[selectedChapter!]['lessons'] as List;
+
+    // دالة مساعدة لاستخراج الأسئلة من كائن بيانات معين
+    List<dynamic> getQuestionsFromData(dynamic d, String title) {
+      if (d is! Map) return [];
+      List<dynamic> qList = [];
+
+      if (d.containsKey('questions')) {
+        qList = List.from(d['questions']);
+      } else if (d.containsKey('parts')) {
+        for (var part in d['parts']) {
+          String partName = part['part'] ?? "";
+          if (part['questions'] != null) {
+            for (var q in part['questions']) {
+              Map<String, dynamic> qWithTag = Map<String, dynamic>.from(q);
+              qWithTag['section_tag'] = partName;
+              qList.add(qWithTag);
+            }
+          }
+        }
+      } else if (d.containsKey('extracted_questions')) {
+        qList = List.from(d['extracted_questions']);
+      } else if (d.containsKey('sections')) {
+        for (var section in d['sections']) {
+          if (section['questions'] != null) {
+            qList.addAll(List.from(section['questions']));
           }
         }
       }
-    } else if (data.containsKey('extracted_questions')) {
-      questionsList = List.from(data['extracted_questions']);
-    } else if (data.containsKey('sections')) {
-      for (var section in data['sections']) {
-        if (section['questions'] != null) {
-          questionsList.addAll(List.from(section['questions']));
+
+      return qList.map((q) {
+        Map<String, dynamic> qWithTopic = Map<String, dynamic>.from(q);
+        qWithTopic['topic_header'] = title;
+        return qWithTopic;
+      }).toList();
+    }
+
+    bool isSimpleSubject = ['الإنكليزي', 'الأحياء', 'التاريخ', 'الجغرافية', 'الاقتصاد'].contains(widget.subjectName);
+
+    if (isSimpleSubject || selectedTopic == null || selectedChapter == "أحكام التلاوة") {
+      // عرض كافة المواضيع في هذا القسم (تلقائياً للإنكليزي والأحياء، أو إذا لم يتم اختيار موضوع)
+      for (var lesson in lessons) {
+        final lessonTitle = lesson['lesson_title'];
+        final data = lesson['data'];
+
+        if (data is Map && data.containsKey('lessons') && data['lessons'] is List) {
+          for (var subLesson in data['lessons']) {
+            final subTitle = subLesson['lesson_title'] ?? subLesson['title'] ?? lessonTitle;
+            questionsList.addAll(getQuestionsFromData(subLesson, subTitle));
+          }
+        } else {
+          questionsList.addAll(getQuestionsFromData(data, lessonTitle));
         }
+      }
+    } else {
+      // عرض موضوع محدد فقط (للعربية والإسلامية)
+      final lesson = lessons.firstWhere((l) => l['lesson_title'] == selectedTopic, orElse: () => lessons.first);
+      final data = lesson['data'];
+
+      if (data is Map && data.containsKey('lessons') && data['lessons'] is List) {
+        for (var subLesson in data['lessons']) {
+          final subTitle = subLesson['lesson_title'] ?? subLesson['title'] ?? selectedTopic!;
+          questionsList.addAll(getQuestionsFromData(subLesson, subTitle));
+        }
+      } else {
+        questionsList.addAll(getQuestionsFromData(data, selectedTopic!));
       }
     }
 
@@ -349,6 +341,22 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
   }
 
   Widget buildQuestionsList(Color primaryColor, Color secondaryColor) {
+    if (subjectData.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.folder_off_rounded, size: 60, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            const Text(
+              "لا توجد وزاريات متوفرة حالياً لهذه المادة",
+              style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      );
+    }
+
     if (filteredQuestions.isEmpty) {
       return Center(
         child: Column(
@@ -419,171 +427,241 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
     Color primaryColor,
     Color secondaryColor,
   ) {
-    final List<dynamic> years = item['years'] ?? [];
+    final dynamic rawYears = item['years'];
+    final List<dynamic> years = (rawYears is List) ? rawYears : (rawYears != null ? [rawYears] : []);
     final String? tag = item['section_tag'];
+    final String? topicHeader = item['topic_header'];
     final bool isHeader = item['isHeader'] ?? false;
 
-    return Container(
-      color: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
-              children: [
-                Icon(Icons.history_edu_rounded, size: 18, color: primaryColor),
-                const SizedBox(width: 10),
-                Text(
-                  tag ?? "سؤال وزاري ${index + 1}",
-                  style: TextStyle(
-                    color: Colors.blueGrey[800],
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
+    // التحقق إذا كان هذا أول سؤال في موضوع جديد لعرض العنوان
+    bool showTopicHeader = false;
+    if (topicHeader != null) {
+      if (index == 0) {
+        showTopicHeader = true;
+      } else {
+        final prevItem = filteredQuestions[index - 1];
+        if (prevItem['topic_header'] != topicHeader) {
+          showTopicHeader = true;
+        }
+      }
+    }
+
+    final TextDirection textDir = widget.subjectName == 'الإنكليزي' ? TextDirection.ltr : TextDirection.rtl;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (showTopicHeader)
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            color: primaryColor.withValues(alpha: 0.05),
+            child: Directionality(
+              textDirection: TextDirection.rtl,
+              child: Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 18,
+                    decoration: BoxDecoration(
+                      color: secondaryColor,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      topicHeader!,
+                      style: TextStyle(
+                        color: primaryColor,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 16,
+                        fontFamily: 'Tajawal',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        Container(
+          color: Colors.white,
+          padding: const EdgeInsets.symmetric(vertical: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Directionality(
+                  textDirection: TextDirection.rtl,
+                  child: Row(
+                    children: [
+                      Icon(Icons.history_edu_rounded, size: 18, color: primaryColor),
+                      const SizedBox(width: 10),
+                      Text(
+                        tag ?? "سؤال وزاري ${index + 1}",
+                        style: TextStyle(
+                          color: Colors.blueGrey[800],
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (years.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  child: Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: years
+                          .map(
+                            (year) => Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: secondaryColor.withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                year.toString(),
+                                style: TextStyle(
+                                  color: secondaryColor,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          )
+                          .toList(),
+                    ),
                   ),
                 ),
               ],
-            ),
-          ),
-          if (years.isNotEmpty) ...[
-            const SizedBox(height: 12),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: years
-                    .map(
-                      (year) => Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
+              if (item['verse'] != null && item['verse'].toString().isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.green.withValues(alpha: 0.03),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.green.withValues(alpha: 0.1)),
+                    ),
+                    child: Text(
+                      item['verse'],
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF15803D),
+                        fontFamily: 'Amiri',
+                        height: 1.8,
+                      ),
+                    ),
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 15, 20, 10),
+                child: Directionality(
+                  textDirection: textDir,
+                  child: Text(
+                    item['question'] ??
+                        (item['word'] != null ? "ما معنى كلمة: ${item['word']}" : ""),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: isHeader ? FontWeight.bold : FontWeight.w600,
+                      height: 1.6,
+                      color: const Color(0xFF1E293B),
+                    ),
+                  ),
+                ),
+              ),
+              Theme(
+                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+                child: ExpansionTile(
+                  title: Directionality(
+                    textDirection: TextDirection.rtl,
+                    child: Text(
+                      "عرض الجواب النموذجي",
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: secondaryColor,
+                      ),
+                    ),
+                  ),
+                  iconColor: secondaryColor,
+                  collapsedIconColor: secondaryColor,
+                  tilePadding: const EdgeInsets.symmetric(horizontal: 20),
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 15),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(15),
                         decoration: BoxDecoration(
-                          color: secondaryColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(6),
+                          color: const Color(0xFFF8FAFC),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
                         ),
-                        child: Text(
-                          year.toString(),
-                          style: TextStyle(
-                            color: secondaryColor,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
+                        child: Directionality(
+                          textDirection: textDir,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (item['answers'] != null)
+                                buildTajweedTable(item['answers']),
+                              if (item['answer'] != null || item['meaning'] != null)
+                                Text(
+                                  item['answer'] ?? item['meaning'],
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    height: 1.7,
+                                    color: Colors.black87,
+                                  ),
+                                ),
+                              if (item['note'] != null)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  child: Text(
+                                    "• ملاحظة: ${item['note']}",
+                                    style: const TextStyle(
+                                      color: Colors.redAccent,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              if (item['extra_answer'] != null) ...[
+                                const Divider(height: 25),
+                                Text(
+                                  item['extra_answer']['definition'] ??
+                                      item['extra_answer']['text'] ??
+                                      "",
+                                  style: const TextStyle(fontSize: 14, height: 1.7),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                       ),
-                    )
-                    .toList(),
-              ),
-            ),
-          ],
-          if (item['verse'] != null && item['verse'].toString().isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.03),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.green.withOpacity(0.1)),
-                ),
-                child: Text(
-                  item['verse'],
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF15803D),
-                    fontFamily: 'Amiri',
-                    height: 1.8,
-                  ),
-                ),
-              ),
-            ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 15, 20, 10),
-            child: Text(
-              item['question'] ??
-                  (item['word'] != null ? "ما معنى كلمة: ${item['word']}" : ""),
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: isHeader ? FontWeight.bold : FontWeight.w600,
-                height: 1.6,
-                color: const Color(0xFF1E293B),
-              ),
-            ),
-          ),
-          Theme(
-            data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-            child: ExpansionTile(
-              title: Text(
-                "عرض الجواب النموذجي",
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                  color: secondaryColor,
-                ),
-              ),
-              iconColor: secondaryColor,
-              collapsedIconColor: secondaryColor,
-              tilePadding: const EdgeInsets.symmetric(horizontal: 20),
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 15),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(15),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.withOpacity(0.1)),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (item['answers'] != null)
-                          buildTajweedTable(item['answers']),
-                        if (item['answer'] != null || item['meaning'] != null)
-                          Text(
-                            item['answer'] ?? item['meaning'],
-                            style: const TextStyle(
-                              fontSize: 14,
-                              height: 1.7,
-                              color: Colors.black87,
-                            ),
-                          ),
-                        if (item['note'] != null)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Text(
-                              "• ملاحظة: ${item['note']}",
-                              style: const TextStyle(
-                                color: Colors.redAccent,
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                        if (item['extra_answer'] != null) ...[
-                          const Divider(height: 25),
-                          Text(
-                            item['extra_answer']['definition'] ??
-                                item['extra_answer']['text'] ??
-                                "",
-                            style: const TextStyle(fontSize: 14, height: 1.7),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -639,7 +717,10 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
                       });
                     },
                   ),
-                  if (topics.isNotEmpty) ...[
+                  if (tempChapter != null && 
+                      topics.isNotEmpty && 
+                      !['الإنكليزي', 'الأحياء', 'التاريخ', 'الجغرافية', 'الاقتصاد'].contains(widget.subjectName) &&
+                      tempChapter != "أحكام التلاوة") ...[
                     const SizedBox(height: 16),
                     buildDropdown(
                       "الموضوع",
@@ -657,9 +738,11 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed:
-                          (tempChapter != null &&
-                              (topics.isEmpty || tempTopic != null))
+                      onPressed: (tempChapter != null && 
+                                 (topics.isEmpty || 
+                                  tempTopic != null || 
+                                  ['الإنكليزي', 'الأحياء', 'التاريخ', 'الجغرافية', 'الاقتصاد'].contains(widget.subjectName) ||
+                                  tempChapter == "أحكام التلاوة"))
                           ? () {
                               setState(() {
                                 selectedChapter = tempChapter;

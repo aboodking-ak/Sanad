@@ -56,10 +56,6 @@ class _ExamsScreenState extends State<ExamsScreen> {
       'الإسلامية': [
         {'cat': 'Preparatory', 'sub': 'Islamic', 'file': 'tajweed_ministerials.json'},
         {'cat': 'Preparatory', 'sub': 'Islamic', 'file': 'unit1_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Islamic', 'file': 'unit2_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Islamic', 'file': 'unit3_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Islamic', 'file': 'unit4_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Islamic', 'file': 'unit5_ministerials.json'},
       ],
       'العربية': [
         {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/istifham_ministerials.json'},
@@ -70,17 +66,15 @@ class _ExamsScreenState extends State<ExamsScreen> {
         {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/taajjub_ministerials.json'},
         {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/madh_thamm_ministerials.json'},
         {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'literature/literature_ministerials.json'},
+        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'criticism/criticism_ministerials.json'},
       ],
       'الإنكليزي': [
         {'cat': 'Preparatory', 'sub': 'English', 'file': 'unit1_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'English', 'file': 'unit2_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'English', 'file': 'essays_ministerials.json'}
+      ],
+      'الأحياء': [
+        {'cat': 'Scientific', 'sub': 'Biology', 'file': 'chapter1_ministerials.json'},
       ],
     };
-
-    if (widget.subjectName == 'العربية' && widget.category == 'Literary') {
-      subjectFiles['العربية']?.add({'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'criticism/criticism_ministerials.json'});
-    }
 
     try {
       if (!mounted) return;
@@ -106,34 +100,47 @@ class _ExamsScreenState extends State<ExamsScreen> {
           final String response = await rootBundle.loadString(path);
           final data = json.decode(response);
           
+          String categoryName = widget.subjectName;
           if (widget.subjectName == 'العربية') {
-            String category = "أخرى";
-            if (path.contains('/rules/')) category = "القواعد";
-            else if (path.contains('/literature/')) category = "الأدب";
-            else if (path.contains('/criticism/')) category = "النقد";
-
-            if (!subjectData.containsKey(category)) {
-              subjectData[category] = {'lessons': []};
+            if (path.contains('/rules/')) categoryName = "القواعد";
+            else if (path.contains('/literature/')) categoryName = "الأدب";
+            else if (path.contains('/criticism/')) categoryName = "النقد";
+            else categoryName = "أخرى";
+          } else {
+            // تسمية القسم بناءً على اسم الملف (فصل أو وحدة)
+            String fileName = fileInfo['file']!;
+            if (fileName.contains('tajweed')) {
+              categoryName = "أحكام التلاوة";
+            } else if (fileName.contains('unit1')) {
+              categoryName = widget.subjectName == 'الإنكليزي' ? "Unit 1" : "الوحدة الأولى";
+            } else if (fileName.contains('chapter1')) {
+              categoryName = "الفصل الأول";
             }
-            
-            if (data is List) {
-              for (var item in data) {
-                (subjectData[category]['lessons'] as List).add({
-                  'lesson_title': item['subject'] ?? item['unit'] ?? item['topic'] ?? item['title'] ?? "بدون عنوان",
-                  'data': item
-                });
-              }
-            } else {
-              (subjectData[category]['lessons'] as List).add({
-                'lesson_title': data['subject'] ?? data['unit'] ?? data['topic'] ?? data['title'] ?? "بدون عنوان",
-                'data': data
+          }
+
+          if (!subjectData.containsKey(categoryName)) {
+            subjectData[categoryName] = {'lessons': []};
+          }
+
+          if (data is List) {
+            for (var item in data) {
+              (subjectData[categoryName]['lessons'] as List).add({
+                'lesson_title': item['subject'] ?? item['unit'] ?? item['topic'] ?? item['title'] ?? "بدون عنوان",
+                'data': item
+              });
+            }
+          } else if (data is Map && data.containsKey('lessons') && data['lessons'] is List) {
+            for (var subLesson in data['lessons']) {
+              (subjectData[categoryName]['lessons'] as List).add({
+                'lesson_title': subLesson['lesson_title'] ?? subLesson['title'] ?? subLesson['subject'] ?? "بدون عنوان",
+                'data': subLesson
               });
             }
           } else {
-            String? chapterTitle = data['unit'] ?? data['topic'] ?? data['title'];
-            if (chapterTitle != null && chapterTitle.isNotEmpty) {
-              subjectData[chapterTitle] = data;
-            }
+            (subjectData[categoryName]['lessons'] as List).add({
+              'lesson_title': data['subject'] ?? data['unit'] ?? data['topic'] ?? data['title'] ?? "بدون عنوان",
+              'data': data
+            });
           }
         } catch (e) {
           debugPrint("Could not load file: $path");
@@ -150,43 +157,67 @@ class _ExamsScreenState extends State<ExamsScreen> {
   void applyFilter() {
     if (selectedChapter == null) return;
 
-    dynamic data;
-    if (selectedTopic != null && subjectData[selectedChapter] is Map && subjectData[selectedChapter].containsKey('lessons')) {
-      final lessons = subjectData[selectedChapter]['lessons'] as List;
-      final lesson = lessons.firstWhere((l) => l['lesson_title'] == selectedTopic, orElse: () => null);
-      
-      if (widget.subjectName == 'العربية') {
-        data = lesson != null ? lesson['data'] : null;
-      } else {
-        data = lesson;
-      }
-    } else {
-      data = subjectData[selectedChapter];
-    }
-
-    if (data == null) return;
-
     List<dynamic> questionsList = [];
-    if (data.containsKey('questions')) {
-      questionsList = List.from(data['questions']);
-    } else if (data.containsKey('parts')) {
-      for (var part in data['parts']) {
-        if (part['questions'] != null) {
-          for (var q in part['questions']) {
-            Map<String, dynamic> qWithTag = Map<String, dynamic>.from(q);
-            qWithTag['section_tag'] = part['part'] ?? "";
-            questionsList.add(qWithTag);
+    final lessons = subjectData[selectedChapter!]['lessons'] as List;
+    
+    bool isSimpleSubject = ['الإنكليزي', 'الأحياء', 'التاريخ', 'الجغرافية', 'الاقتصاد'].contains(widget.subjectName);
+
+    // دالة مساعدة لاستخراج الأسئلة
+    List<dynamic> extractQuestions(dynamic d) {
+      if (d is! Map) return [];
+      List<dynamic> list = [];
+      if (d.containsKey('questions')) {
+        list = List.from(d['questions']);
+      } else if (d.containsKey('parts')) {
+        for (var part in d['parts']) {
+          if (part['questions'] != null) {
+            for (var q in part['questions']) {
+              Map<String, dynamic> qWithTag = Map<String, dynamic>.from(q);
+              qWithTag['section_tag'] = part['part'] ?? "";
+              list.add(qWithTag);
+            }
+          }
+        }
+      } else if (d.containsKey('extracted_questions')) {
+        list = List.from(d['extracted_questions']);
+      } else if (d.containsKey('sections')) {
+        for (var section in d['sections']) {
+          if (section['questions'] != null) {
+            list.addAll(List.from(section['questions']));
           }
         }
       }
-    } else if (data.containsKey('extracted_questions')) {
-      questionsList = List.from(data['extracted_questions']);
-    } else if (data.containsKey('sections')) {
-       for (var section in data['sections']) {
-          if (section['questions'] != null) {
-            questionsList.addAll(List.from(section['questions']));
+      return list;
+    }
+
+    if (isSimpleSubject || selectedChapter == "أحكام التلاوة" || selectedTopic == null) {
+      // جمع كافة الأسئلة من كافة الدروس في هذا الفصل
+      for (var lesson in lessons) {
+        final data = lesson['data'];
+        if (data is Map && data.containsKey('lessons') && data['lessons'] is List) {
+          for (var sub in data['lessons']) {
+            questionsList.addAll(extractQuestions(sub));
           }
-       }
+        } else {
+          questionsList.addAll(extractQuestions(data));
+        }
+      }
+    } else {
+      // اختيار موضوع محدد (للعربية والإسلامية)
+      final lesson = lessons.firstWhere(
+        (l) => l['lesson_title'] == selectedTopic,
+        orElse: () => null,
+      );
+      if (lesson != null) {
+        final data = lesson['data'];
+        if (data is Map && data.containsKey('lessons') && data['lessons'] is List) {
+          for (var sub in data['lessons']) {
+            questionsList.addAll(extractQuestions(sub));
+          }
+        } else {
+          questionsList.addAll(extractQuestions(data));
+        }
+      }
     }
 
     // خلط الأسئلة واختيار 10
@@ -321,6 +352,7 @@ class _ExamsScreenState extends State<ExamsScreen> {
               final item = currentQuestions[index];
               final String questionText = item['question'] ?? (item['word'] != null ? "ما معنى كلمة: ${item['word']}" : "");
               final String answerText = item['answer'] ?? item['meaning'] ?? "لا يوجد جواب متاح";
+              final TextDirection textDir = widget.subjectName == 'الإنكليزي' ? TextDirection.ltr : TextDirection.rtl;
 
               return SingleChildScrollView(
                 padding: const EdgeInsets.all(25),
@@ -343,13 +375,21 @@ class _ExamsScreenState extends State<ExamsScreen> {
                           ),
                         ),
                       ),
-                    Text(
-                      questionText,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        height: 1.8,
-                        color: Color(0xFF334155),
-                        fontWeight: FontWeight.bold,
+                    Directionality(
+                      textDirection: textDir,
+                      child: Container(
+                        width: double.infinity,
+                        alignment: textDir == TextDirection.ltr ? Alignment.centerLeft : Alignment.centerRight,
+                        child: Text(
+                          questionText,
+                          textAlign: textDir == TextDirection.ltr ? TextAlign.left : TextAlign.right,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            height: 1.8,
+                            color: Color(0xFF334155),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                     if (_showAnswer) ...[
@@ -365,16 +405,29 @@ class _ExamsScreenState extends State<ExamsScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      if (item['answers'] != null) buildTajweedTable(item['answers']),
-                      if (item['answers'] == null)
-                        Text(
-                          answerText,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            height: 1.7,
-                            color: Color(0xFF64748B),
+                      Directionality(
+                        textDirection: textDir,
+                        child: Container(
+                          width: double.infinity,
+                          alignment: textDir == TextDirection.ltr ? Alignment.centerLeft : Alignment.centerRight,
+                          child: Column(
+                            crossAxisAlignment: textDir == TextDirection.ltr ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+                            children: [
+                              if (item['answers'] != null) buildTajweedTable(item['answers']),
+                              if (item['answers'] == null)
+                                Text(
+                                  answerText,
+                                  textAlign: textDir == TextDirection.ltr ? TextAlign.left : TextAlign.right,
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    height: 1.7,
+                                    color: Color(0xFF64748B),
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
+                      ),
                       if (item['note'] != null)
                         Padding(
                           padding: const EdgeInsets.only(top: 15),
@@ -382,7 +435,18 @@ class _ExamsScreenState extends State<ExamsScreen> {
                         ),
                       if (item['extra_answer'] != null) ...[
                         const Divider(height: 35),
-                        Text(item['extra_answer']['definition'] ?? item['extra_answer']['text'] ?? "", style: const TextStyle(fontSize: 15, height: 1.7)),
+                        Directionality(
+                          textDirection: textDir,
+                          child: Container(
+                            width: double.infinity,
+                            alignment: textDir == TextDirection.ltr ? Alignment.centerLeft : Alignment.centerRight,
+                            child: Text(
+                              item['extra_answer']['definition'] ?? item['extra_answer']['text'] ?? "", 
+                              textAlign: textDir == TextDirection.ltr ? TextAlign.left : TextAlign.right,
+                              style: const TextStyle(fontSize: 15, height: 1.7)
+                            ),
+                          ),
+                        ),
                       ]
                     ],
                   ],
@@ -500,7 +564,7 @@ class _ExamsScreenState extends State<ExamsScreen> {
                       });
                     },
                   ),
-                  if (topics.isNotEmpty) ...[
+                  if (tempChapter != null && topics.isNotEmpty && !['الإنكليزي', 'الأحياء', 'التاريخ', 'الجغرافية', 'الاقتصاد'].contains(widget.subjectName) && tempChapter != "أحكام التلاوة") ...[
                     const SizedBox(height: 16),
                     buildDropdown(
                       "الموضوع",
@@ -518,7 +582,7 @@ class _ExamsScreenState extends State<ExamsScreen> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: (tempChapter != null && (topics.isEmpty || tempTopic != null))
+                      onPressed: (tempChapter != null && (topics.isEmpty || tempTopic != null || ['الإنكليزي', 'الأحياء', 'التاريخ', 'الجغرافية', 'الاقتصاد'].contains(widget.subjectName) || tempChapter == "أحكام التلاوة"))
                           ? () {
                               setState(() {
                                 selectedChapter = tempChapter;

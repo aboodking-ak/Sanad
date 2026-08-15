@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/gestures.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../core/services/auth_service.dart';
@@ -430,13 +431,94 @@ class _RegisterScreenState extends State<RegisterScreen>
           activeColor: secondaryColor,
           onChanged: (v) => setState(() => _agreeToTerms = v!),
         ),
-        const Expanded(
-          child: Text(
-            "أوافق على الشروط والأحكام وسياسة الخصوصية",
-            style: TextStyle(fontSize: 11),
+        Expanded(
+          child: RichText(
+            text: TextSpan(
+              style: const TextStyle(
+                fontSize: 12,
+                color: Colors.black87,
+                fontFamily: 'Tajawal',
+              ),
+              children: [
+                const TextSpan(text: "أوافق على "),
+                TextSpan(
+                  text: "الشروط والأحكام",
+                  style: TextStyle(
+                    color: secondaryColor,
+                    fontWeight: FontWeight.bold,
+                    decoration: TextDecoration.underline,
+                  ),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () => _showTermsDialog(),
+                ),
+                const TextSpan(text: " و "),
+                TextSpan(
+                  text: "سياسة الخصوصية",
+                  style: TextStyle(
+                    color: secondaryColor,
+                    fontWeight: FontWeight.bold,
+                    decoration: TextDecoration.underline,
+                  ),
+                  recognizer: TapGestureRecognizer()
+                    ..onTap = () => _showPrivacyDialog(),
+                ),
+              ],
+            ),
           ),
         ),
       ],
+    );
+  }
+
+  void _showTermsDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text("الشروط والأحكام", textAlign: TextAlign.center),
+        content: const SingleChildScrollView(
+          child: Text(
+            "1. الالتزام بالاستخدام التعليمي للتطبيق.\n"
+            "2. عدم محاولة اختراق أو نسخ محتوى التطبيق.\n"
+            "3. الحفاظ على سرية معلومات الحساب.\n"
+            "4. التطبيق غير مسؤول عن سوء استخدام الحساب من قبل المستخدم.\n"
+            "5. يحق لإدارة التطبيق حظر أي حساب يخالف القوانين.",
+            style: TextStyle(height: 1.6),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("إغلاق"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showPrivacyDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text("سياسة الخصوصية", textAlign: TextAlign.center),
+        content: const SingleChildScrollView(
+          child: Text(
+            "1. نحن نحترم خصوصيتك ونحمي بياناتك الشخصية.\n"
+            "2. يتم استخدام بريدك الإلكتروني لتوثيق الحساب فقط.\n"
+            "3. لا نشارك بياناتك مع أي طرف ثالث.\n"
+            "4. يتم تخزين بيانات التقدم الدراسي لتحسين تجربتك.\n"
+            "5. نستخدم بروتوكولات أمان متقدمة لحماية معلوماتك.",
+            style: TextStyle(height: 1.6),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("إغلاق"),
+          ),
+        ],
+      ),
     );
   }
 
@@ -546,34 +628,77 @@ class _RegisterScreenState extends State<RegisterScreen>
 
   void _showForgotPasswordDialog() {
     final emailCtrl = TextEditingController();
+    final primaryColor = Theme.of(context).colorScheme.primary;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text("استعادة كلمة المرور"),
-        content: TextField(
-          controller: emailCtrl,
-          decoration: const InputDecoration(hintText: "البريد الإلكتروني"),
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: primaryColor.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.lock_reset_rounded, size: 40, color: primaryColor),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                "استعادة كلمة المرور",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                "أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey[600], fontSize: 14),
+              ),
+              const SizedBox(height: 24),
+              _buildTextField(
+                controller: emailCtrl,
+                hint: "البريد الإلكتروني",
+                icon: Icons.email_outlined,
+                keyboardType: TextInputType.emailAddress,
+              ),
+              const SizedBox(height: 30),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("إلغاء", style: TextStyle(color: Colors.grey)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (emailCtrl.text.isEmpty) return;
+                        await _authService.resetPassword(emailCtrl.text.trim());
+                        if (mounted) {
+                          if (Navigator.canPop(context)) {
+                            Navigator.pop(context);
+                          }
+                          _showSnackBar("تم إرسال الرابط بنجاح", Colors.green);
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        elevation: 0,
+                      ),
+                      child: const Text("إرسال", style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("إلغاء"),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (emailCtrl.text.isEmpty) return;
-              await _authService.resetPassword(emailCtrl.text.trim());
-              if (mounted) {
-                if (Navigator.canPop(context)) {
-                  Navigator.pop(context);
-                }
-                _showSnackBar("تم إرسال الرابط", Colors.green);
-              }
-            },
-            child: const Text("إرسال"),
-          ),
-        ],
       ),
     );
   }
