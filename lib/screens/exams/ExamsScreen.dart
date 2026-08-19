@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_math_fork/flutter_math.dart' as tex;
 
 class ExamsScreen extends StatefulWidget {
   final String subjectName;
@@ -73,6 +74,9 @@ class _ExamsScreenState extends State<ExamsScreen> {
       ],
       'الأحياء': [
         {'cat': 'Scientific', 'sub': 'Biology', 'file': 'chapter1_ministerials.json'},
+      ],
+      'الرياضيات': [
+        {'cat': 'Scientific', 'sub': 'Mathematics', 'file': 'chapter1_ministerials.json'},
       ],
     };
 
@@ -160,7 +164,7 @@ class _ExamsScreenState extends State<ExamsScreen> {
     List<dynamic> questionsList = [];
     final lessons = subjectData[selectedChapter!]['lessons'] as List;
     
-    bool isSimpleSubject = ['الإنكليزي', 'الأحياء', 'التاريخ', 'الجغرافية', 'الاقتصاد'].contains(widget.subjectName);
+    bool isSimpleSubject = ['الرياضيات', 'الإنكليزي', 'الأحياء', 'التاريخ', 'الجغرافية', 'الاقتصاد'].contains(widget.subjectName);
 
     // دالة مساعدة لاستخراج الأسئلة
     List<dynamic> extractQuestions(dynamic d) {
@@ -380,10 +384,9 @@ class _ExamsScreenState extends State<ExamsScreen> {
                       child: Container(
                         width: double.infinity,
                         alignment: textDir == TextDirection.ltr ? Alignment.centerLeft : Alignment.centerRight,
-                        child: Text(
+                        child: _buildMathContent(
                           questionText,
-                          textAlign: textDir == TextDirection.ltr ? TextAlign.left : TextAlign.right,
-                          style: const TextStyle(
+                          const TextStyle(
                             fontSize: 18,
                             height: 1.8,
                             color: Color(0xFF334155),
@@ -415,10 +418,9 @@ class _ExamsScreenState extends State<ExamsScreen> {
                             children: [
                               if (item['answers'] != null) buildTajweedTable(item['answers']),
                               if (item['answers'] == null)
-                                Text(
+                                _buildMathContent(
                                   answerText,
-                                  textAlign: textDir == TextDirection.ltr ? TextAlign.left : TextAlign.right,
-                                  style: const TextStyle(
+                                  const TextStyle(
                                     fontSize: 15,
                                     height: 1.7,
                                     color: Color(0xFF64748B),
@@ -564,7 +566,7 @@ class _ExamsScreenState extends State<ExamsScreen> {
                       });
                     },
                   ),
-                  if (tempChapter != null && topics.isNotEmpty && !['الإنكليزي', 'الأحياء', 'التاريخ', 'الجغرافية', 'الاقتصاد'].contains(widget.subjectName) && tempChapter != "أحكام التلاوة") ...[
+                  if (tempChapter != null && topics.isNotEmpty && !['الرياضيات', 'الإنكليزي', 'الأحياء', 'التاريخ', 'الجغرافية', 'الاقتصاد'].contains(widget.subjectName) && tempChapter != "أحكام التلاوة") ...[
                     const SizedBox(height: 16),
                     buildDropdown(
                       "الموضوع",
@@ -582,7 +584,7 @@ class _ExamsScreenState extends State<ExamsScreen> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: (tempChapter != null && (topics.isEmpty || tempTopic != null || ['الإنكليزي', 'الأحياء', 'التاريخ', 'الجغرافية', 'الاقتصاد'].contains(widget.subjectName) || tempChapter == "أحكام التلاوة"))
+                      onPressed: (tempChapter != null && (topics.isEmpty || tempTopic != null || ['الرياضيات', 'الإنكليزي', 'الأحياء', 'التاريخ', 'الجغرافية', 'الاقتصاد'].contains(widget.subjectName) || tempChapter == "أحكام التلاوة"))
                           ? () {
                               setState(() {
                                 selectedChapter = tempChapter;
@@ -656,6 +658,95 @@ class _ExamsScreenState extends State<ExamsScreen> {
           DataCell(Text(a['reason']??"", style: const TextStyle(fontSize: 11))),
         ])).toList(),
       ),
+    );
+  }
+
+  Widget _buildMathContent(String text, TextStyle style) {
+    // إذا لم تكن المادة هي الرياضيات، نعيد النص بشكل بسيط جداً لضمان عدم تأثر بقية المواد
+    if (widget.subjectName != 'الرياضيات') {
+      return Text(
+        text,
+        style: style,
+        textAlign: widget.subjectName == 'الإنكليزي' ? TextAlign.left : TextAlign.right,
+      );
+    }
+
+    // في الرياضيات: السؤال (يبدأ بـ س/) لليمين، والحل (يبدأ بـ sol :) لليسار
+    bool isAnswer = text.trim().startsWith('sol :') || text.trim().startsWith('ج/');
+    Alignment alignment = isAnswer ? Alignment.centerLeft : Alignment.centerRight;
+    TextAlign textAlign = isAnswer ? TextAlign.left : TextAlign.right;
+
+    // منطق الرياضيات المتقدم
+    if (!text.contains('\$')) {
+      return Container(
+        width: double.infinity,
+        alignment: alignment,
+        child: Text(
+          text,
+          style: style,
+          textAlign: textAlign,
+        ),
+      );
+    }
+
+    List<Widget> contentWidgets = [];
+    final parts = text.split('\$');
+
+    for (int i = 0; i < parts.length; i++) {
+      if (i % 2 == 0) {
+        // نص عادي
+        if (parts[i].trim().isNotEmpty) {
+          contentWidgets.add(
+            Container(
+              width: double.infinity,
+              alignment: alignment,
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              child: Text(
+                parts[i],
+                style: style,
+                textAlign: textAlign,
+              ),
+            ),
+          );
+        }
+      } else {
+        // نص رياضي (LaTeX)
+        if (parts[i].isNotEmpty) {
+          contentWidgets.add(
+            Container(
+              width: double.infinity,
+              alignment: alignment,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                child: Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                    child: tex.Math.tex(
+                      "\u200E ${parts[i]} \u200E",
+                      textStyle: style.copyWith(
+                        fontSize: (style.fontSize ?? 14) + 2,
+                        fontFamily: 'Tajawal',
+                        color: style.color,
+                      ),
+                      onErrorFallback: (err) => Text(
+                        parts[i],
+                        style: style.copyWith(color: Colors.red),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }
+      }
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: contentWidgets,
     );
   }
 }

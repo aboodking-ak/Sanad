@@ -3599,8 +3599,9 @@ class _HomePageScreenState extends State<HomePageScreen> {
                   },
                 );
               }),
-              // زر الاختبارات (مخفي لمواد معينة)
-              if (!['الرياضيات', 'الفيزياء', 'الكيمياء', 'الفرنسية'].contains(subject['label']))
+              // زر الاختبارات (مخفي لمواد معينة وللأدبي في الرياضيات)
+              if (!['الفيزياء', 'الكيمياء', 'الفرنسية'].contains(subject['label']) &&
+                  !(subject['label'] == 'الرياضيات' && _getCategoryForSubject(subject['label']) == 'Literary'))
                 _buildBottomSheetItem(
                   "الاختبارات",
                   Icons.assignment_turned_in_rounded,
@@ -3619,8 +3620,9 @@ class _HomePageScreenState extends State<HomePageScreen> {
                     });
                   },
                 ),
-              // زر الوزاريات (مخفي لمواد معينة)
-              if (!['الرياضيات', 'الفيزياء', 'الكيمياء', 'الفرنسية'].contains(subject['label']))
+              // زر الوزاريات (مخفي لمواد معينة وللأدبي في الرياضيات)
+              if (!['الفيزياء', 'الكيمياء', 'الفرنسية'].contains(subject['label']) &&
+                  !(subject['label'] == 'الرياضيات' && _getCategoryForSubject(subject['label']) == 'Literary'))
                 _buildBottomSheetItem(
                   "الوزاريات",
                   Icons.account_balance_rounded,
@@ -4032,9 +4034,15 @@ class _HomePageScreenState extends State<HomePageScreen> {
     }
 
     // 2. الاختبارات والوزاريات (موجودة لبعض المواد فقط حالياً)
-    final List<String> excludedSubjects = ['الرياضيات', 'الفيزياء', 'الكيمياء', 'الفرنسية'];
+    final List<String> excludedSubjects = ['الفيزياء', 'الكيمياء', 'الفرنسية'];
+    String category = _getCategoryForSubject(label);
+    
     if (!excludedSubjects.contains(label)) {
-      count += 2; // الاختبارات + الوزاريات
+      if (label == 'الرياضيات' && category == 'Literary') {
+        // لا نحتسبها للأدبي في الرياضيات
+      } else {
+        count += 2; // الاختبارات + الوزاريات
+      }
     }
 
     // 4. أقسام إضافية تختلف حسب المادة
