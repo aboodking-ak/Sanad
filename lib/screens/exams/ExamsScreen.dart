@@ -72,12 +72,6 @@ class _ExamsScreenState extends State<ExamsScreen> {
       'الإنكليزي': [
         {'cat': 'Preparatory', 'sub': 'English', 'file': 'unit1_ministerials.json'},
       ],
-      'الأحياء': [
-        {'cat': 'Scientific', 'sub': 'Biology', 'file': 'chapter1_ministerials.json'},
-      ],
-      'الرياضيات': [
-        {'cat': 'Scientific', 'sub': 'Mathematics', 'file': 'chapter1_ministerials.json'},
-      ],
     };
 
     try {

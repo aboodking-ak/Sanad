@@ -3651,9 +3651,8 @@ class _HomePageScreenState extends State<HomePageScreen> {
                   },
                 );
               }),
-              // زر الاختبارات (مخفي لمواد معينة وللأدبي في الرياضيات)
-              if (!['الفيزياء', 'الكيمياء', 'الفرنسية'].contains(subject['label']) &&
-                  !(subject['label'] == 'الرياضيات' && _getCategoryForSubject(subject['label']) == 'Literary'))
+              // زر الاختبارات (مخفي لمواد معينة)
+              if (!['الفيزياء', 'الكيمياء', 'الفرنسية'].contains(subject['label']))
                 _buildBottomSheetItem(
                   "الاختبارات",
                   Icons.assignment_turned_in_rounded,
@@ -3672,9 +3671,8 @@ class _HomePageScreenState extends State<HomePageScreen> {
                     });
                   },
                 ),
-              // زر الوزاريات (مخفي لمواد معينة وللأدبي في الرياضيات)
-              if (!['الفيزياء', 'الكيمياء', 'الفرنسية'].contains(subject['label']) &&
-                  !(subject['label'] == 'الرياضيات' && _getCategoryForSubject(subject['label']) == 'Literary'))
+              // زر الوزاريات (مخفي لمواد معينة)
+              if (!['الفيزياء', 'الكيمياء', 'الفرنسية'].contains(subject['label']))
                 _buildBottomSheetItem(
                   "الوزاريات",
                   Icons.account_balance_rounded,
@@ -4090,11 +4088,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
     String category = _getCategoryForSubject(label);
     
     if (!excludedSubjects.contains(label)) {
-      if (label == 'الرياضيات' && category == 'Literary') {
-        // لا نحتسبها للأدبي في الرياضيات
-      } else {
-        count += 2; // الاختبارات + الوزاريات
-      }
+      count += 2; // الاختبارات + الوزاريات
     }
 
     // 4. أقسام إضافية تختلف حسب المادة
