@@ -13,6 +13,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:intl/intl.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:http/http.dart' as http;
+import 'package:flutter_markdown/flutter_markdown.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/models/subject_model.dart';
 import '../../core/utils/ad_helper.dart';
@@ -86,6 +87,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
 
   // Gemini AI & Search Variables
   final TextEditingController _chatController = TextEditingController();
+  final ScrollController _chatScrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
   bool _isTipVisible = false;
@@ -128,6 +130,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
     _timer.cancel();
     _searchController.dispose();
     _chatController.dispose();
+    _chatScrollController.dispose();
     _notificationsSubscription?.cancel();
     _leaderboardSubscription?.cancel();
     super.dispose();
@@ -701,6 +704,8 @@ class _HomePageScreenState extends State<HomePageScreen> {
       _isTyping = true;
     });
 
+    _scrollToBottom();
+
     await _incrementAiCount();
     await _saveMessageToDB(message, true);
 
@@ -713,6 +718,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
       }
 
       setState(() => _chatMessages.add({'text': responseText, 'isMe': false}));
+      _scrollToBottom();
       await _saveMessageToDB(responseText!, false);
     } catch (e) {
       debugPrint("Groq Error: $e");
@@ -749,7 +755,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
       }
 
       final body = jsonEncode({
-        "model": "llama-3.3-70b-versatile",
+        "model": "openai/gpt-oss-120b",
         "messages": messages,
         "temperature": 0.7,
         "max_tokens": 1024,
@@ -766,7 +772,8 @@ class _HomePageScreenState extends State<HomePageScreen> {
 
       if (response.statusCode == 200) {
         final data = jsonDecode(utf8.decode(response.bodyBytes));
-        return data['choices'][0]['message']['content']?.toString().trim();
+        final responseText = data['choices'][0]['message']['content']?.toString().trim();
+        return responseText;
       } else {
         debugPrint("Groq API Error: ${response.statusCode} - ${response.body}");
         return null;
@@ -810,6 +817,10 @@ class _HomePageScreenState extends State<HomePageScreen> {
             _addWelcomeMessage();
           }
         });
+        // الانتقال للأسفل بعد تحميل الرسائل
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollToBottom(isInstant: true);
+        });
       }
     } catch (e) {
       debugPrint("Error loading chat messages: $e");
@@ -824,6 +835,24 @@ class _HomePageScreenState extends State<HomePageScreen> {
         'isMe': false,
       });
     });
+    _scrollToBottom(isInstant: true);
+  }
+
+  void _scrollToBottom({bool isInstant = false}) {
+    if (_chatScrollController.hasClients) {
+      if (isInstant) {
+        _chatScrollController.jumpTo(_chatScrollController.position.maxScrollExtent);
+      } else {
+        _chatScrollController.animateTo(
+          _chatScrollController.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
+      }
+    } else {
+      // إذا لم يكن جاهزاً بعد، ننتظر الإطار القادم
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom(isInstant: isInstant));
+    }
   }
 
   Future<void> _saveMessageToDB(String text, bool isMe) async {
@@ -2503,6 +2532,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
       children: [
         Expanded(
           child: ListView.builder(
+            controller: _chatScrollController,
             padding: const EdgeInsets.all(20),
             itemCount: _chatMessages.length + (_isTyping ? 1 : 0),
             itemBuilder: (context, index) {
@@ -2589,6 +2619,9 @@ class _HomePageScreenState extends State<HomePageScreen> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 15),
         padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * 0.75,
+        ),
         decoration: BoxDecoration(
           color: isMe ? primaryColor : Colors.grey[200],
           borderRadius: BorderRadius.only(
@@ -2598,13 +2631,32 @@ class _HomePageScreenState extends State<HomePageScreen> {
             bottomRight: Radius.circular(isMe ? 0 : 15),
           ),
         ),
-        child: Text(
-          message,
-          style: TextStyle(
-            color: isMe ? Colors.white : Colors.black87,
-            fontSize: 14,
-          ),
-        ),
+        child: isMe
+            ? Text(
+                message,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 14,
+                ),
+              )
+            : MarkdownBody(
+                data: message,
+                styleSheet: MarkdownStyleSheet(
+                  p: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 14,
+                    fontFamily: 'Tajawal',
+                  ),
+                  strong: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Tajawal',
+                  ),
+                  listBullet: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
       ),
     );
   }

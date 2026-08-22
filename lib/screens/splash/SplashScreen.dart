@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../../core/utils/ad_helper.dart';
 import '../../core/constants/app_assets.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -26,54 +28,156 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _initApp() async {
-    setState(() {
-      _isOffline = false;
-    });
-    
-    final bool hasInternet = await _checkInternet();
-    
-    if (hasInternet) {
-      // فحص الصيانة والتحديثات أولاً
-      final bool canProceed = await _checkAppStatus();
+    setState(() => _isOffline = false);
+    final startTime = DateTime.now();
+
+    try {
+      // 1. فحص الإنترنت أولاً
+      final hasInternet = await _checkInternet().timeout(const Duration(seconds: 4), onTimeout: () => false);
+      if (!hasInternet) {
+        setState(() => _isOffline = true);
+        return;
+      }
+
+      // 2. تهيئة قاعدة البيانات أولاً لضمان جاهزيتها للفحص
+      try {
+        await Supabase.initialize(
+          url: 'https://vxdhjeefbrdjwzwdlybu.supabase.co',
+          publishableKey: 'sb_publishable_bh6MjtlteOB4F6eyax80jA_GjlXFpIh',
+          authOptions: const FlutterAuthClientOptions(authFlowType: AuthFlowType.pkce),
+        );
+      } catch (e) {
+        // إذا كان مهيأ مسبقاً لا مشكلة
+        debugPrint("Supabase already initialized");
+      }
+
+      // 3. تنفيذ الفحوصات بالتوازي (التحديثات + بيانات المستخدم + وقت الانتظار)
+      final results = await Future.wait([
+        _checkAppStatus(),       // فحص الصيانة والتحديثات الإجبارية
+        _checkLoginStatusData(), // جلب بيانات المستخدم
+        Future.delayed(const Duration(seconds: 2)), // الحد الأدنى لعرض الشعار
+      ]);
+
+      final bool canProceed = results[0] as bool;
+      final Map<String, dynamic>? authData = results[1] as Map<String, dynamic>?;
+
+      // تهيئة الإعلانات في الخلفية
+      MobileAds.instance.initialize();
+      AdHelper().loadRewardedAd();
+
       if (canProceed && mounted) {
-        _checkLoginStatus();
+        _navigate(authData);
+      }
+    } catch (e) {
+      debugPrint("Init Error: $e");
+      _navigateWithLocalData();
+    }
+  }
+
+  Future<void> _navigateWithLocalData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final bool isLoggedIn = prefs.getBool('is_logged_in') ?? false;
+    final authData = {
+      'isLoggedIn': isLoggedIn,
+      'userName': prefs.getString('user_name'),
+      'profileImage': prefs.getString('profile_image_path'),
+      'selectedStage': prefs.getString('user_stage'),
+    };
+    if (mounted) _navigate(isLoggedIn ? authData : null);
+  }
+
+  // دالة جديدة لجلب بيانات الدخول دون الانتقال الفوري
+  Future<Map<String, dynamic>?> _checkLoginStatusData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final bool isLoggedIn = prefs.getBool('is_logged_in') ?? false;
+      
+      if (!isLoggedIn) return null;
+
+      final supabase = Supabase.instance.client;
+      final session = supabase.auth.currentSession;
+      final user = supabase.auth.currentUser;
+
+      if (session != null && user != null) {
+        // التحقق من صحة الحساب مع مهلة زمنية قصيرة
+        final response = await supabase.auth.getUser().timeout(const Duration(seconds: 5));
+        
+        if (response.user != null) {
+          final userMetadata = response.user?.userMetadata;
+          final String? savedName = prefs.getString('user_name');
+          final String? savedImage = prefs.getString('profile_image_path');
+          final String? savedStage = prefs.getString('user_stage');
+          
+          if (savedImage != null && savedImage.startsWith('http') && mounted) {
+            precacheImage(NetworkImage(savedImage), context);
+          }
+
+          return {
+            'isLoggedIn': true,
+            'userName': savedName ?? userMetadata?['full_name'],
+            'profileImage': savedImage ?? userMetadata?['profile_image'],
+            'selectedStage': savedStage ?? userMetadata?['user_stage'],
+          };
+        }
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  void _navigate(Map<String, dynamic>? authData) {
+    if (authData != null && authData['isLoggedIn'] == true) {
+      if (authData['selectedStage'] != null) {
+        Navigator.pushReplacementNamed(context, "/home", arguments: authData);
+      } else {
+        Navigator.pushReplacementNamed(context, "/stages");
       }
     } else {
-      setState(() {
-        _isOffline = true;
-      });
+      Navigator.pushReplacementNamed(context, "/signin");
     }
   }
 
   Future<bool> _checkAppStatus() async {
     try {
       final supabase = Supabase.instance.client;
-      final settings = await supabase.from('app_settings').select('key, value');
       
-      Map<String, dynamic> config = {
+      // طلب البيانات من جدول app_settings
+      final List<dynamic> settings = await supabase
+          .from('app_settings')
+          .select('key, value');
+
+      // تحويل القائمة إلى Map لسهولة الوصول
+      final Map<String, dynamic> config = {
         for (var item in settings) item['key']: item['value']
       };
 
-      // 1. فحص وضع الصيانة
-      if (config['maintenance_mode'] == 'true' || config['maintenance_mode'] == true) {
-        if (mounted) _showMaintenanceDialog(config['maintenance_message'] ?? "التطبيق في وضع الصيانة حالياً. يرجى العودة لاحقاً.");
+      // 1. فحص التحديث الإجباري باستخدام المفتاح min_app_version
+      final PackageInfo packageInfo = await PackageInfo.fromPlatform();
+      final String currentVersion = packageInfo.version; // مثل 1.2.0
+      final String minVersion = config['min_app_version']?.toString() ?? "1.0.0";
+
+      debugPrint("Checking Version: Current=$currentVersion | Required=$minVersion");
+
+      if (_isVersionLower(currentVersion, minVersion)) {
+        if (mounted) {
+          _showUpdateDialog(config['update_url']?.toString() ?? "https://play.google.com/store");
+        }
         return false;
       }
 
-      // 2. فحص التحديث الإجباري
-      final PackageInfo packageInfo = await PackageInfo.fromPlatform();
-      final String currentVersion = packageInfo.version;
-      final String minVersion = config['min_app_version'] ?? "1.0.0";
-
-      if (_isVersionLower(currentVersion, minVersion)) {
-        if (mounted) _showUpdateDialog(config['update_url'] ?? "https://play.google.com/store");
+      // 2. فحص وضع الصيانة
+      if (config['maintenance_mode'] == 'true' || config['maintenance_mode'] == true) {
+        if (mounted) {
+          _showMaintenanceDialog(config['maintenance_message']?.toString() ?? "التطبيق في وضع الصيانة حالياً.");
+        }
         return false;
       }
 
       return true;
     } catch (e) {
-      debugPrint("App Status Check Error: $e");
-      return true; // في حال حدوث خطأ في قاعدة البيانات، نسمح بالدخول لضمان عدم تعطل المستخدمين
+      debugPrint("Status Check Error: $e");
+      return true; // الدخول في حال حدوث خطأ تقني لضمان عدم تعطل المستخدم
     }
   }
 
@@ -162,65 +266,8 @@ class _SplashScreenState extends State<SplashScreen> {
     }
   }
 
-  Future<void> _checkLoginStatus() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final bool isLoggedIn = prefs.getBool('is_logged_in') ?? false;
-      final String? savedName = prefs.getString('user_name');
-      final String? savedImage = prefs.getString('profile_image_path');
-      final String? savedStage = prefs.getString('user_stage');
+  // تم استبدال _checkLoginStatus القديمة بالمنطق الجديد أعلاه لزيادة السرعة
 
-      final supabase = Supabase.instance.client;
-      final session = supabase.auth.currentSession;
-      final user = supabase.auth.currentUser;
-
-      if (isLoggedIn && savedImage != null && savedImage.startsWith('http') && mounted) {
-        precacheImage(NetworkImage(savedImage), context);
-      }
-
-      // ضبط التايمر للانتقال
-      _timer = Timer(const Duration(seconds: 2), () async {
-        if (!mounted) return;
-
-        try {
-          if (isLoggedIn && session != null && user != null) {
-            // التحقق من صحة الحساب
-            final response = await supabase.auth.getUser().timeout(const Duration(seconds: 10));
-            
-            if (response.user != null) {
-              final userMetadata = response.user?.userMetadata;
-              final String? metadataStage = userMetadata?['user_stage'];
-
-              if (metadataStage != null && savedStage == null) {
-                await prefs.setString('user_stage', metadataStage);
-              }
-
-              if (savedStage != null || metadataStage != null) {
-                Navigator.pushReplacementNamed(context, "/home", arguments: {
-                  'userName': savedName ?? userMetadata?['full_name'],
-                  'profileImage': savedImage ?? userMetadata?['profile_image'],
-                  'selectedStage': savedStage ?? metadataStage,
-                });
-              } else {
-                Navigator.pushReplacementNamed(context, "/stages");
-              }
-            } else {
-              await _forceLogout(prefs);
-            }
-          } else {
-            Navigator.pushReplacementNamed(context, "/signin");
-          }
-        } catch (e) {
-          // في حال حدوث أي خطأ في الاتصال بالسيرفر، نذهب لصفحة التسجيل
-          debugPrint("Splash Navigation Error: $e");
-          Navigator.pushReplacementNamed(context, "/signin");
-        }
-      });
-    } catch (e) {
-      debugPrint("Outer Splash Error: $e");
-      if (mounted) Navigator.pushReplacementNamed(context, "/signin");
-    }
-  }
 
   Future<void> _forceLogout(SharedPreferences prefs) async {
     await prefs.clear();

@@ -26,20 +26,8 @@ import 'screens/tools/TodosScreen.dart';
 import 'screens/profile/ProfileScreen.dart';
 import 'screens/auth/ChangePasswordScreen.dart';
 
-Future<void> main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // تهيئة محرك الإعلانات
-  await MobileAds.instance.initialize();
-
-  await Supabase.initialize(
-    url: 'https://vxdhjeefbrdjwzwdlybu.supabase.co',
-    publishableKey: 'sb_publishable_bh6MjtlteOB4F6eyax80jA_GjlXFpIh',
-    authOptions: const FlutterAuthClientOptions(
-      authFlowType: AuthFlowType.pkce,
-    ),
-  );
-
   runApp(const MyApp());
 }
 
@@ -59,11 +47,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _checkLoginStatus();
     _setupAuthListener();
-    
-    // تحميل الإعلانات في الخلفية فقط بدون إظهار تلقائي هنا
-    _adHelper.loadRewardedAd();
   }
 
   @override
@@ -84,14 +68,17 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     });
   }
 
-  void _setupAuthListener() {
+  static void setupAuthListener(GlobalKey<NavigatorState> navKey) {
     Supabase.instance.client.auth.onAuthStateChange.listen((data) {
       final AuthChangeEvent event = data.event;
       if (event == AuthChangeEvent.passwordRecovery) {
-        // نستخدم pushNamedAndRemoveUntil لضمان عدم تداخل شاشة السبلاتش مع عملية الاستعادة
-        _navigatorKey.currentState?.pushNamedAndRemoveUntil('/change-password', (route) => false);
+        navKey.currentState?.pushNamedAndRemoveUntil('/change-password', (route) => false);
       }
     });
+  }
+
+  void _setupAuthListener() {
+    // سيتم استدعاؤها من SplashScreen بعد تهيئة Supabase
   }
 
   @override
@@ -109,7 +96,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
           ),
         );
       },
-      initialRoute: _isLoggedIn ? '/home' : '/',
+      initialRoute: '/',
       routes: {
         '/': (context) => const SplashScreen(),
         '/signup': (context) => const RegisterScreen(initialIsLogin: false),
