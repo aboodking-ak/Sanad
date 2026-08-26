@@ -25,7 +25,7 @@ class HomePageScreen extends StatefulWidget {
   State<HomePageScreen> createState() => _HomePageScreenState();
 }
 
-class _HomePageScreenState extends State<HomePageScreen> {
+class _HomePageScreenState extends State<HomePageScreen> with SingleTickerProviderStateMixin {
   final AdHelper _adHelper = AdHelper();
   final InAppPurchase _inAppPurchase = InAppPurchase.instance;
   late StreamSubscription<List<PurchaseDetails>> _purchaseSubscription;
@@ -88,6 +88,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
   // Gemini AI & Search Variables
   final TextEditingController _chatController = TextEditingController();
   final ScrollController _chatScrollController = ScrollController();
+  late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
   bool _isTipVisible = false;
@@ -111,6 +112,19 @@ class _HomePageScreenState extends State<HomePageScreen> {
     _loadUserData();
     _loadTips();
     _startCountdown();
+    _tabController = TabController(length: 5, vsync: this);
+    _tabController.addListener(() {
+      if (_tabController.index == 1) {
+        if (!_hasShownBetaSheet) {
+          _hasShownBetaSheet = true;
+          _showBetaInfoSheet();
+        }
+        // التمرير للأسفل عند الانتقال لتبويب المحادثة
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollToBottom(isInstant: true);
+        });
+      }
+    });
     _initAi();
     _loadAiLimit();
     _fetchSupabaseData();
@@ -131,6 +145,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
     _searchController.dispose();
     _chatController.dispose();
     _chatScrollController.dispose();
+    _tabController.dispose();
     _notificationsSubscription?.cancel();
     _leaderboardSubscription?.cancel();
     super.dispose();
@@ -698,6 +713,9 @@ class _HomePageScreenState extends State<HomePageScreen> {
     final message = _chatController.text.trim();
     if (message.isEmpty) return;
 
+    // إخفاء لوحة المفاتيح عند الإرسال
+    FocusScope.of(context).unfocus();
+
     setState(() {
       _chatMessages.add({'text': message, 'isMe': true});
       _chatController.clear();
@@ -1251,21 +1269,9 @@ class _HomePageScreenState extends State<HomePageScreen> {
           SystemNavigator.pop();
         }
       },
-      child: DefaultTabController(
-        length: 5,
-        child: Builder(
-          builder: (context) {
-            final tabController = DefaultTabController.of(context);
-            tabController.addListener(() {
-              if (tabController.index == 1 && !_hasShownBetaSheet) {
-                _hasShownBetaSheet = true;
-                _showBetaInfoSheet();
-              }
-            });
-
-            return Directionality(
-              textDirection: widgets.TextDirection.rtl,
-              child: Scaffold(
+      child: Directionality(
+        textDirection: widgets.TextDirection.rtl,
+        child: Scaffold(
                 backgroundColor: Colors.white,
                 resizeToAvoidBottomInset: false,
                 // الحل الاحترافي: منع الشاشة من الانضغاط
@@ -1316,6 +1322,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
                         ), // حواف بيضاء خفيفة وواضحة
                       ),
                       child: TabBar(
+                        controller: _tabController,
                         dividerColor: Colors.transparent,
                         indicatorColor: secondaryColor,
                         indicatorSize: TabBarIndicatorSize.label,
@@ -1406,6 +1413,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
                   bottom: true,
                   // يضمن عدم تداخل المحتوى مع أزرار النظام في الأسفل
                   child: TabBarView(
+                    controller: _tabController,
                     // تم ترك خاصية physics افتراضية للسماح بالسحب بين التبويبات
                     children: [
                       _buildHomeView(primaryColor, secondaryColor),
@@ -1417,11 +1425,8 @@ class _HomePageScreenState extends State<HomePageScreen> {
                   ),
                 ),
               ),
-            );
-          },
-        ),
-      ),
-    );
+            ),
+          );
   }
 
   void _showSubscriptionSheet() {

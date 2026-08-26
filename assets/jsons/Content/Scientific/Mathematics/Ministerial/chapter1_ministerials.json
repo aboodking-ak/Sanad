@@ -5,17 +5,23 @@
       {
         "question": "س/ ضع بالصورة العادية للعدد المركب $(1 + 3i)^2 + (3 - 2i)^2$",
         "answer": "sol :\n$(1 + 3i)^2 + (3 - 2i)^2$\n$= (1 + 6i + 9i^2) + (9 - 12i + 4i^2)$\n$= (-8 + 6i) + (5 - 12i)$\n$= -3 - 6i$",
-        "years": ["1/1998"]
+        "years": [
+          "1/1998"
+        ]
       },
       {
         "question": "س/ جد الصيغة العادية للعدد المركب $(\\frac{3-i}{1+i})^2$",
         "answer": "sol :\n$(\\frac{3-i}{1+i})^2$\n$= (\\frac{3-i}{1+i} \\cdot \\frac{1-i}{1-i})^2$\n$= (\\frac{(3-i)+(-3-i)i}{1+1})^2$\n$= (\\frac{2-4i}{2})^2$\n$= (1 - 2i)^2 = 1 - 4i + 4i^2 = -3 - 4i$",
-        "years": ["1/1999"]
+        "years": [
+          "1/1999"
+        ]
       },
       {
         "question": "س/ اذا كان $x = 2 + 3i , y = 3 - i$ جد قيمة $x^2 + 2y^2$",
         "answer": "sol :\n$x^2 + 2y^2 = (2 + 3i)^2 + 2(3 - i)^2$\n$= (4 + 12i + 9i^2) + 2(9 - 6i + i^2)$\n$= (-5 + 12i) + 2(8 - 6i)$\n$= (-5 + 12i) + (16 - 12i)$\n$= 11 + 0i$",
-        "years": ["1/2000"]
+        "years": [
+          "1/2000"
+        ]
       },
       {
         "question": "س/ ضع ما يأتي بالصيغة العادية ثم جد نظيره الضربي $(-2 + i) (3 + 2i)$ ",
@@ -25,127 +31,180 @@
       {
         "question": "س/ جد النظير الضربي للعدد المركب $5i + 3$ ثم ضعه بالصورة العادية.",
         "answer": "sol :\n$c^{-1} = \\frac{1}{c} = \\frac{1}{3 + 5i}$\n$= \\frac{1}{3 + 5i} \\cdot \\frac{3 - 5i}{3 - 5i}$\n$= \\frac{3 - 5i}{9 + 25} = \\frac{3}{34} - \\frac{5}{34}i$",
-        "years": ["1/2003"]
+        "years": [
+          "1/2003"
+        ]
       },
       {
         "question": "س/ جد الصيغة العادية للعدد المركب $(1 - \\sqrt{3}i)^2 - (2 - \\sqrt{3}i)^2$",
         "answer": "sol :\n$(1 - \\sqrt{3}i)^2 - (2 - \\sqrt{3}i)^2$\n$= (1 - 2\\sqrt{3}i + 3i^2) - (4 - 4\\sqrt{3}i + 3i^2)$\n$= (-2 - 2\\sqrt{3}i) - (1 - 4\\sqrt{3}i)$\n$= (-2 - 2\\sqrt{3}i) + (-1 + 4\\sqrt{3}i)$\n$= -3 + 2\\sqrt{3}i$",
-        "years": ["1/2004"]
+        "years": [
+          "1/2004"
+        ]
       },
       {
         "question": "س/ جد ناتج بالصيغة الديكارتية $(3 + 4i)^2 + (5 - 3i)(1 + i)$ ",
         "answer": "sol :\n$(3 + 4i)^2 + (5 - 3i)(1 + i)$\n$= (9 + 24i + 16i^2) + (5 + 5i - 3i - 3i^2)$\n$= (-7 + 24i) + (8 + 2i) = 1 + 26i$\n$= (1 , 26)$",
-        "years": ["1/2005"]
+        "years": [
+          "1/2005"
+        ]
       },
       {
         "question": "س/ اذا كانت $x = -1 + 2i$ جد قيمة $x^2 + 3x + 5$ بالصيغة الديكارتية (أرجاند)",
         "answer": "sol :\n$x^2 + 3x + 5$\n$= (-1 + 2i)^2 + 3(-1 + 2i) + 5$\n$= (1 - 4i + 4i^2) + (-3 + 6i) + 5$\n$= (1 - 4i - 4) - 3 + 6i + 5$\n$= (-3 - 4i) + (2 + 6i)$\n$= -1 + 2i = -1 , 2$\nوهي صيغة ارجاند المطلوبة",
-        "years": ["2/2005"]
+        "years": [
+          "2/2005"
+        ]
       },
       {
         "question": "س/ ضع بالصيغة العادية للعدد المركب $(1+i)^5 - (1-i)^5$",
         "answer": "sol :\n$(1+i)^5 = (1+i)^4 (1+i)$\n$= [(1+i)^2]^2 (1+i)$\n$= (1+2i+i^2)^2 (1+i)$\n$= (2i)^2 (1+i) = 4i^2 (1+i)$\n$= -4(1+i) = -4-4i$\n$(1-i)^5 = (1-i)^4 (1-i)$\n$= [(1-1)^2]^2 (1-i)$\n$= (1-2i+i^2)^2 (1-i)$\n$= (-2i)^2 (1-i) = 4i^2 (1-i)$\n$= -4(1-i) = -4+4i$\n$(1+i)^5 - (1-i)^5$\n$= (-4-4i) - (-4+4i)$\n$= (-4-4i) + (4-4i) = 0-8i$",
-        "years": ["2/2012"]
+        "years": [
+          "2/2012"
+        ]
       },
       {
         "question": "س/ اثبت ان $\\frac{(1-i)^2}{1+i} + \\frac{(1+i)^2}{1-i} = -2$",
         "answer": "sol :\n$\\frac{(1-i)^2}{1+i} + \\frac{(1+i)^2}{1-i} = \\frac{1-2i+i^2}{1+i} + \\frac{1+2i+i^2}{1-i}$\n$= \\frac{-2i}{1+i} \\cdot \\frac{1-i}{1-i} + \\frac{2i}{1-i} \\cdot \\frac{1+i}{1+i}$\n$= \\frac{-2i+2i^2}{1+1} + \\frac{2i+2i^2}{1+1}$\n$= (-1-i) + (-1+i) = -2$",
-        "years": ["3/2012"]
+        "years": [
+          "3/2012"
+        ]
       },
       {
         "question": "س/ جد قيمة $(1-i)(1-i^2)(1-i^3)$ ",
         "answer": "sol :\n$(1-i)(1-i^2)(1-i^3)$\n$= (1-i)(1+1)(1+i)$\n$= (2)(1-i)(1+i)$\n$= (2)(1+1) = (2)(2) = 4$",
-        "years": ["1/2013"]
+        "years": [
+          "1/2013"
+        ]
       },
       {
         "question": "س/ اذا كان $x=3+2i, y=1-i$ اثبت ان $\\overline{x+y} = \\overline{x} + \\overline{y}$",
         "answer": "sol :\nLHS: $\\overline{x+y} = \\overline{(3+2i) + (1-i)}$\n$= \\overline{4+i} = 4-i$\nRHS: $\\overline{x} + \\overline{y} = \\overline{(3+2i)} + \\overline{(1-i)}$\n$= (3-2i) + (1+i) = 4-i$\n$\\rightarrow LHS = RHS$",
-        "years": ["2006/تمهيدي"]
+        "years": [
+          "2006/تمهيدي"
+        ]
       },
       {
         "question": "س/ اذا كانت $x=2i-1$ جد قيمة $x^2+2x+6$ ",
         "answer": "sol :\n$x^2+2x+6$\n$= (-1+2i)^2 + 2(-1+2i) + 6$\n$= (1-4i+4i^2) + (-2+4i) + 6$\n$= (-3-4i) + (4+4i)$\n$= 1+0i$",
-        "years": ["1/2007 خارج القطر"]
+        "years": [
+          "1/2007 خارج القطر"
+        ]
       },
       {
         "question": "س/ حل المعادلة $Z^4 + 13Z^2 + 36 = 0$ ",
         "answer": "sol :\n$Z^4 + 13Z^2 + 36 = 0$\n$(Z^2+9)(Z^2+4) = 0$\neither $Z^2 = -9 \\rightarrow Z = \\pm 3i$\nOr $Z^2 = -4 \\rightarrow Z = \\pm 2i$",
-        "years": ["2/2009"]
+        "years": [
+          "2/2009"
+        ]
       },
       {
         "question": "س/ اذا كان $a+bi = \\frac{2+i}{1-i}$ اثبت ان $2(a^3+b^3) = 7$",
         "answer": "sol :\n$a+bi = \\frac{2+i}{1-i} \\cdot \\frac{1+i}{1+i}$\n$= \\frac{2+2i+i-1}{2} = \\frac{1+3i}{2} = \\frac{1}{2} + \\frac{3}{2}i$\n$a=\\frac{1}{2}, b=\\frac{3}{2}$\n$2(a^3+b^3) = 2(\\frac{1}{8} + \\frac{27}{8}) = 2(\\frac{28}{8}) = 7$",
-        "years": ["2010/تمهيدي" , "1/2022 تطبيقي"]
+        "years": [
+          "2010/تمهيدي",
+          "1/2022 تطبيقي"
+        ]
       },
       {
         "question": "س/ ضع العدد بالصيغة العادية للعدد المركب: $\\frac{(1+i)^{15}}{128}$ ",
         "answer": "sol :\n$\\frac{(1+i)^{15}}{128} = \\frac{((1+i)^2)^7(1+i)}{128}$\n$= \\frac{(1+2i-1)^7(1+i)}{128}$\n$= \\frac{(2i)^7(1+i)}{128}$\n$= \\frac{128i^4 \\cdot i^3(1+i)}{128}$\n$= -i(1+i) = 1-i$\n$Z = (1-i) \\rightarrow P_1(1,-1)$\n$\\overline{z} = (1+i) \\rightarrow P_2(1,1)$",
-        "years": ["1/2018"]
+        "years": [
+          "1/2018"
+        ]
       },
       {
         "question": "س/ اذا علمت ان $x=8-i$, وكان $y=2+i$, تحقق من ان $\\overline{x \\cdot y} = \\overline{x} \\cdot \\overline{y}$ ",
         "answer": "sol :\n$x=8-i \\rightarrow \\overline{x}=8+i$\n$y=2+i \\rightarrow \\overline{y}=2-i$\nنأخذ الطرف الايسر\n$x \\cdot y = (8-i)(2+i)$\n$= 16+8i-2i-i^2$\n$= 17+6i$\n$\\overline{x \\cdot y} = 17-6i$\nنأخذ الطرف الايمن\n$\\overline{x} \\cdot \\overline{y} = (8+i)(2-i)$\n$= 16-8i+2i-i^2$\n$= 17-6i$\nالطرف الايمن = الطرف الايسر فالعلاقة صحيحة.",
-        "years": ["2/2018 احيائي"]
+        "years": [
+          "2/2018 احيائي"
+        ]
       },
       {
         "question": "س/ ضع المقدار $\\frac{(1-i)^{13}}{64}$ بالصيغة العادية للعدد المركب",
         "answer": "sol :\n$\\frac{(1-i)^{13}}{64} = \\frac{(1-i)^{12}(1-i)}{64}$\n$= \\frac{[(1-i)^2]^6(1-i)}{64} = \\frac{(1-2i+i^2)^6(1-i)}{64}$\n$= \\frac{(-2i)^6(1-i)}{64} = \\frac{64i^6(1-i)}{64}$\n$= \\frac{-64(1-i)}{64} = -(1-i) = -1+i$",
-        "years": ["1/2013 خارج القطر"]
+        "years": [
+          "1/2013 خارج القطر"
+        ]
       },
       {
         "question": "س/ اذا كان $C_1=7-4i, C_2=2-3i$ فتحقق من: $\\overline{(\\frac{C_1}{C_2})} = \\frac{\\overline{C_1}}{\\overline{C_2}}$",
         "answer": "sol :\nLHS: $\\overline{(\\frac{C_1}{C_2})} = \\overline{(\\frac{7-4i}{2-3i})} = \\overline{(\\frac{7-4i}{2-3i} \\cdot \\frac{2+3i}{2+3i})}$\n$= \\overline{(\\frac{14+21i-8i+12}{4+9})} = \\overline{(\\frac{26+13i}{13})}$\n$= \\overline{2+i} = 2-i$\nRHS: $\\frac{\\overline{C_1}}{\\overline{C_2}} = \\frac{7+4i}{2+3i} = \\frac{7+4i}{2+3i} \\cdot \\frac{2-3i}{2-3i}$\n$= \\frac{14-21i+8i+12}{4+9}$\n$= \\frac{26-13i}{13} = 2-i$\nالطرف الايسر = الطرف الايمن.",
-        "years": ["2014 تمهيدي"]
+        "years": [
+          "2014 تمهيدي"
+        ]
       },
       {
         "question": "س/ اثبت ان $\\frac{1}{(1+2i)^2} + \\frac{1}{(1-2i)^2} = \\frac{-6}{25}$",
         "answer": "sol :\nنأخذ الطرف الايسر\n$\\frac{1}{(1+2i)^2} + \\frac{1}{(1-2i)^2}$\n$= \\frac{1}{1+4i+4i^2} + \\frac{1}{1-4i+4i^2}$\n$= \\frac{1}{-3+4i} + \\frac{1}{-3-4i} = \\frac{-3-4i-3+4i}{(-3+4i)(-3-4i)}$\n$= \\frac{-6}{9+16} = \\frac{-6}{25}$\nالطرف الايمن",
-        "years": ["1/2017 احيائي"]
+        "years": [
+          "1/2017 احيائي"
+        ]
       },
       {
         "question": "س/ اثبت ان: $\\frac{1}{(2-i)^2} - \\frac{1}{(2+i)^2} = \\frac{8}{25}i$ ",
         "answer": "sol :\nنأخذ الطرف الايسر\n$\\frac{1}{(2-i)^2} - \\frac{1}{(2+i)^2}$\nالطريقة الاولى\n$= \\frac{1}{4-4i-1} - \\frac{1}{4+4i-1}$\n$= \\frac{1}{3-4i} - \\frac{1}{3+4i}$\n$= \\frac{3+4i - 3+4i}{(3-4i)(3+4i)}$\n$= \\frac{8i}{9+16} = \\frac{8i}{25}$\nالطرف الايمن\nالطريقة الثانية\n$\\frac{1}{(2-i)^2} - \\frac{1}{(2+i)^2}$\n$= \\frac{(2+i)^2 - (2-i)^2}{(2-i)^2 \\cdot (2+i)^2}$\n$= \\frac{3+4i - 3+4i}{(5)^2} = \\frac{8i}{25}$\nالطرف الايمن",
-        "years": ["2020 تمهيدي احيائي" , "2/2021 تطبيقي" , "3/2023 تطبيقي"]
+        "years": [
+          "2020 تمهيدي احيائي",
+          "2/2021 تطبيقي",
+          "3/2023 تطبيقي"
+        ]
       },
       {
         "question": "س/ ضع بالصيغة العادية ( الجبرية ) ناتج : $\\frac{i}{(\\sqrt{2}+i)^2} + \\frac{i}{(\\sqrt{2}-i)^2}$",
         "answer": "sol :\n$\\frac{i}{(\\sqrt{2}+i)^2} + \\frac{i}{(\\sqrt{2}-i)^2}$\n$= \\frac{i}{2+2\\sqrt{2}i-1} + \\frac{i}{2-2\\sqrt{2}i-1}$\n$= \\frac{i}{1+2\\sqrt{2}i} + \\frac{i}{1-2\\sqrt{2}i}$\n$= \\frac{i(1-2\\sqrt{2}i) + i(1+2\\sqrt{2}i)}{(1+2\\sqrt{2}i)(1-2\\sqrt{2}i)}$\n$= \\frac{i+2\\sqrt{2} + i-2\\sqrt{2}}{1^2 + (2\\sqrt{2})^2} = \\frac{2i}{1+8}$\n$= \\frac{2}{9}i = (0 + \\frac{2}{9}i)$",
-        "years": ["1/2020"]
+        "years": [
+          "1/2020"
+        ]
       },
       {
         "question": "س/ جد مجموعة حلول المعادلة في $C$: $Z^2 + 2i(3-2i) = 3Z$ ",
         "answer": "sol :\n$Z^2 - 3Z + 2i(3-2i) = 0$\n$(Z-2i)(Z-(3-2i)) = 0$\nif $Z=2i$ OR $Z=(3-2i)$\nطريقة ثانية بالدستور\n$a=1, b=-3, c=2i(3-2i)$\n$Z = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}$\n$= \\frac{3 \\pm \\sqrt{3^2 - 4(4+6i)}}{2} = \\frac{3 \\pm \\sqrt{9-16-24i}}{2}$\n$= \\frac{3 \\pm \\sqrt{-7-24i}}{2}$\nlet $\\sqrt{-7-24i} = a+bi \\Rightarrow -7-24i = a^2-b^2+2abi$\n$a^2-b^2 = -7$ ... (1)\n$2ab = -24 \\Rightarrow ab = -12 \\Rightarrow a = \\frac{-12}{b}$ ... (2)\n$\\frac{144}{b^2} - b^2 = -7 \\rightarrow 144-b^4 = -7b^2 \\rightarrow b^4-7b^2-144=0$\n$(b^2-16)(b^2+9)=0 \\Rightarrow b^2=16 \\Rightarrow b=\\pm 4 \\rightarrow a=\\mp 3$\nفالعددين $(\\pm 4), (-3)$\n$\\therefore Z = \\frac{3 \\pm (-3+4i)}{2} = \\frac{4i}{2} = 2i$\n$or Z = \\frac{3 - (-3+4i)}{2} = \\frac{6-4i}{2} = 3-2i$",
-        "years": ["2/2017 احيائي"]
+        "years": [
+          "2/2017 احيائي"
+        ]
       },
       {
         "question": "س/ اثبت ان: $\\frac{1}{(3+i)^2} + \\frac{1}{(3-i)^2} = \\frac{4}{25}$ ",
         "answer": "sol :\nالطريقة الأولى:\nنأخذ الطرف الأيسر\n$\\frac{1}{(3+i)^2} + \\frac{1}{(3-i)^2} = \\frac{1}{9+6i-1} + \\frac{1}{9-6i-1}$\n$= \\frac{1}{8+6i} + \\frac{1}{8-6i}$\n$= \\frac{(8-6i) + (8+6i)}{(8+6i) \\cdot (8-6i)}$\n$= \\frac{16}{64+36} = \\frac{16}{100} = \\frac{4}{25}$ = الطرف الأيمن",
-        "years": ["2/2021"]
+        "years": [
+          "2/2021"
+        ]
       },
       {
         "question": "س/ اثبت ان : $\\sqrt{(1-i)(i^2-1)(1-i^3)} = 2i$ ",
         "answer": "sol :\nالطرف الايسر $\\sqrt{(1-i)(i^2-1)(1-i^3)}$\n$= \\sqrt{(1-i)(-1-1)(1+i)}$\n$= \\sqrt{-2(1+1)}$\n$= \\sqrt{-4} = 2i$ = الطرف الايمن",
-        "years": ["2/2021 احيائي"]
+        "years": [
+          "2/2021 احيائي"
+        ]
       },
       {
         "question": "س/ ضع بالصيغة العادية ناتج: $(1-\\sqrt{2}i)^2 - (2-\\sqrt{2}i)^2$ ",
         "answer": "sol :\nالطريقة الأولى:\n$(1-\\sqrt{2}i)^2 - (2-\\sqrt{2}i)^2$\n$= (1-2\\sqrt{2}i-2) - (4-4\\sqrt{2}i-2)$\n$= -1-2\\sqrt{2}i-2+4\\sqrt{2}i$\n$= -3+2\\sqrt{2}i$ الصورة العادية\nالطريقة ثانية:\n$[(1-\\sqrt{2}i)-(2-\\sqrt{2}i)] [(1-\\sqrt{2}i)+(2-\\sqrt{2}i)]$\n$= [1-\\sqrt{2}i-2+\\sqrt{2}i] [1-\\sqrt{2}i+2-\\sqrt{2}i]$\n$= [-1] [3-2\\sqrt{2}i] = -3+2\\sqrt{2}i$",
-        "years": ["2021 تمهيدي احيائي"]
+        "years": [
+          "2021 تمهيدي احيائي"
+        ]
       },
       {
         "question": "س/ ضع بالصيغة العادية : $\\frac{(1+i)^2}{(1+2i)^2} - \\frac{(1-i)^2}{(1-2i)^2}$ ",
         "answer": "sol :\n$\\frac{(1+i)^2}{(1+2i)^2} - \\frac{(1-i)^2}{(1-2i)^2}$\n$= \\frac{1+2i+i^2}{1+4i+4i^2} - \\frac{1-2i+i^2}{1-4i+4i^2}$\n$= \\frac{1+2i-1}{1+4i-4} - \\frac{1-2i-1}{1-4i-4}$\n$= \\frac{2i}{-3+4i} - \\frac{-2i}{-3-4i}$\n$= \\frac{2i(-3-4i) + 2i(-3+4i)}{(-3+4i)(-3-4i)}$\n$= \\frac{-6i-8i^2-6i+8i^2}{9+16}$\n$= \\frac{-12i}{25} = 0 - \\frac{12i}{25}$",
-        "years": ["2/2022 احيائي"]
+        "years": [
+          "2/2022 احيائي"
+        ]
       },
       {
         "question": "س/ اثبت ان: $\\frac{1}{(1+\\sqrt{3}i)^2} + \\frac{1}{(1-\\sqrt{3}i)^2} = \\frac{-1}{4}$ ",
         "answer": "sol :\n$\\frac{1}{(1+\\sqrt{3}i)^2} + \\frac{1}{(1-\\sqrt{3}i)^2} = \\frac{-1}{4}$\nالطرف الأيسر = $\\frac{1}{1+2\\sqrt{3}i-3} + \\frac{1}{1-2\\sqrt{3}i-3}$\n$= \\frac{1}{-2+2\\sqrt{3}i} + \\frac{1}{-2-2\\sqrt{3}i}$\n$= \\frac{-2-2\\sqrt{3}i-2+2\\sqrt{3}i}{4+12}$\n$= \\frac{-4}{16} = \\frac{-1}{4}$ = الطرف الايمن",
-        "years": ["2/2024 محاولات"]
+        "years": [
+          "2/2024 محاولات"
+        ]
       },
       {
         "question": "س/ اثبت ان $(1-i)(1-i^2)(1-i^3) = 4$ ",
         "answer": "sol :\n$(1-i)(1-i^2)(1-i^3) = 4$\nالطرف الايسر = $(1-i)(1-(-1))(1-(-i))$\n$= (1-i)(1+1)(1+i)$\n$= (2)(1+1) = (2)(2) = 4$ = الطرف الايمن",
-        "years": ["2025/تمهيدي"]
+        "years": [
+          "2025/تمهيدي"
+        ]
       },
       {
         "question": "س/ اكمل الفراغات الاتية بما يناسبها : 1 - حلل العدد المركب (8+i) الى عوامله ............ ",
@@ -155,22 +214,30 @@
       {
         "question": "س/ اكمل الفراغات الاتية بما يناسبها : 2 - اذا كان $Z=3-2i$ فإن $Z+\\overline{Z}$ يساوي ............ ",
         "answer": "sol :\n$Z+\\overline{Z} = (3-2i) + (3+2i) = 6$",
-        "years": ["2025/تمهيدي"]
+        "years": [
+          "2025/تمهيدي"
+        ]
       },
       {
         "question": "س/ اذا علمت ان $x=2+3i$ جد $x^2-3x+\\sqrt{-16}$ بالصيغة العادية",
         "answer": "sol :\n$x^2-3x+\\sqrt{-16}$ , $x=2+3i$\nنعوض قيمة x\n$= (2+3i)^2 - 3(2+3i) + \\sqrt{16}i$\n$= 4+12i-9-6-9i+4i$\n$= -11+7i$",
-        "years": ["2023/تمهيدي احيائي"]
+        "years": [
+          "2023/تمهيدي احيائي"
+        ]
       },
       {
         "question": "س/ اثبت ان: $\\frac{\\sqrt{3}+i}{\\sqrt{3}-i} + \\frac{\\sqrt{3}-i}{\\sqrt{3}+i} = 1$ ",
         "answer": "sol :\nالطريقة الأولى:\nالطرف الأيسر\n$\\frac{\\sqrt{3}+i}{\\sqrt{3}-i} + \\frac{\\sqrt{3}-i}{\\sqrt{3}+i}$\n$= \\frac{(\\sqrt{3}+i)(\\sqrt{3}+i)}{3+1} + \\frac{(\\sqrt{3}-i)(\\sqrt{3}-i)}{3+1}$\n$= \\frac{(3+\\sqrt{3}i+\\sqrt{3}i-1)}{4} + \\frac{(3-\\sqrt{3}i-\\sqrt{3}i-1)}{4}$\n$= \\frac{2+2\\sqrt{3}i+2-2\\sqrt{3}i}{4}$\n$= \\frac{4}{4} = 1$ = الطرف الايمن",
-        "years": ["3/2023 احيائي"]
+        "years": [
+          "3/2023 احيائي"
+        ]
       },
       {
         "question": "س/ اثبت ان $\\frac{(1-i)^2}{1+i} - \\frac{(1+i)^2}{1-i} = -2i$ ",
         "answer": "sol :\n$\\frac{(1-i)^2}{1+i} - \\frac{(1+i)^2}{1-i} = \\frac{1-2i+i^2}{1+i} - \\frac{1+2i+i^2}{1-i}$\n$= \\frac{-2i}{1+i} - \\frac{2i}{1-i}$\n$= \\frac{-2i(1-i) - 2i(1+i)}{(1+i)(1-i)}$\n$= \\frac{-2i+2i^2-2i-2i^2}{(1+1)}$\n$= \\frac{-4i}{2} = -2i$",
-        "years": ["2/2025"]
+        "years": [
+          "2/2025"
+        ]
       }
     ]
   },
@@ -180,137 +247,198 @@
       {
         "question": "س/ جد قيمتي $x, y \\in R$ التي تحقق $(2x+i)(y-2i) = -2-9i$",
         "answer": "sol :\n$(2xy+2) + (-4x+y)i = -2-9i$\n$2xy+2 = -2 \\Rightarrow 2xy = -4 \\dots (1)$\n$-4x+y = -9 \\Rightarrow y = 4x-9 \\dots (2)$\nنعوض (2) في (1)\n$2x(4x-9) = -4$\n$\\rightarrow [8x^2-18x+4=0] \\div 2$\n$\\rightarrow 4x^2-9x+2=0$\n$(4x-1)(x-2)=0$\n$\\rightarrow 4x-1=0 \\rightarrow 4x=1 \\rightarrow x=1/4$ اما نعوضها في (2)\n$y=4x-9 \\rightarrow y=4(1/4)-9 \\therefore y=1-9=-8$\nاو $x-2=0 \\rightarrow x=2$ نعوضها في (2)\n$y=4x-9 \\rightarrow y=4(2)-9 \\therefore y=8-9=-1$",
-        "years": ["1/1996"]
+        "years": [
+          "1/1996"
+        ]
       },
       {
         "question": "س/ جد قيمتي $x, y \\in R$ التي تحقق $(3x+2yi)^2 = \\frac{200}{4+3i}$",
         "answer": "sol :\n$(3x+2yi)^2 = \\frac{200}{4+3i}$\n$\\rightarrow 9x^2+12xyi+4y^2i^2 = \\frac{200}{4+3i} \\cdot \\frac{4-3i}{4-3i}$\n$(9x^2-4y^2)+(12xy)i = \\frac{200(4-3i)}{25}$\n$\\rightarrow (9x^2-4y^2)+(12xy)i = 8(4-3i)$\n$(9x^2-4y^2)+(12xy)i = 32-24i$\n$9x^2-4y^2 = 32 \\dots (1)$\n$12xy = -24$\n$\\rightarrow y = \\frac{-2}{x} \\dots (2)$\nنعوض (2) في (1)\n$9x^2 - 4(\\frac{-2}{x})^2 = 32$\n$\\rightarrow [9x^2 - \\frac{16}{x^2} = 32] \\cdot x^2$\n$9x^4-16=32x^2$\n$\\rightarrow 9x^4-32x^2-16=0$\n$(9x^2+4)(x^2-4)=0$\nاما $9x^2+4=0$ غير ممكن لانه مجموع مربعين\nاو $x^2=4 \\rightarrow x=\\pm 2$\nنعوضها في (1) $x=2 \\rightarrow y=-1$\nاو $x=-2$ نعوضها في (1) $\\rightarrow y=1$",
-        "years": ["2/1999", "3/2023 احيائي"]
+        "years": [
+          "2/1999",
+          "3/2023 احيائي"
+        ]
       },
       {
         "question": "س/ جد قيمتي $x, y \\in R$ التي تحقق $(2+xi)(-x+i) = \\frac{9y^2+49}{3y+7i}$",
         "answer": "sol :\n$(2+xi)(-x+i) = \\frac{9y^2+49}{3y+7i}$\n$\\rightarrow (-2x+2i-x^2i+xi^2) = \\frac{9y^2-49i^2}{3y+7i}$\n$(-2x-x)+(2-x^2)i = \\frac{(3y-7i)(3y+7i)}{3y+7i}$\n$\\rightarrow (-3x)+(2-x^2)i = 3y-7i$\n$-3x=3y \\rightarrow -x=y \\dots (1)$\n$2-x^2=-7 \\rightarrow x^2=9 \\rightarrow x=\\pm 3$\n$x=3 \\rightarrow$ نعوضها في (1) $y=-3$\n$x=-3 \\rightarrow$ نعوضها في (1) $y=3$",
-        "years": ["2/1998"]
+        "years": [
+          "2/1998"
+        ]
       },
       {
         "question": "س/ جد قيمتي $x, y \\in R$ التي تحقق $x(x+i)+y(y-i)+i=13$",
         "answer": "sol :\n$(x^2+xi)+(y^2-yi)=13-i$\n$\\rightarrow (x^2+y^2)+(x-y)i = 13-i$\n$x^2+y^2=13 \\dots (1)$\n$x-y=-1 \\rightarrow x=y-1 \\dots (2)$\nنعوض (2) في (1)\n$(y-1)^2+y^2=13 \\rightarrow y^2-2y+1+y^2-13=0$\n$\\rightarrow 2y^2-2y-12=0 \\rightarrow y^2-y-6=0$\n$(y-3)(y+2)=0$\nاما $y=3$ نعوضها في (2) $\\rightarrow x=3-1=2$\nاو $y=-2$ نعوضها في (2) $\\rightarrow x=-2-1=-3$",
-        "years": ["2/2000"]
+        "years": [
+          "2/2000"
+        ]
       },
       {
         "question": "س/ جد قيمتي $x, y \\in R$ التي تحقق $\\frac{2-i}{1+i}x + \\frac{3-i}{2+i}y = \\frac{1}{i}$",
         "answer": "sol :\n$(\\frac{2-i}{1+i} \\cdot \\frac{1-i}{1-i})x + (\\frac{3-i}{2+i} \\cdot \\frac{2-i}{2-i})y = (\\frac{1}{i} \\cdot \\frac{-i}{-i})$\n$(\\frac{(2-1)+(-2-1)i}{1+1})x + (\\frac{(6-1)+(-3-2)i}{4+1})y = -i$\n$(\\frac{1}{2}-\\frac{3}{2}i)x + (1-i)y = 0-i$\n$\\rightarrow (\\frac{1}{2}x-\\frac{3}{2}xi)+(y-yi) = 0-i$\n$(\\frac{1}{2}x+y)+(-\\frac{3}{2}x-y)i = 0-i$\n$\\frac{1}{2}x+y=0 \\rightarrow x+2y=0 \\rightarrow x=-2y \\dots (1)$\n$-\\frac{3}{2}x-y=-1 \\rightarrow -3x-2y=-2 \\dots (2)$\nنعوض (1) في (2)\n$-3(-2y)-2y=-2 \\rightarrow 6y-2y=-2 \\rightarrow 4y=-2 \\rightarrow y=\\frac{-1}{2}$\n$\\rightarrow x=(-2)(\\frac{-1}{2})=1$",
-        "years": ["2/2004", "2/2005"]
+        "years": [
+          "2/2004",
+          "2/2005"
+        ]
       },
       {
         "question": "س/ جد قيمتي $x, y$ الحقيقيتين التي تحقق المعادلة $\\frac{y}{1+i} = \\frac{x^2+4}{x+2i}$",
         "answer": "sol :\n$\\frac{x^2-4i^2}{x+2i} = \\frac{y}{1+i} \\rightarrow \\frac{(x-2i)(x+2i)}{x+2i} = \\frac{y}{1+i}$\n$\\rightarrow x-2i = \\frac{y}{1+i} \\rightarrow (x-2i)(1+i)=y$\n$\\rightarrow (x+2)+(x-2)i = y+0i$\n$x+2=y \\dots (1)$\n$x-2=0 \\rightarrow x=2 \\dots (2)$\nنعوض (2) في (1)\n$y=2+2=4$",
-        "years": ["3/2003"]
+        "years": [
+          "3/2003"
+        ]
       },
       {
         "question": "س/ جد قيمتي $x, y \\in R$ التي تحقق $(x+i)(y-3i) = -1-13i$",
         "answer": "sol :\n$xy-3ix+iy-3i^2 = -1-13i \\rightarrow (xy+3)+(-3x+y)i = -1-13i$\n$xy+3=-1 \\rightarrow xy=-4 \\dots (1)$\n$-3x+y=-13 \\rightarrow y=3x-13 \\dots (2)$\nنعوض (2) في (1)\n$x(3x-13)=-4 \\rightarrow 3x^2-13x+4=0 \\rightarrow (3x-1)(x-4)=0$\nاما $x=1/3$ نعوضها في (2) $\\rightarrow y=3(1/3)-13 = 1-13 = -12$\nاو $x=4$ نعوضها في (2) $\\rightarrow y=12-13 = -1$",
-        "years": ["2006 تمهيدي"]
+        "years": [
+          "2006 تمهيدي"
+        ]
       },
       {
         "question": "س/ جد قيمتي $x, y \\in R$ التي تحقق $(3x-i)(2y+i)+11=7i$",
         "answer": "sol :\n$6xy+3xi-2yi-i^2 = -11+7i \\rightarrow (6xy+1)+(3x-2y)i = -11+7i$\n$6xy+1=-11 \\rightarrow 6xy=-12 \\rightarrow y = \\frac{-2}{x} \\dots (1)$\n$3x-2y=7 \\dots (2)$\nنعوض (1) في (2)\n$[3x + \\frac{4}{x} = 7] \\cdot x \\rightarrow 3x^2+4=7x \\rightarrow 3x^2-7x+4=0$\n$\\rightarrow (3x-4)(x-1)=0$\nاما $x=4/3 \\rightarrow$ نعوضها في (1) $y = \\frac{-2}{4/3} = -2(\\frac{3}{4}) = \\frac{-3}{2}$\nاو $x=1 \\rightarrow$ نعوضها في (1) $y = \\frac{-2}{1} = -2$",
-        "years": ["2/2006", "1/2024 محاولات احيائي"]
+        "years": [
+          "2/2006",
+          "1/2024 محاولات احيائي"
+        ]
       },
       {
         "question": "س/ جد قيمتي $x, y \\in R$ التي تحقق $y+5i = (2x+i)(x+i)$",
         "answer": "sol :\n$y+5i = 2x^2+2xi+xi+i^2 \\rightarrow y+5i = (2x^2-1)+3xi$\n$2x^2-1=y \\dots (1)$\n$3x=5 \\rightarrow x=5/3 \\dots (2)$\nنعوض (2) في (1)\n$2(\\frac{25}{9})-1=y \\rightarrow y = \\frac{50}{9}-1 = \\frac{50-9}{9} = \\frac{41}{9}$",
-        "years": ["2/2008"]
+        "years": [
+          "2/2008"
+        ]
       },
       {
         "question": "س/ جد قيمتي $x, y \\in R$ التي تحقق $12+5i = (x+3i)(y-2i)$",
         "answer": "sol :\n$12+5i = xy-2xi+3yi-6i^2 \\rightarrow 12+5i = (xy+6)+(-2x+3y)i$\n$xy+6=12 \\rightarrow xy=6 \\rightarrow y = \\frac{6}{x} \\dots (1)$\n$-2x+3y=5 \\dots (2)$\nنعوض (1) في (2)\n$[-2x+3(\\frac{6}{x})=5] \\cdot x \\rightarrow -2x^2+18=5x \\rightarrow 2x^2+5x-18=0$\n$(2x+9)(x-2)=0$\nاما $x=-9/2 \\rightarrow$ نعوضها في (1) $y = \\frac{6}{-9/2} = 6(\\frac{-2}{9}) = \\frac{-4}{3}$\nاو $x=2 \\rightarrow$ نعوضها في (1) $y = \\frac{6}{2} = 3$",
-        "years": ["1/2010"]
+        "years": [
+          "1/2010"
+        ]
       },
       {
         "question": "س/ جد قيمتي $x, y \\in R$ التي تحقق $(3+2i)^2 y = (x+3i)^2$",
         "answer": "sol :\n$(9+12i+4i^2)y = (x^2+6ix+9i^2) \\rightarrow (5+12i)y = (x^2-9)+6ix$\n$\\rightarrow 5y+12yi = (x^2-9)+6ix$\n$5y=x^2-9 \\dots (1)$\n$12y=6x \\rightarrow x=2y \\dots (2)$\nنعوض (2) في (1)\n$5y = 4y^2-9 \\rightarrow 4y^2-5y-9=0 \\rightarrow (4y-9)(y+1)=0$\nاما $y=9/4$ نعوضها في (2) $x=2(\\frac{9}{4}) \\rightarrow x = \\frac{9}{2}$\nاو $y=-1$ نعوضها في (2) $x=2(-1) \\rightarrow x=-2$",
-        "years": ["2009 تمهيدي"]
+        "years": [
+          "2009 تمهيدي"
+        ]
       },
       {
         "question": "س/ جد قيمتي $x, y \\in R$ التي تحقق $(\\frac{1-i}{1+i}) + (x+yi) = (1+2i)^2$",
         "answer": "sol :\n$(\\frac{1-i}{1+i} \\cdot \\frac{1-i}{1-i}) + (x+yi) = (1+4i+4i^2)$\n$\\rightarrow (\\frac{1-2i-1}{1+1}) + (x+yi) = (1+4i-4)$\n$(0-i) + (x+yi) = -3+4i \\rightarrow (x)+(-1+y)i = -3+4i$\n$x=-3$\n$-1+y=4 \\rightarrow y=5$",
-        "years": ["1/2012 خارج القطر"]
+        "years": [
+          "1/2012 خارج القطر"
+        ]
       },
       {
         "question": "س/ جد قيمتي $x, y$ الحقيقيتان اذا علمت ان $\\frac{2+i}{3-i}, \\frac{5}{x+yi}$ مترافقان",
         "answer": "sol :\n$\\overline{(\\frac{2+i}{3-i})} = \\frac{5}{x+yi} \\rightarrow (\\frac{2-i}{3+i} \\cdot \\frac{3-i}{3-i}) = \\frac{5}{x+yi}$\n$\\rightarrow (\\frac{(6-1)+(-3-2)i}{10}) = \\frac{5}{x+yi} \\rightarrow \\frac{1}{2}-\\frac{1}{2}i = \\frac{5}{x+yi}$\n$\\rightarrow 1-i = \\frac{10}{x+yi} \\rightarrow x+yi = \\frac{10}{1-i} \\cdot \\frac{1+i}{1+i} \\rightarrow x+yi = \\frac{10(1+i)}{2}$\n$x+yi = 5+5i \\rightarrow x=5, y=5$",
-        "years": ["1/2012", "2/2023 تمهيدي احيائي"]
+        "years": [
+          "1/2012",
+          "2/2023 تمهيدي احيائي"
+        ]
       },
       {
         "question": "س/ جد قيمتي $x, y \\in R$ التي تحقق $(x+2i)(x-i) = \\frac{121+9y^2}{11+3yi}$",
         "answer": "sol :\n$(x^2-xi+2xi-2i^2) = \\frac{121-9y^2i^2}{11+3yi} \\rightarrow (x^2+2)+(-x+2x)i = \\frac{(11-3yi)(11+3yi)}{11+3yi}$\n$(x^2+2)+(x)i = 11-3yi$\n$x^2+2=11 \\rightarrow x^2=9 \\rightarrow x=\\pm 3$\n$x=-3y \\rightarrow x=3 \\rightarrow 3=-3y \\rightarrow y=-1$\nاو $x=-3 \\rightarrow -3=-3y \\rightarrow y=1$",
-        "years": ["2/2016"]
+        "years": [
+          "2/2016"
+        ]
       },
       {
         "question": "س/ جد قيمتي $x, y$ الحقيقيتان اذا علمت ان $\\frac{3+i}{2-i}, \\frac{6}{x+yi}$ مترافقان",
         "answer": "sol :\n$\\overline{(\\frac{3+i}{2-i})} = \\frac{6}{x+yi} \\rightarrow (\\frac{3-i}{2+i} \\cdot \\frac{2-i}{2-i}) = \\frac{6}{x+yi}$\n$\\rightarrow (\\frac{(6-1)+(-3-2)i}{5}) = \\frac{6}{x+yi} \\rightarrow 1-i = \\frac{6}{x+yi}$\n$\\rightarrow x+yi = \\frac{6}{1-i} \\cdot \\frac{1+i}{1+i} \\rightarrow x+yi = \\frac{6(1+i)}{2}$\n$x+yi = 3+3i \\rightarrow x=3, y=3$",
-        "years": ["3/2015", "2017 تمهيدي", "2020 تمهيدي تطبيقي"]
+        "years": [
+          "3/2015",
+          "2017 تمهيدي",
+          "2020 تمهيدي تطبيقي"
+        ]
       },
       {
         "question": "س/ اذا كان $\\frac{x-yi}{1+5i}, \\frac{3-2i}{i}$ عددان مركبان مترافقان، فجد قيمة كل من $x, y$",
         "answer": "sol :\n$\\overline{(\\frac{x-yi}{1+5i})} = \\frac{3-2i}{i} \\rightarrow \\frac{x+yi}{1-5i} = \\frac{3-2i}{i}$\n$i(x+yi) = (3-2i)(1-5i) \\rightarrow xi+yi^2 = 3-15i-2i+10i^2$\n$xi-y = -7-17i \\rightarrow -y+xi = -7-17i$\n$\\therefore x=-17, -y=-7 \\rightarrow y=7$\nملاحظة / يمكن للطالب ان يأخذ $\\overline{(\\frac{3-2i}{i})} = \\frac{x-yi}{1+5i}$ ويكمل الحل بشكل مضبوط",
-        "years": ["3/2016"]
+        "years": [
+          "3/2016"
+        ]
       },
       {
         "question": "س/ جد قيمتي $x, y$ الحقيقيتان التي تحقق المعادلة $\\frac{125}{11+2i}x + (1-i)^2y = 11$",
         "answer": "sol :\n$\\frac{125}{11+2i} \\cdot \\frac{11-2i}{11-2i}x + (1-2i+i^2)y = 11$\n$\\rightarrow \\frac{125(11-2i)}{125}x + (-2i)y = 11$\n$(11x-2xi)+(0-2yi) = 11 \\rightarrow (11x)+(-2x-2y)i = 11+0i$\n$11x=11 \\rightarrow x=1$\n$-2x-2y=0 \\rightarrow -x-y=0 \\rightarrow -1-y=0 \\rightarrow y=-1$",
-        "years": ["2016 تمهيدي"]
+        "years": [
+          "2016 تمهيدي"
+        ]
       },
       {
         "question": "س/ جد قيمتي $x, y$ الحقيقيتين التي تحقق المعادلة $\\frac{y}{1+i} = \\frac{x^2+9}{x+3i}$",
         "answer": "sol :\n$\\frac{y}{1+i} = \\frac{x^2+9}{x+3i} \\rightarrow \\frac{y}{1+i} \\cdot \\frac{1-i}{1-i} = \\frac{x^2-9i^2}{x+3i}$\n$\\rightarrow \\frac{y-yi}{1+1} = \\frac{(x-3i)(x+3i)}{x+3i} \\rightarrow \\frac{y}{2}-\\frac{y}{2}i = x-3i$\n$\\frac{y}{2}=x \\dots (1) , \\frac{-y}{2}=-3 \\rightarrow y=6$\nنعوض (2) في (1) $\\rightarrow \\frac{6}{2}=x \\rightarrow x=3$\nملاحظة / يمكن للطالب ان يضرب الطرف الايمن بالمرافق دون تغير اشارة البسط ويكمل الحل بشكل صحيح. او يضرب الطرفين في الوسطين",
-        "years": ["2018 تمهيدي احيائي"]
+        "years": [
+          "2018 تمهيدي احيائي"
+        ]
       },
       {
         "question": "س/ اذا علمت ان $\\frac{1-i}{1+i}x + (1+3i)^2y = (1-i)(1+3i)$ جد قيمتي $x, y \\in R$",
         "answer": "sol :\n$\\frac{1-i}{1+i}x + (1+3i)^2y = (1-i)(1+3i)$\n$(\\frac{1-i}{1+i} \\cdot \\frac{1-i}{1-i})x + (1+6i-9)y = 1+3i-i+3$\n$(\\frac{1-2i-1}{1+1})x + (-8+6i)y = 4+2i \\rightarrow -xi - 8y + 6yi = 4+2i$\n$-8y + (-x+6y)i = 4+2i \\rightarrow -8y = 4 \\rightarrow y = -1/2$\n$-x+6y=2 \\rightarrow -x+6(-1/2)=2 \\rightarrow -x-3=2 \\rightarrow -x=5 \\rightarrow x=-5$",
-        "years": ["2024 تمهيدي"]
+        "years": [
+          "2024 تمهيدي"
+        ]
       },
       {
         "question": "س/ اذا كان $x=(3-2i)^2, y = \\frac{3-i}{1+i}$ جد $x, y$ بالصيغة العادية ثم اثبت ان $\\overline{x+y} = \\overline{x}+\\overline{y}$",
         "answer": "sol :\n$x=(3-2i)^2 = 9-12i-4 = 5-12i$\n$y = \\frac{3-i}{1+i} \\cdot \\frac{1-i}{1-i} = \\frac{3-3i-i-1}{1+1} = \\frac{2-4i}{2} = 1-2i$\nالطرف الايسر $\\overline{x+y} = \\overline{(5-12i)+(1-2i)} = \\overline{6-14i} = 6+14i$\nالطرف الايمن $\\overline{x}+\\overline{y} = \\overline{(5-12i)}+\\overline{(1-2i)} = 5+12i+1+2i = 6+14i$\n$\\therefore \\overline{x+y} = \\overline{x}+\\overline{y}$",
-        "years": ["3/2019 احيائي"]
+        "years": [
+          "3/2019 احيائي"
+        ]
       },
       {
         "question": "س/ جد قيمتي $x, y$ الحقيقيتين اذا علمت ان $\\frac{x-yi}{x^2+y^2} = \\frac{1}{(1+xi)(3+i)}$",
         "answer": "sol :\n$\\frac{x-yi}{x^2-y^2i^2} = \\frac{1}{3+i+3xi+xi^2} \\rightarrow \\frac{x-yi}{(x-yi)(x+yi)} = \\frac{1}{(3-x)+(1+3x)i}$\n$x+yi = (3-x)+(1+3x)i$\nوحسب تساوي العددين المركبين: $\\therefore x = 3-x \\rightarrow 2x=3 \\rightarrow x=3/2$\n$y=1+3x \\rightarrow y=1+3(3/2) = 1+9/2 = 11/2$",
-        "years": ["1/2018 خارج القطر احيائي"]
+        "years": [
+          "1/2018 خارج القطر احيائي"
+        ]
       },
       {
         "question": "س/ جد قيمة $x, y$ الحقيقيتين اللتين تحققان المعادلة $(y+5i) = (2x+i)(x+2i)$",
         "answer": "sol :\n$(y+5i) = (2x+i) \\cdot (x+2i) = (2x^2-2)+(x+4x)i$\n$y+5i = (2x^2-2)+5xi$\n$y=2x^2-2 \\dots (1) , 5=5x \\Rightarrow x=1$\n$y=2(1)^2-2 \\Rightarrow y=0$",
-        "years": ["2020 تمهيدي احيائي"]
+        "years": [
+          "2020 تمهيدي احيائي"
+        ]
       },
       {
         "question": "س/ جد $x, y \\in R$ اذا علمت ان $\\frac{-2}{x+yi}, \\frac{1-5i}{3-2i}$ مترافقان",
         "answer": "sol :\nبما ان العددين مترافقين $\\frac{-2}{x+yi} = \\overline{(\\frac{1-5i}{3-2i})} \\rightarrow \\frac{-2}{x+yi} = \\frac{1+5i}{3+2i}$\n$\\frac{x+yi}{-2} = \\frac{3+2i}{1+5i} \\cdot \\frac{1-5i}{1-5i} = \\frac{3-15i+2i+10}{26} = \\frac{13-13i}{26}$\n$\\frac{x+yi}{-2} = \\frac{13-13i}{26} \\rightarrow x+yi = \\frac{-2(13-13i)}{26} = \\frac{-(13-13i)}{13} = -1+i$\n$\\therefore x=-1, y=1$\nملاحظة :- اذا قام الطالب من الخطوة * وبالضرب الطرفين في الوسطين وبسط الحل تعطى درجة الخطوة كاملة",
-        "years": ["1/2020 احيائي"]
+        "years": [
+          "1/2020 احيائي"
+        ]
       },
       {
         "question": "س/ اذا علمت ان $(\\frac{1+5i}{1+i})x - (\\frac{7-i}{3+i})y = \\frac{-3}{i}$ جد $x, y \\in R$",
         "answer": "sol :\nالطريقة الأولى:\n$(\\frac{1+5i}{1+i} \\cdot \\frac{1-i}{1-i})x - (\\frac{7-i}{3+i} \\cdot \\frac{3-i}{3-i})y = 3i$\n$(\\frac{6+4i}{2})x - (\\frac{20-10i}{10})y = 3i \\rightarrow (3+2i)x - (2-i)y = 3i$\n$3x+2xi-2y+yi = 3i \\rightarrow (3x-2y)+(2x+y)i = 0+3i$\n$3x-2y=0 \\dots (1) , 2x+y=3 \\dots (2) \\cdot (2) \\rightarrow 4x+2y=6$\nبالجمع $7x=6 \\Rightarrow x=6/7$\n$3(6/7)-2y=0 \\Rightarrow 18/7=2y \\Rightarrow y=9/7$",
-        "years": ["2/2021 احيائي"]
+        "years": [
+          "2/2021 احيائي"
+        ]
       },
       {
         "question": "س/ جد قيمة كل من $x, y$ الحقيقيتين اللتين تحققان المعادلة $2x-1+2i = 1+(y+1)i$",
         "answer": "sol :\nالحقيقي = الحقيقي $\\rightarrow 2x-1=1 \\rightarrow 2x=2 \\Rightarrow x=1$\nالتخيلي = التخيلي $\\rightarrow 2=y+1 \\rightarrow y=1$",
-        "years": ["2022 تمهيدي تطبيقي"]
+        "years": [
+          "2022 تمهيدي تطبيقي"
+        ]
       },
       {
         "question": "س/ جد قيمتي $x, y$ الحقيقيتان اذا علمت ان $\\frac{7-6i}{x+yi}, \\frac{5-5i}{1-3i}$ مترافقان",
         "answer": "sol :\n$\\frac{7-6i}{x+yi} = \\overline{(\\frac{5-5i}{1-3i})} = \\frac{5+5i}{1+3i} \\rightarrow x+yi = \\frac{(7-6i)(1+3i)}{5+5i}$\n$= \\frac{25+15i}{5+5i} \\cdot \\frac{5-5i}{5-5i} = \\frac{125-125i+75i+75}{50} = \\frac{200-50i}{50} = 4-i$\n$x+yi = 4-i \\rightarrow x=4, y=-1$\nملاحظة : يمكن اخذ المرافق للكسر الأول بدل الثاني. او يبسط الكسر ثم يأخذ المرافق له",
-        "years": ["2/2024 محاولات"]
+        "years": [
+          "2/2024 محاولات"
+        ]
       },
       {
         "question": "س/ اذا كان $\\frac{x+yi}{3+4i}, \\frac{3+i}{2-i}$ عددان مترافقان ، جد $x, y \\in R$",
         "answer": "sol :\n$\\frac{x+yi}{3+4i} = \\overline{(\\frac{3+i}{2-i})} = \\frac{3-i}{2+i} \\rightarrow x+yi = \\frac{(3-i)(3+4i)}{2+i}$\n$= \\frac{9+12i-3i+4}{2+i} = \\frac{13+9i}{2+i} \\cdot \\frac{2-i}{2-i} = \\frac{26-13i+18i+9}{5} = \\frac{35+5i}{5} = 7+i$\n$\\therefore x=7, y=1$",
-        "years": ["2/2023 احيائي", "3/2023 تكميلي احيائي"]
+        "years": [
+          "2/2023 احيائي",
+          "3/2023 تكميلي احيائي"
+        ]
       }
     ]
   },
@@ -320,52 +448,73 @@
       {
         "question": "س/ جد الجذران التربيعيان للعدد المركب $\\frac{14+2i}{1+i}$",
         "answer": "sol :\n$\\frac{14+2i}{1+i} \\cdot \\frac{1-i}{1-i} = \\frac{14-14i+2i-2i^2}{2}$\n$= \\frac{16-12i}{2} = 8-6i$\n$\\sqrt{8-6i} = x+yi$ بتربيع الطرفين\n$8-6i = (x^2-y^2) + (2xy)i$\n$x^2-y^2 = 8 \\dots (1)$\n$2xy = -6 \\rightarrow y = \\frac{-3}{x} \\dots (2)$\nنعوض (2) في (1)\n$x^2 - (\\frac{-3}{x})^2 = 8 \\rightarrow [x^2 - \\frac{9}{x^2} = 8] \\cdot x^2$\n$x^4-9=8x^2 \\rightarrow x^4-8x^2-9=0$\n$(x^2-9)(x^2+1)=0$\nيهمل ($x^2+1=0$ مجموع مربعين ليس له حل في R)\nاو $x^2-9=0 \\rightarrow x^2=9 \\rightarrow x=\\pm 3$\n$\\rightarrow y = (\\frac{-3}{\\pm 3}) \\rightarrow y = \\mp 1$\nans: $\\sqrt{8-6i} = \\{\\pm(3-i)\\}$",
-        "years": ["2/2009"]
+        "years": [
+          "2/2009"
+        ]
       },
       {
         "question": "س/ اذا كان $c, d \\in R$ وكان $c+di = \\frac{7-4i}{2+i}$ جد $\\sqrt{2c-di}$",
         "answer": "sol :\n$c+di = \\frac{7-4i}{2+i} \\cdot \\frac{2-i}{2-i} = \\frac{14-7i-8i-4}{5} = \\frac{10-15i}{5} = 2-3i$\n$\\rightarrow c=2, d=-3$\n$\\sqrt{2c-di} = \\sqrt{2(2)-(-3)i} = \\sqrt{4+3i}$\n$\\sqrt{4+3i} = x+yi \\rightarrow 4+3i = (x^2-y^2) + (2xy)i$\n$x^2-y^2 = 4 \\dots (1)$\n$2xy = 3 \\rightarrow y = \\frac{3}{2x} \\dots (2)$\nنعوض (2) في (1)\n$x^2 - (\\frac{3}{2x})^2 = 4 \\rightarrow [x^2 - \\frac{9}{4x^2} = 4] \\cdot 4x^2$\n$4x^4-9=16x^2 \\rightarrow 4x^4-16x^2-9=0$\n$(2x^2-9)(2x^2+1)=0$\nيهمل ($2x^2+1=0$)\nاو $2x^2-9=0 \\rightarrow 2x^2=9 \\rightarrow x^2 = 9/2 \\rightarrow x=\\pm \\frac{3}{\\sqrt{2}}$\n$\\rightarrow y = (\\frac{3}{\\pm 2(\\frac{3}{\\sqrt{2}})}) \\rightarrow y = \\pm \\frac{1}{\\sqrt{2}}$\nans: $\\sqrt{4+3i} = \\{\\pm(\\frac{3}{\\sqrt{2}}+\\frac{1}{\\sqrt{2}}i)\\}$",
-        "years": ["1/1997"]
+        "years": [
+          "1/1997"
+        ]
       },
       {
         "question": "س/ جد الجذران التربيعيان للعدد المركب $3+4i$",
         "answer": "sol :\n$\\sqrt{3+4i} = x+yi \\rightarrow 3+4i = (x^2-y^2) + (2xy)i$\n$x^2-y^2 = 3 \\dots (1)$\n$2xy = 4 \\rightarrow y = \\frac{2}{x} \\dots (2)$\nنعوض (2) في (1)\n$x^2 - (\\frac{2}{x})^2 = 3 \\rightarrow [x^2 - \\frac{4}{x^2} = 3] \\cdot x^2$\n$x^4-4=3x^2 \\rightarrow x^4-3x^2-4=0$\n$(x^2-4)(x^2+1)=0$\nيهمل ($x^2+1=0$)\nاو $x^2-4=0 \\rightarrow x^2=4 \\rightarrow x=\\pm 2$\n$\\rightarrow y = (\\frac{2}{\\pm 2}) \\rightarrow y = \\pm 1$\nans: $\\sqrt{3+4i} = \\{\\pm(2+i)\\}$",
-        "years": ["1/2007"]
+        "years": [
+          "1/2007"
+        ]
       },
       {
         "question": "س/ اذا كانت $a, b \\in R, a+bi = \\frac{7-4i}{2+i}$ جد قيمة $\\sqrt{2a-ib}$",
         "answer": "sol :\n$a+bi = \\frac{7-4i}{2+i} \\cdot \\frac{2-i}{2-i} = \\frac{10-15i}{5} = 2-3i$\n$\\rightarrow a=2, b=-3$\n$\\sqrt{2a-ib} = \\sqrt{2(2)-i(-3)} = \\sqrt{4+3i}$\n$\\sqrt{4+3i} = x+yi$\n$4+3i = x^2-y^2+2xyi$\n$x^2-y^2=4 \\dots (1)$\n$2xy=3 \\Rightarrow y=\\frac{3}{2x} \\dots (2)$\nنعوض (2) في (1)\n$x^2 - (\\frac{3}{2x})^2 = 4 \\rightarrow [x^2-\\frac{9}{4x^2}=4] \\cdot 4x^2$\n$4x^4-9=16x^2 \\rightarrow 4x^4-16x^2-9=0$\n$(2x^2-9)(2x^2+1)=0$\nيهمل ($2x^2+1=0$)\nاو $2x^2=9 \\Rightarrow x^2=9/2 \\Rightarrow x = \\pm \\frac{3}{\\sqrt{2}}$\nعند $x = \\pm \\frac{3}{\\sqrt{2}} \\rightarrow y = \\pm \\frac{1}{\\sqrt{2}}$\n$\\therefore C_1 = \\frac{3}{\\sqrt{2}}+\\frac{1}{\\sqrt{2}}i , C_2 = \\frac{-3}{\\sqrt{2}}-\\frac{1}{\\sqrt{2}}i$",
-        "years": ["1/2019 خارج القطر احيائي"]
+        "years": [
+          "1/2019 خارج القطر احيائي"
+        ]
       },
       {
         "question": "س/ جد الجذران التربيعيان للعدد المركب $(-1+7i)(1+i)$ ",
         "answer": "sol :\n$(-1+7i)(1+i) = -1-i+7i+7i^2 = -8+6i$\n$\\sqrt{-8+6i} = x+yi$ بتربيع الطرفين\n$-8+6i = (x^2-y^2) + (2xy)i$\n$x^2-y^2 = -8 \\dots (1)$\n$2xy = 6 \\rightarrow y = \\frac{3}{x} \\dots (2)$\nنعوض (2) في (1)\n$x^2 - (\\frac{3}{x})^2 = -8 \\rightarrow [x^2 - \\frac{9}{x^2} = -8] \\cdot x^2$\n$x^4-9=-8x^2 \\rightarrow x^4+8x^2-9=0$\n$(x^2+9)(x^2-1)=0$\nيهمل ($x^2+9=0$)\nاو $x^2-1=0 \\rightarrow x^2=1 \\rightarrow x=\\pm 1$\n$\\rightarrow y = (\\frac{3}{\\pm 1}) \\rightarrow y = \\pm 3$\nans: $\\sqrt{-8+6i} = \\{\\pm(1+3i)\\}$",
-        "years": ["1/2010"]
+        "years": [
+          "1/2010"
+        ]
       },
       {
         "question": "س/ اذا كان $c+di = \\frac{5-i}{1+i}$ جد الجذران التربيعيان للعدد المركب $(4c-2di)$ ",
         "answer": "sol :\n$c+di = \\frac{5-i}{1+i} \\cdot \\frac{1-i}{1-i} = \\frac{5-5i-i-1}{2} = \\frac{4-6i}{2} = 2-3i$\n$\\therefore c=2 , d=-3$\n$4c-2di = 4(2)-2(-3)i = 8+6i$\n$\\therefore \\sqrt{4c-2di} = \\sqrt{8+6i}$\nنفرض $\\sqrt{8+6i} = x+yi$ بتربيع الطرفين\n$8+6i = (x^2-y^2) + 2xyi$\n$8 = x^2-y^2 \\dots (1)$\n$2xy = 6 \\dots (2)$\nمن معادلة (2) $y = \\frac{3}{x}$ نعوضها بـ (1)\n$x^2 - (\\frac{3}{x})^2 = 8 \\Rightarrow x^2 - \\frac{9}{x^2} = 8 ] \\cdot x^2$\n$x^4-9=8x^2 \\Rightarrow x^4-8x^2-9=0$\n$(x^2-9)(x^2+1)=0$\n$\\therefore x^2-9=0 \\Rightarrow x^2=9 \\Rightarrow x=\\mp 3$\n$x^2+1 \\neq 0$ يهمل\n$\\therefore y = \\frac{3}{x} = \\frac{3}{3} \\Rightarrow y=1$ الجذر الاول = $3+i$\n$y = \\frac{3}{-3} \\Rightarrow y=-1$ الجذر الثاني = $-3-i$\nالجذور $[3+i , -3-i]$ ",
-        "years": ["2/2023 احيائي"]
+        "years": [
+          "2/2023 احيائي"
+        ]
       },
       {
         "question": "س/ جد الجذور التكعيبية للعدد 27 ",
         "answer": "sol :\nlet $Z = \\sqrt[3]{27} \\rightarrow Z^3 = 27$\n$\\rightarrow Z^3 - 27 = 0$\n$(Z-3)(Z^2+3Z+9) = 0$\nاما $Z=3$ او $Z^2+3Z+9=0$\n$a=1, b=3, c=9$\n$Z = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a} = \\frac{-3 \\pm \\sqrt{3^2-4.1.9}}{2.1}$\n$= \\frac{-3 \\pm \\sqrt{9-36}}{2} = \\frac{-3 \\pm \\sqrt{-27}}{2}$\n$= \\frac{-3 \\pm 3\\sqrt{3}i}{2} = \\frac{-3}{2} \\pm \\frac{3\\sqrt{3}}{2}i$\nans: $\\{3 , \\frac{-3}{2}-\\frac{3\\sqrt{3}}{2}i , \\frac{-3}{2}+\\frac{3\\sqrt{3}}{2}i\\}$",
-        "years": ["2/2001"]
+        "years": [
+          "2/2001"
+        ]
       },
       {
         "question": "س/ جد الجذور التربيعية للعدد المركب $\\frac{7+wi+w^2i}{1-wi-w^2i}$ ",
         "answer": "sol :\n$\\frac{7+wi+w^2i}{1-wi-w^2i} = \\frac{7+i(w+w^2)}{1-i(w+w^2)}$\n$= \\frac{7-i}{1+i} \\cdot \\frac{1-i}{1-i} = \\frac{7-7i-i+i^2}{2} = \\frac{6-8i}{2} = 3-4i$\n$\\sqrt{3-4i} = x+yi$\n$3-4i = (x^2-y^2) + (2xy)i$\n$x^2-y^2 = 3 \\dots (1)$\n$2xy = -4 \\dots (2) \\rightarrow y = -2/x \\dots (3) in (1)$\n$x^2 - (\\frac{-2}{x})^2 = 3 \\rightarrow [x^2-\\frac{4}{x^2}=3] \\cdot x^2$\n$x^4-4=3x^2 \\rightarrow x^4-3x^2-4=0$\n$(x^2-4)(x^2+1)=0$\nاما $x^2+1=0$ يهمل\nاو $x^2-4=0 \\rightarrow x^2=4 \\rightarrow x=\\pm 2$\n$\\rightarrow y = (\\frac{-2}{\\pm 2}) \\rightarrow y = \\mp 1$\n$\\sqrt{3-4i} = \\{\\pm(2-i)\\}$",
-        "years": ["1/1998"]
+        "years": [
+          "1/1998"
+        ]
       },
       {
         "question": "س/ جد الجذور التربيعية للعدد المركب $\\frac{1+wi+w^2i}{1-wi-w^2i}$ ",
         "answer": "sol :\n$\\frac{1+wi+w^2i}{1-wi-w^2i} = \\frac{1+i(w+w^2)}{1-i(w+w^2)} = \\frac{1-i}{1+i} \\cdot \\frac{1-i}{1-i}$\n$= \\frac{1-i-i+i^2}{2} = \\frac{-2i}{2} = -i$\n$\\sqrt{-i} = x+yi$ بتربيع الطرفين\n$x^2-y^2=0 \\dots (1)$\n$2xy=-1 \\dots (2) , y = \\frac{-1}{2x} \\dots (3) in (1)$\n$x^2 - (\\frac{-1}{2x})^2 = 0 \\rightarrow [x^2-\\frac{1}{4x^2}=0] \\cdot 4x^2 \\rightarrow 4x^4-1=0$\n$(2x^2-1)(2x^2+1)=0$\n$(2x^2+1)=0$ يهمل\n$2x^2-1=0 \\rightarrow 2x^2=1 \\rightarrow x^2 = 1/2 \\rightarrow x = \\pm \\frac{1}{\\sqrt{2}}$\n$x = \\frac{1}{\\sqrt{2}} \\rightarrow y = \\frac{-1}{2 \\cdot \\frac{1}{\\sqrt{2}}} = \\frac{-1}{\\sqrt{2}}$\n$x = \\frac{-1}{\\sqrt{2}} \\rightarrow y = \\frac{-1}{2 \\cdot \\frac{-1}{\\sqrt{2}}} = \\frac{1}{\\sqrt{2}}$\nans: $\\{\\pm(\\frac{1}{\\sqrt{2}}-\\frac{1}{\\sqrt{2}}i)\\}$",
-        "years": ["2/2005" , "2024 تمهيدي"]
+        "years": [
+          "2/2005",
+          "2024 تمهيدي"
+        ]
       },
       {
         "question": "س/ اكتب العدد Z بالصيغة العادية اولاً، ثم جد الجذور التربيعية للعدد المركب: $Z = (\\sqrt{2}+\\sqrt{2}w)^6 + \\sqrt{-36}$ ",
         "answer": "sol :\nالطريقة الأولى لـ اولاً :\n$Z = [(\\sqrt{2}+\\sqrt{2}w)^2]^3 + 6i$\n$Z = [2+4w+2w^2]^3 + 6i$\n$Z = [2(1+w^2)+4w]^3 + 6i$\n$Z = [-2w+4w]^3 + 6i$\n$Z = [2w]^3 + 6i = 8w^3+6i = 8+6i$\nثانياً : نفرض $\\sqrt{8+6i} = x+yi$ بتربيع الطرفين\n$8+6i = (x^2-y^2) + 2xyi$\n$x^2-y^2 = 8 \\dots (1)$\n$2xy=6 \\div 2 \\rightarrow y = 3/x \\dots (2)$ نعوض 2 في 1\n$x^2 - (3/x)^2 = 8 \\rightarrow [x^2-\\frac{9}{x^2}=8] \\cdot x^2$\n$x^4-9=8x^2 \\rightarrow x^4-8x^2-9=0$\n$(x^2-9)(x^2+1)=0$\nاما $x^2+1=0$ يهمل او $x^2-9=0 \\rightarrow x^2=9 \\rightarrow x = \\pm 3$\nعندما $x=3 \\rightarrow y=1$\nعندما $x=-3 \\rightarrow y=-1$\nالجذران هما $C_1=3+i , C_2=-3-i$\n------------------------\nالطريقة الثانية لـ اولاً :\n$Z = (\\sqrt{2}+(1+w))^6 + 6i$\n$Z = (\\sqrt{2}(-w^2))^6 + 6i$\n$Z = 8w^{12}+6i = 8+6i$",
-        "years": ["1/2025"]
+        "years": [
+          "1/2025"
+        ]
       }
     ]
   },
@@ -375,132 +524,187 @@
       {
         "question": "س/ جد قيمة: $(\\frac{1}{1+w^2} - \\frac{1}{1+w})^2$",
         "answer": "sol :\n$(\\frac{1}{1+w^2} - \\frac{1}{1+w})^2$\n$= (\\frac{1}{-w} - \\frac{1}{-w^2})^2 = (\\frac{w^3}{-w} - \\frac{w^3}{-w^2})^2 = (-w^2 - (-w))^2$\n$= w^4 - 2w^3 + w^2 = w - 2 + w^2$\n$= -1 - 2 = -3$",
-        "years": ["1/2000"]
+        "years": [
+          "1/2000"
+        ]
       },
       {
         "question": "س/ جد قيمة $(2 + 3w^2 + w)^2$",
         "answer": "sol :\n$(2 + 3w^2 + w)^2$\n$= [1 + 1 + w^2 + 2w^2 + w]^2$\n$= (1 + 2w^2)^2$\n$= 1 + 4w^2 + 4w^4$\n$= 1 + 4(w^2 + w)$\n$= 1 - 4 = -3$",
-        "years": ["2/2001"]
+        "years": [
+          "2/2001"
+        ]
       },
       {
         "question": "س/ جد قيمة المقدار $(4 + \\frac{3}{w} + w^2)(3 + \\frac{2}{w^2} + w)$",
         "answer": "sol :\n$(4 + \\frac{3}{w} + w^2)(3 + \\frac{2}{w^2} + w)$\n$= (4 + \\frac{3w^3}{w} + w^2)(3 + \\frac{2w^3}{w^2} + w)$\n$= (4 + 3w^2 + w^2)(3 + 2w + w)$\n$= (4 + 4w^2)(3 + 3w)$\n$= 4[1 + w^2][3(1 + w)]$\n$= (-4w)(-3w^2) = 12w^3 = 12$",
-        "years": ["تمهيدي 2009"]
+        "years": [
+          "تمهيدي 2009"
+        ]
       },
       {
         "question": "س/ جد بأبسط صورة $w(1 + i)^4 - (5 + 3w + 5w^2)^2$",
         "answer": "sol :\n$w(1 + i)^4 - (5 + 3w + 5w^2)^2$\n$= w[(1 + i)^2]^2 - [3w + 5(1 + w^2)]^2$\n$= w(1 + 2i + i^2)^2 - (3w - 5w)^2$\n$= w(2i)^2 - (-2w)^2 = -4w - 4w^2$\n$= -4(w + w^2) = 4$",
-        "years": ["1/2009"]
+        "years": [
+          "1/2009"
+        ]
       },
       {
         "question": "س/ برهن ان: $3(w^{14} - w^7 - 1) = 2(w^{10} + w^5 - 2)$",
         "answer": "sol :\n$3(w^{14} - w^7 - 1) = 3(w^2 + w - 1)$\n$= 3(-1 - 1) = -6$\n$2(w^{10} + w^5 - 2) = 2(w + w^2 - 2)$\n$= 2(-1 - 2) = -6$",
-        "years": ["1/1998"]
+        "years": [
+          "1/1998"
+        ]
       },
       {
         "question": "س/ اذا كان $x = 2 + \\sqrt{3}i, y = 2 - \\sqrt{3}i$ جد قيمة $x^2 w + y^2 w^2$",
         "answer": "sol :\n$x^2 = (2 + \\sqrt{3}i)^2 = 4 + 4\\sqrt{3}i + 3i^2 = 1 + 4\\sqrt{3}i$\n$y^2 = (2 - \\sqrt{3}i)^2 = 4 - 4\\sqrt{3}i + 3i^2 = 1 - 4\\sqrt{3}i$\n$x^2 w + y^2 w^2 = (1 + 4\\sqrt{3}i)w + (1 - 4\\sqrt{3}i)w^2$\n$= (w + 4w\\sqrt{3}i) + (w^2 - 4w^2\\sqrt{3}i)$\n$= (w + w^2) + 4\\sqrt{3}i(w - w^2) = -1 + 4\\sqrt{3}i(w - w^2)$\n$= -1 + 4\\sqrt{3}i(\\pm\\sqrt{3}i) = -1 \\pm 12i^2 = -1 \\pm 12 = \\{-13, 11\\}$",
-        "years": ["2/1999"]
+        "years": [
+          "2/1999"
+        ]
       },
       {
         "question": "س/ جد قيمة المقدار $(2 + w^2) + (2 + w)$",
         "answer": "sol :\n$(2 + w^2) + (2 + w) = 4 + w + w^2$\n$= 4 - 1 = 3$",
-        "years": ["2/2004"]
+        "years": [
+          "2/2004"
+        ]
       },
       {
         "question": "س/ برهن ان $(1 + w^2)^3 + (1 + w)^3 = -2$",
         "answer": "sol :\n$(1 + w^2)^3 + (1 + w)^3 = (-w)^3 + (-w^2)^3$\n$= -w^3 - w^6 = -1 - 1 = -2$",
-        "years": ["تمهيدي 2005"]
+        "years": [
+          "تمهيدي 2005"
+        ]
       },
       {
         "question": "س/ جد قيمة : $(4 + 5w + 4w^2)^6$",
         "answer": "sol :\n$(4 + 5w + 4w^2)^6 = [4(1 + w^2) + 5w]^6$\n$= (-4w + 5w)^6 = w^6 = 1$",
-        "years": ["تمهيدي 2008"]
+        "years": [
+          "تمهيدي 2008"
+        ]
       },
       {
         "question": "س/ اثبت ان $(\\frac{1}{1+i} - \\frac{1}{1-i})^{100} = \\frac{-1}{8}(1 - \\frac{1}{w^2} + \\frac{1}{w})^3$",
         "answer": "sol :\nL.H.S: $(\\frac{1}{1+i} - \\frac{1}{1-i})^{100}$\n$= (\\frac{(1-i) - (1+i)}{(1+i)(1-i)})^{100} = (\\frac{-2i}{2})^{100} = i^{100} = 1$\nRHS: $\\frac{-1}{8}(1 - \\frac{1}{w^2} + \\frac{1}{w})^3 = \\frac{-1}{8}(1 - w + w^2)^3$\n$= \\frac{-1}{8}(-w - w)^3 = \\frac{-1}{8}(-2w)^3$\n$= \\frac{-1}{8}(-8w^3) = 1$",
-        "years": ["تكميلي خارج القطر 2/2013"]
+        "years": [
+          "تكميلي خارج القطر 2/2013"
+        ]
       },
       {
         "question": "س/ جد قيمة المقدار $(3 w^{9n} + \\frac{5}{w^5} + \\frac{4}{w^4})^6$",
         "answer": "sol :\n$(3 w^{9n} + \\frac{5}{w^5} + \\frac{4}{w^4})^6 = (3(w^9)^n + \\frac{5w^3}{w^2} + \\frac{4w^3}{w})^6$\n$= (3 + 5w + 4w^2)^6 = [3 + 5w + 4(-1 - w)]^6$\n$= (3 + 5w - 4 - 4w)^6 = [-1 + w]^6 = [(-1 + w)^2]^3$\n$= (1 - 2w + w^2)^3 = (-3w)^3 = -27$",
-        "years": ["اسئلة النازحين 2/2014"]
+        "years": [
+          "اسئلة النازحين 2/2014"
+        ]
       },
       {
         "question": "س/ اثبت ان $(5 - \\frac{5}{w^2+1} + \\frac{3}{w^2})^6 = 64$",
         "answer": "sol :\n$(5 - \\frac{5}{w^2+1} + \\frac{3}{w^2})^6 = (5 - \\frac{5w^3}{-w} + \\frac{3w^3}{w^2})^6$\n$= (5 + 5w^2 + 3w)^6 = (5 + 5w^2 + 5w - 2w)^6$\n$= [5(1 + w^2 + w) - 2w]^6 = [-2w]^6 = 64(w)^6 = 64$",
-        "years": ["محاولات تطبيقي 1/2024", "1/2016"]
+        "years": [
+          "محاولات تطبيقي 1/2024",
+          "1/2016"
+        ]
       },
       {
         "question": "س/ جد قيمة المقدار $(\\sqrt{2} + \\frac{\\sqrt{2}}{w} + 3\\sqrt{2}w)^2 (1 + \\frac{1}{w^2} + 4w)$",
         "answer": "sol :\n$(\\sqrt{2} + \\frac{\\sqrt{2}}{w} + 3\\sqrt{2}w)^2 (1 + \\frac{1}{w^2} + 4w)$\n$= (\\sqrt{2} + \\frac{\\sqrt{2}w^3}{w} + 3\\sqrt{2}w)^2 (1 + w^2 + 4w)$\n$= (\\sqrt{2} + \\sqrt{2}w^2 + 3\\sqrt{2}w)^2 (1 + w^2 + 4w)$\n$= [\\sqrt{2}(1 + w^2) + 3\\sqrt{2}w]^2 [-w + 4w]$\n$= (-\\sqrt{2}w + 3\\sqrt{2}w)^2 (3w) = (2\\sqrt{2}w)^2 (3w)$\n$= (8w^2)(3w) = 24w^3 = 24$",
-        "years": ["2/2010"]
+        "years": [
+          "2/2010"
+        ]
       },
       {
         "question": "س/ اثبت ان $(1 - \\frac{2}{w^2} + w^2)(1 + w - \\frac{5}{w}) = 18$",
         "answer": "sol :\nL.H.S: $(1 - \\frac{2}{w^2} + w^2)(1 + w - \\frac{5}{w})$\n$= (1 - \\frac{2w^3}{w^2} + w^2)(1 + w - \\frac{5w^3}{w})$\n$= (1 - 2w + w^2)(1 + w - 5w^2) = (-w - 2w)(-w^2 - 5w^2)$\n$= (-3w)(-6w^2) = 18w^3 = 18 = الطرف الايمن$",
-        "years": ["2/2010", "1/2014"]
+        "years": [
+          "2/2010",
+          "1/2014"
+        ]
       },
       {
         "question": "س/ اثبت ان $(\\frac{5w^2 i - 1}{5 + iw})^6 = -1$",
         "answer": "sol :\nL.H.S: $(\\frac{5w^2 i - 1}{5 + iw})^6 = (\\frac{5w^2 i - 1(-i^2.w^3)}{5 + iw})^6$\n$= (\\frac{5w^2 i + i^2.w^3}{5 + iw})^6 = (\\frac{w^2 i (5 + iw)}{5 + iw})^6$\n$= (w^2 i)^6 = w^{12}.i^6 = -1 = الطرف الايمن$",
-        "years": ["2/2014"]
+        "years": [
+          "2/2014"
+        ]
       },
       {
         "question": "س/ اثبت ان $(2w + \\frac{3}{w} + 2)^2 \\cdot (5 + \\frac{2}{w^2} + 5w^2)^2 = 9$",
         "answer": "sol :\n$(2w + \\frac{3}{w} + 2)^2 \\cdot (5 + \\frac{2}{w^2} + 5w^2)^2$\n$= [2(w + 1) + \\frac{3w^3}{w}]^2 \\cdot [5(1 + w^2) + \\frac{2w^3}{w^2}]^2$\n$= [-2w^2 + 3w^2]^2 \\cdot [-5w + 2w]^2$\n$= [w^2]^2 \\cdot [-3w]^2 = w^4 \\cdot 9w^2 = 9w^6 = 9$",
-        "years": ["خارج القطر 2/2016"]
+        "years": [
+          "خارج القطر 2/2016"
+        ]
       },
       {
         "question": "س/ هل ان $(\\frac{1}{2+w} - \\frac{1}{2+w^2}) = \\frac{-i}{6}$ ? بين ذلك",
         "answer": "sol :\nL.H.S $(\\frac{1}{2+w} - \\frac{1}{2+w^2}) = \\frac{2+w^2-(2+w)}{(2+w)(2+w^2)}$\n$= \\frac{w^2-w}{4+2w^2+2w+w^3} = \\frac{w^2-w}{4+2(w^2+w)+1}$\n$= \\frac{\\pm\\sqrt{3}i}{5+2(-1)} = \\frac{\\pm\\sqrt{3}i}{3} \\neq \\frac{-i}{6}$\nL.H.S $\\neq$ R.H.S",
-        "years": ["تطبيقي 2/2019"]
+        "years": [
+          "تطبيقي 2/2019"
+        ]
       },
       {
         "question": "س/ اثبت ان $\\frac{w^{14}+w^7-1}{w^{10}+w^5-2} = \\frac{2}{3}$",
         "answer": "sol :\nL.H.S $= \\frac{w^2 + w - 1}{w + w^2 - 2} = \\frac{-1-1}{-1-2} = \\frac{-2}{-3} = \\frac{2}{3} = R.H.S$",
-        "years": ["تطبيقي 3/2019", "2/2025"]
+        "years": [
+          "تطبيقي 3/2019",
+          "2/2025"
+        ]
       },
       {
         "question": "س/ اثبت ان $(\\frac{1}{1+3w^2} - \\frac{1}{1+3w^4})^2 = \\frac{-27}{49}$",
         "answer": "sol :\n$(\\frac{1}{1+3w^2} - \\frac{1}{1+3w})^2 = (\\frac{(1+3w) - (1+3w^2)}{(1+3w^2)(1+3w)})^2$\n$= (\\frac{3w-3w^2}{1+3w+3w^2+9w^3})^2 = (\\frac{3w-3w^2}{10+3(w+w^2)})^2$\n$= (\\frac{3(w-w^2)}{7})^2 = \\frac{9(w^2-2w^3+w^4)}{49} = \\frac{9(w^2-2+w)}{49}$\n$= \\frac{9(-1-2)}{49} = \\frac{-27}{49}$",
-        "years": ["خارج القطر 1/2015"]
+        "years": [
+          "خارج القطر 1/2015"
+        ]
       },
       {
         "question": "س/ اثبت ان $(\\frac{1}{w} - \\frac{1}{w^2})^2 \\cdot (2 + \\frac{2}{w}) \\cdot (\\frac{-1}{1+w^2}) = 6$",
         "answer": "sol :\n$(\\frac{1}{w} - \\frac{1}{w^2})^2 \\cdot (2 + \\frac{2}{w}) \\cdot (\\frac{-1}{1+w^2})$\n$= (w^2 - w)^2 (2 + 2w^2)(w^2) = (w^4 - 2w^3 + w^2) 2(1 + w^2)(w^2)$\n$= (w - 2 + w^2)(2w^2)(-w) = ((w + w^2) - 2)(-2w^3)$\n$= (-1 - 2)(-2) = 6 = الطرف الايمن$",
-        "years": ["تطبيقي 3/2017"]
+        "years": [
+          "تطبيقي 3/2017"
+        ]
       },
       {
         "question": "س/ اثبت ان $(\\frac{1}{1+i} - \\frac{1}{1-i})^{100} = [\\frac{2+3w}{2w^2+3} + \\frac{4w^2+1}{4+w}]^{200}$",
         "answer": "sol :\nL.H.S $[\\frac{1}{1+i} - \\frac{1}{1-i}]^{100} = [\\frac{-2i}{2}]^{100} = (-i)^{100} = 1$\nR.H.S $[\\frac{2+3w}{2w^2+3} + \\frac{4w^2+1}{4+w}]^{200} = [\\frac{2w^3+3w}{2w^2+3} + \\frac{4w^2+w^3}{4+w}]^{200}$\n$= [\\frac{w(2w^2+3)}{2w^2+3} + \\frac{w^2(4+w)}{4+w}]^{200} = [w + w^2]^{200}$\n$= (-1)^{200} = 1 \\therefore L.H.S = R.H.S$",
-        "years": ["1/2019"]
+        "years": [
+          "1/2019"
+        ]
       },
       {
         "question": "س/ اذا كان $1+3Z^{10}+3Z^{11} / 1-3Z^7-3Z^8$ ، جد قيمة المقدار علمًا ان $Z^2+Z+1=0$",
         "answer": "sol :\nنحل المعادلة $Z^2+Z+1=0$ بالدستور لايجاد Z $\\rightarrow Z = -1/2 \\pm \\frac{\\sqrt{3}}{2}i$\nاما $Z=W$ او $Z=W^2$\nعندما $Z=W$: $\\frac{1+3W^{10}+3W^{11}}{1-3W^7-3W^8} = \\frac{1+3W+3W^2}{1-3W-3W^2}$\n$= \\frac{1+3(W+W^2)}{1-3(W+W^2)} = \\frac{1+3(-1)}{1-3(-1)} = \\frac{1-3}{1+3} = -1/2$\nعندما $Z=W^2$: $\\frac{1+3(W^2)^{10}+3(W^2)^{11}}{1-3(W^2)^7-3(W^2)^8} = \\frac{1+3W^2+3W}{1-3W^2-3W} = -1/2$",
-        "years": ["تمهيدي تطبيقي 2018"]
+        "years": [
+          "تمهيدي تطبيقي 2018"
+        ]
       },
       {
         "question": "س/ اذا كان $\\frac{x+yi}{3-i} , \\frac{7-iw-iw^2}{3+iw+iw^2}$ عددان مترافقان جد $x, y \\in R$",
         "answer": "sol :\nالجذر الاول $= \\frac{7-i(w+w^2)}{3+i(w+w^2)} = \\frac{7-i(-1)}{3+i(-1)} = \\frac{7+i}{3-i}$\nالجذر الثاني $= \\frac{x+yi}{3-i} \\therefore \\frac{x+yi}{3-i} = \\overline{(\\frac{7+i}{3-i})} = \\frac{7-i}{3+i}$\n$x+yi = \\frac{(7-i)(3-i)}{3+i} = \\frac{20-10i}{3+i} \\cdot \\frac{3-i}{3-i} = \\frac{50-50i}{10} = 5-5i$\n$\\Rightarrow x=5, y=-5$",
-        "years": ["3/2024"]
+        "years": [
+          "3/2024"
+        ]
       },
       {
         "question": "س/ اثبت ان $(3 + 4w + 3w^2)^3 = 1$",
         "answer": "sol :\n$(3 + 4w + 3w^2)^3 = [3(1+w^2) + 4w]^3 = [3(-w) + 4w]^3$\n$= [-3w + 4w]^3 = (w)^3 = 1 = الطرف الايمن$",
-        "years": ["تمهيدي 2025"]
+        "years": [
+          "تمهيدي 2025"
+        ]
       },
       {
         "question": "س/ اذا كان $x = \\frac{3+4w}{3w^2+4} , y = \\frac{5-2w^2}{5w-2}$ اثبت ان $(x^2+y^2)^2=1$",
         "answer": "sol :\n$x = \\frac{w(3w^2+4)}{(3w^2+4)} \\rightarrow x=w , y = \\frac{w^2(5w-2)}{(5w-2)} \\rightarrow y=w^2$\nL.H.S $(x^2+y^2)^2 = [w^2 + w^4]^2 = [w^2 + w]^2 = [-1]^2 = 1 = R.H.S$",
-        "years": ["تطبيقي 1/2023"]
+        "years": [
+          "تطبيقي 1/2023"
+        ]
       },
       {
         "question": "س/ اثبت ان $(\\frac{1+i}{1-i})^5 + [\\frac{5w^2i-1}{5+wi}]^{12} = 1 + i$",
         "answer": "sol :\nالطرف الايسر $= [i]^5 + [\\frac{w^2i(5+wi)}{5+wi}]^{12} = i + (w^2 i)^{12}$\n$= i + w^{24} i^{12} = i + (w^3)^8 (i^4)^3 = i + 1$",
-        "years": ["2/2024"]
+        "years": [
+          "2/2024"
+        ]
       }
     ]
   },
@@ -510,47 +714,66 @@
       {
         "question": "س/ حل المعادلة التربيعية الآتية وبين هل ان الجذرين مترافقان ؟ $z^2 - 2zi + 3 = 0$",
         "answer": "sol :\nطريقة اولى\n$z^2 - 2zi + 3 = 0 \\rightarrow z^2 - 2zi - 3i^2 = 0$\n$(Z+i)(Z-3i) = 0$\nif $Z+i=0 \\Rightarrow Z=-i$\nOr $Z-3i=0 \\Rightarrow Z=3i$\n$\\therefore A = \\{(0-i) , (0+3i)\\}$\nملاحظة : الجذران غير مترافقين\nطريقة ثانية بالدستور\n$a=1, b=-2i, c=3$\n$Z = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a} = \\frac{2i \\pm \\sqrt{-4-4(3)}}{2}$\n$= \\frac{2i \\pm \\sqrt{-16}}{2} = \\frac{2i \\pm 4i}{2}$\nاما $Z = \\frac{2i+4i}{2} = 3i = 0+3i$\nاو $Z = \\frac{2i-4i}{2} = -i = 0-i$\n$\\Rightarrow A = \\{(0+3i) , (0-i)\\}$ ",
-        "years": ["تمهيدي احيائي 2020"]
+        "years": [
+          "تمهيدي احيائي 2020"
+        ]
       },
       {
         "question": "س/ حل المعادلة $x^3 + 8i = 0$ في C",
         "answer": "sol :\n$x^3 + 8i^3 = 0 \\rightarrow (x+2i)(x^2-2ix+4i^2) = 0$\n$x=-2i$ او $x^2-2ix-4=0$\n$a=1, b=-2i, c=-4$\n$x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a} = \\frac{2i \\pm \\sqrt{-4+16}}{2}$\n$= \\frac{2i \\pm \\sqrt{12}}{2} = \\frac{2i \\pm 2\\sqrt{3}}{2} = \\pm\\sqrt{3}+i$\nans: $\\{\\sqrt{3}+i , -\\sqrt{3}+i , -2i\\}$",
-        "years": ["تمهيدي 2005"]
+        "years": [
+          "تمهيدي 2005"
+        ]
       },
       {
         "question": "س/ حل المعادلة $x^3 - 8i = 0$ في C",
         "answer": "sol :\n$x^3 - 8i^3 = 0 \\rightarrow (x-2i)(x^2+2ix+4i^2) = 0$\n$x=2i$ او $x^2+2ix-4=0$\n$a=1, b=2i, c=-4$\n$x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a} = \\frac{-2i \\pm \\sqrt{-4+16}}{2}$\n$= \\frac{-2i \\pm \\sqrt{12}}{2} = \\frac{-2i \\pm 2\\sqrt{3}}{2} = \\pm\\sqrt{3}-i$\nans: $\\{\\sqrt{3}-i , -\\sqrt{3}-i , 2i\\}$",
-        "years": ["1/2005"]
+        "years": [
+          "1/2005"
+        ]
       },
       {
         "question": "س/ جد حل المعادلة في $C$: $x^4 + 21x^2 - 100 = 0$ ",
         "answer": "sol :\n$x^4 + 21x^2 - 100 = 0 \\rightarrow (x^2+25)(x^2-4) = 0$\nاما $x^2+25=0 \\Rightarrow x^2=-25 \\Rightarrow x=\\sqrt{-25} \\Rightarrow x=\\sqrt{25}i \\Rightarrow x=\\mp 5i$\nاو $x^2-4=0 \\Rightarrow x^2=4 \\Rightarrow x=\\mp 2$\nمجموعة الحل = $\\{\\mp 5i , \\mp 2\\}$",
-        "years": ["2/2022 احيائي"]
+        "years": [
+          "2/2022 احيائي"
+        ]
       },
       {
         "question": "س/ جد مجموعة حلول المعادلة في $C$: $z^2 - 3z + 1 + 3i = 0$",
         "answer": "sol :\nالطريقة الاولى\n$z^2 - 3z + 1 + 3i = 0 \\rightarrow z^2 - 3z - i^2 + 3i = 0$\n$z^2 - i^2 - 3z + 3i = 0 \\rightarrow (z-i)(z+i) - 3(z-i) = 0$\n$(Z-i)(Z+i-3) = 0 \\rightarrow (Z-i)(Z-(3-i)) = 0$\nاما $Z-i=0 \\Rightarrow Z=i$ او $Z-(3-i)=0 \\Rightarrow Z=3-i$\nالطريقة الثانية بالدستور\n$a=1, b=-3, c=(1+3i)$\n$Z = \\frac{3 \\pm \\sqrt{9-4(1+3i)}}{2} = \\frac{3 \\pm \\sqrt{5-12i}}{2}$\nلايجاد $\\sqrt{5-12i}$ نفرض $5-12i = x^2-y^2+2xyi$\n$x^2-y^2=5 , 2xy=-12 \\rightarrow y = -6/x$\n$x^2 - (-6/x)^2 = 5 \\rightarrow x^4-36=5x^2 \\rightarrow x^4-5x^2-36=0$\n$(x^2-9)(x^2+4)=0 \\rightarrow x^2=9 \\rightarrow x=\\pm 3 \\rightarrow y=\\mp 2$\nالجذور هما $(3-2i), (-3+2i)$\nنعوض في قانون الدستور\nاما $Z = \\frac{3+(3-2i)}{2} = \\frac{6-2i}{2} = 3-i$\nاو $Z = \\frac{3-(3-2i)}{2} = \\frac{2i}{2} = i$",
-        "years": ["2021 تمهيدي احيائي"]
+        "years": [
+          "2021 تمهيدي احيائي"
+        ]
       },
       {
         "question": "س/ حل المعادلة الآتية في $C$: $Z^2 + 2Z + i(2-i) = 0$",
         "answer": "sol :\nالطريقة الاولى\n$Z^2 + 2Z + i(2-i) = 0 \\rightarrow (Z+i)(Z+2-i) = 0$\nاما $Z+i=0 \\Rightarrow Z=-i$ او $Z+2-i=0 \\Rightarrow Z=-2+i$\n$S = \\{-i , -2+i\\}$\nالطريقة الثانية بالدستور\n$a=1, b=2, c=2i-i^2 = 2i+1$\n$Z = \\frac{-2 \\pm \\sqrt{4-4(1)(2i+1)}}{2} = \\frac{-2 \\pm \\sqrt{-8i}}{2}$\nنجد $\\sqrt{-8i} = x+yi \\rightarrow -8i = x^2-y^2+2xyi$\n$x^2-y^2=0 , 2xy=-8 \\rightarrow xy=-4 \\rightarrow y = -4/x$\n$x^2 - (-4/x)^2 = 0 \\rightarrow x^4-16=0 \\rightarrow (x^2-4)(x^2+4)=0 \\rightarrow x=\\pm 2 \\rightarrow y=\\mp 2$\nالجذور هما $(2-2i), (-2+2i)$\nنعوض في الدستور\nاما $Z = \\frac{-2+(2-2i)}{2} = -i$ او $Z = \\frac{-2-(2-2i)}{2} = -2+i$\n$S = \\{-i , -2+i\\}$",
-        "years": ["1/2021 احيائي", "3/2023 تطبيقي"]
+        "years": [
+          "1/2021 احيائي",
+          "3/2023 تطبيقي"
+        ]
       },
       {
         "question": "س/ جد مجموعة الحل للمعادلة في $C$: $x^2 - 6x + 25 = 0$",
         "answer": "sol :\nالطريقة الأولى بالدستور\n$a=1, b=-6, c=25$\n$x = \\frac{6 \\pm \\sqrt{36-100}}{2} = \\frac{6 \\pm \\sqrt{-64}}{2} = \\frac{6 \\pm 8i}{2}$\n$Z_1=3+4i , Z_2=3-4i$\n$S = \\{3+4i , 3-4i\\}$\nالطريقة الثانية اكمال المربع\n$x^2-6x+9+16=0 \\rightarrow (x-3)^2+16=0 \\rightarrow (x-3)^2-16i^2=0$\n$[(x-3)-4i][(x-3)+4i]=0$\nاما $x=3+4i$ او $x=3-4i$\n$S = \\{3+4i , 3-4i\\}$",
-        "years": ["2022 تمهيدي احيائي"]
+        "years": [
+          "2022 تمهيدي احيائي"
+        ]
       },
       {
         "question": "س/ حل المعادلة في $C$: $Z^2 + 2Z + 4i = 4i^6$",
         "answer": "sol :\n$Z^2+2Z+4i = -4 \\rightarrow Z^2+2Z+4i+4 = 0$\n$a=1, b=2, c=4+4i$\n$x = \\frac{-2 \\pm \\sqrt{4-4(1)(4+4i)}}{2} = \\frac{-2 \\pm \\sqrt{4-16-16i}}{2} = \\frac{-2 \\pm \\sqrt{-12-16i}}{2}$\nنفرض $\\sqrt{-12-16i} = x+yi \\rightarrow -12-16i = x^2-y^2+2xyi$\n$x^2-y^2=-12 , 2xy=-16 \\rightarrow y=-8/x$\n$x^2-(-8/x)^2 = -12 \\rightarrow x^4+12x^2-64=0 \\rightarrow (x^2+16)(x^2-4)=0$\n$x=\\pm 2 \\rightarrow y=\\mp 4$\nالجذور هما $(2-4i), (-2+4i)$\nبالتعويض في الدستور\nاما $Z_1 = \\frac{-2+2-4i}{2} = -2i$ او $Z_2 = \\frac{-2-2+4i}{2} = -2+2i$\n$S = \\{-2i , -2+2i\\}$",
-        "years": ["1/2023 احيائي"]
+        "years": [
+          "1/2023 احيائي"
+        ]
       },
       {
         "question": "س/ حل المعادلة التربيعية في $C$: $Z^2 - 3Z + 3 + i = 0$ ثم بين هل الجذران مترافقان؟",
         "answer": "sol :\n$a=1, b=-3, c=3+i$\n$Z = \\frac{3 \\pm \\sqrt{9-4(1)(3+i)}}{2} = \\frac{3 \\pm \\sqrt{-3-4i}}{2}$\nنفرض $\\sqrt{-3-4i} = x+yi \\rightarrow -3-4i = x^2-y^2+2xyi$\n$x^2-y^2=-3 , 2xy=-4 \\rightarrow y=-2/x$\n$x^2-(-2/x)^2 = -3 \\rightarrow x^4+3x^2-4=0 \\rightarrow (x^2+4)(x^2-1)=0$\n$x=\\pm 1 \\rightarrow y=\\mp 2$\nالجذور هما $(1-2i), (-1+2i)$\nنعوض في الدستور\nاما $Z_1 = \\frac{3+1-2i}{2} = 2-i$ او $Z_2 = \\frac{3-1+2i}{2} = 1+i$\n$S = \\{1+i , 2-i\\} \\therefore$ الجذران ليس مترافقان",
-        "years": ["3/2024 محاولات احيائي"]
+        "years": [
+          "3/2024 محاولات احيائي"
+        ]
       }
     ]
   },
@@ -560,207 +783,292 @@
       {
         "question": "س/ كون المعادلة التربيعية التي جذراها $(5-i), (2+i)$",
         "answer": "sol :\n$m = (2 + i) , L = (5 - i)$\n$m + L = (2 + i) + (5 - i) = 7$\n$m \\cdot L = (2 + i) \\cdot (5 - i)$\n$= 10 - 2i + 5i + 1 = 11 + 3i$\n$\\therefore$ المعادلة هي : $x^2 - 7x + 11 + 3i = 0$",
-        "years": ["3/2017 اسئلة الموصل"]
+        "years": [
+          "3/2017 اسئلة الموصل"
+        ]
       },
       {
         "question": "س/ ما المعادلة التربيعية ذات المعاملات الحقيقية وأحد جذريها هو $(3-i)$؟",
         "answer": "sol :\nبما أن معاملات المعادلة حقيقية وأحد جذريها $3 - i$\n$\\therefore$ الجذر الآخر هو المرافق له وهو $3 + i$\nمجموع الجذرين $= (3 - i) + (3 + i) = 6$\nحاصل ضرب الجذرين $= (3 - i) \\cdot (3 + i) = 9 + 1 = 10$\n$\\therefore$ المعادلة هي : $x^2 - 6x + 10 = 0$",
-        "years": ["1/2017 خارج القطر"]
+        "years": [
+          "1/2017 خارج القطر"
+        ]
       },
       {
         "question": "س/ اذا كان $3+i$ هو احد جذري المعادلة $x^2 - ax + (5+5i) = 0$ فما قيمة $a$ وما هو الجذر الآخر؟",
         "answer": "sol :\nنفرض الجذر الأول $h = 3 + i$ والجذر الآخر $k$\nالمعادلة هي $x^2 - (h + k)x + hk = 0$\nبالمقارنة : $hk = 5 + 5i$\n$(3 + i) \\cdot k = 5 + 5i \\Rightarrow k = \\frac{5 + 5i}{3 + i} \\cdot \\frac{3 - i}{3 - i}$\n$k = \\frac{15 - 5i + 15i + 5}{9 + 1} = \\frac{20 + 10i}{10} = 2 + i$\nإذن الجذر الآخر هو $2 + i$\n$a = h + k = (3 + i) + (2 + i) = 5 + 2i$",
-        "years": ["1/2011", "1/2024 محاولات احيائي"]
+        "years": [
+          "1/2011",
+          "1/2024 محاولات احيائي"
+        ]
       },
       {
         "question": "س/ كون المعادلة التربيعية ذات المعاملات الحقيقية اذا كان احد جذريها $(\\sqrt{3}-i)^2$؟",
         "answer": "sol :\nنفرض $L = (\\sqrt{3} - i)^2 = 3 - 2\\sqrt{3}i + i^2 = 2 - 2\\sqrt{3}i$\nبما أن المعاملات حقيقية إذن الجذران مترافقان\n$\\therefore m = 2 + 2\\sqrt{3}i$\n$L + m = (2 - 2\\sqrt{3}i) + (2 + 2\\sqrt{3}i) = 4$\n$L \\cdot m = (2 - 2\\sqrt{3}i)(2 + 2\\sqrt{3}i) = 4 + (2\\sqrt{3})^2 = 4 + 12 = 16$\n$\\therefore$ المعادلة هي : $x^2 - 4x + 16 = 0$",
-        "years": ["3/2018"]
+        "years": [
+          "3/2018"
+        ]
       },
       {
         "question": "س/ اذا كان $(1+2i)$ هو احد جذري المعادلة $x^2 - (3-i)x + a = 0$ فما قيمة الجذر الثاني وما قيمة $a$؟",
         "answer": "sol :\nنفرض $m = 1 + 2i$ والجذر الثاني $L$\nمجموع الجذرين $m + L = 3 - i$\n$(1 + 2i) + L = 3 - i \\Rightarrow L = 3 - i - 1 - 2i = 2 - 3i$\nحاصل ضرب الجذرين $a = m \\cdot L$\n$a = (1 + 2i) \\cdot (2 - 3i) = 2 - 3i + 4i - 6i^2 = 8 + i$",
-        "years": ["2/2017 خارج القطر احيائي"]
+        "years": [
+          "2/2017 خارج القطر احيائي"
+        ]
       },
       {
         "question": "س/ اذا كان احد جذري المعادلة $x^2 - 3ix - 6x + c = 0$ هو ضعف الجذر الآخر ، فجد $c$",
         "answer": "sol :\nنفرض الجذر الأول $L$ إذن الجذر الثاني $M = 2L$\nالمعادلة : $x^2 - (3i + 6)x + c = 0$\nمجموع الجذرين $L + M = 3i + 6$\n$L + 2L = 6 + 3i \\Rightarrow 3L = 6 + 3i \\Rightarrow L = 2 + i$\nإذن الجذر الأول $2 + i$ والجذر الثاني $M = 2(2 + i) = 4 + 2i$\nحاصل ضرب الجذرين $c = L \\cdot M$\n$c = (2 + i) \\cdot (4 + 2i) = 8 + 4i + 4i - 2 = 6 + 8i$",
-        "years": ["1/2022 احيائي"]
+        "years": [
+          "1/2022 احيائي"
+        ]
       },
       {
         "question": "س/ كون المعادلة التربيعية ذات المعاملات الحقيقية والتي احد جذريها مقاسه (2) وسعته $\\frac{5\\pi}{3}$",
         "answer": "sol :\nنفرض العدد $L = x + yi$\nفي الربع الرابع $(+, -)$ لأن $\\frac{5\\pi}{3} = 300^\\circ$\n$x = r \\cos \\theta = 2 \\cos \\frac{5\\pi}{3} = 2(\\frac{1}{2}) = 1$\n$y = r \\sin \\theta = 2 \\sin \\frac{5\\pi}{3} = 2(-\\frac{\\sqrt{3}}{2}) = -\\sqrt{3}$\nإذن العدد هو $L = 1 - \\sqrt{3}i$\nبما أن المعاملات حقيقية إذن الجذر الآخر هو $m = 1 + \\sqrt{3}i$\n$L + m = (1 - \\sqrt{3}i) + (1 + \\sqrt{3}i) = 2$\n$L \\cdot m = (1 - \\sqrt{3}i)(1 + \\sqrt{3}i) = 1 + 3 = 4$\n$\\therefore$ المعادلة هي : $x^2 - 2x + 4 = 0$",
-        "years": ["1/2021 تطبيقي"]
+        "years": [
+          "1/2021 تطبيقي"
+        ]
       },
       {
         "question": "س/ اذا كان $(1+w), (1+w^2)$ هما جذرا المعادلة التربيعية ، فما هي المعادلة؟",
         "answer": "sol :\nنفرض $h = 1 + w = -w^2$ و $k = 1 + w^2 = -w$\nمجموع الجذرين $h + k = -w^2 - w = -(w^2 + w) = -(-1) = 1$\nحاصل ضرب الجذرين $h \\cdot k = (-w^2)(-w) = w^3 = 1$\n$\\therefore$ المعادلة هي : $x^2 - x + 1 = 0$",
-        "years": ["2/2007", "3/2014 اسئلة النازحين"]
+        "years": [
+          "2/2007",
+          "3/2014 اسئلة النازحين"
+        ]
       },
       {
         "question": "س/ كون المعادلة التربيعية التي جذراها $(3-2iw), (3-2iw^2)$",
         "answer": "sol :\nنفرض $h = 3 - 2iw$ و $k = 3 - 2iw^2$\n$h + k = (3 - 2iw) + (3 - 2iw^2) = 6 - 2i(w + w^2) = 6 - 2i(-1) = 6 + 2i$\n$h \\cdot k = (3 - 2iw)(3 - 2iw^2) = 9 - 6iw^2 - 6iw + 4i^2 w^3$\n$= 9 - 6i(w^2 + w) - 4 = 5 - 6i(-1) = 5 + 6i$\n$\\therefore$ المعادلة هي : $x^2 - (6 + 2i)x + (5 + 6i) = 0$",
-        "years": ["1/2006"]
+        "years": [
+          "1/2006"
+        ]
       },
       {
         "question": "س/ كون المعادلة التربيعية التي جذراها $(\\frac{3i}{w^2}), (\\frac{-3w^2}{i})$",
         "answer": "sol :\n$h = \\frac{3i}{w^2} = \\frac{3w^3 i}{w^2} = 3wi$\n$k = \\frac{-3w^2}{i} \\cdot \\frac{-i}{-i} = \\frac{3w^2 i}{-i^2} = 3w^2 i$\n$h + k = 3wi + 3w^2 i = 3i(w + w^2) = 3i(-1) = -3i$\n$h \\cdot k = (3wi)(3w^2 i) = 9w^3 i^2 = -9$\n$\\therefore$ المعادلة هي : $x^2 + 3ix - 9 = 0$",
-        "years": ["2/2011", "1/2024"]
+        "years": [
+          "2/2011",
+          "1/2024"
+        ]
       },
       {
         "question": "س/ كون المعادلة التربيعية التي جذراها $(\\frac{i-5}{w}), (i-\\frac{5}{w^2})$",
         "answer": "sol :\n$L = i - \\frac{5}{w} = i - 5w^2$\n$M = i - \\frac{5}{w^2} = i - 5w$\n$L + M = (i - 5w^2) + (i - 5w) = 2i - 5(w^2 + w) = 2i + 5 = 5 + 2i$\n$L \\cdot M = (i - 5w^2)(i - 5w) = i^2 - 5iw - 5iw^2 + 25w^3$\n$= -1 - 5i(w + w^2) + 25 = 24 + 5i$\n$\\therefore$ المعادلة هي : $x^2 - (5 + 2i)x + (24 + 5i) = 0$",
-        "years": ["3/2020 تطبيقي"]
+        "years": [
+          "3/2020 تطبيقي"
+        ]
       },
       {
         "question": "س/ جد المعادلة التربيعية ذات المعاملات الحقيقية وأحد جذريها هو العدد $(4i - 3)$؟",
         "answer": "sol :\nبما أن المعاملات حقيقية وأحد الجذور هو $-3 + 4i$\nإذن الجذر الآخر هو المرافق له وهو $-3 - 4i$\nمجموع الجذرين $= (-3 + 4i) + (-3 - 4i) = -6$\nحاصل ضرب الجذرين $= (-3 + 4i)(-3 - 4i) = 9 + 16 = 25$\nالمعادلة هي : $x^2 + 6x + 25 = 0$",
-        "years": ["1/2020"]
+        "years": [
+          "1/2020"
+        ]
       },
       {
         "question": "س/ إذا علمت أن $(2 + i)$ هو أحد جذري المعادلة $x^2 - hx + 5 - 5i = 0$ فجد قيمة $h \\in C$ وما هو الجذر الآخر؟",
         "answer": "sol :\nالطريقة الأولى : بتعويض الجذر الأول بالمعاملة\n$(2 + i)^2 - h(2 + i) + 5 - 5i = 0$\n$(4 + 4i - 1) + 5 - 5i = h(2 + i)$\n$8 - i = h(2 + i) \\Rightarrow h = \\frac{8 - i}{2 + i} \\cdot \\frac{2 - i}{2 - i}$\n$h = \\frac{16 - 8i - 2i - 1}{4 + 1} = \\frac{15 - 10i}{5} = 3 - 2i$\nمجموع الجذرين $= h = 3 - 2i$\nبما أن الجذر الأول هو $2 + i$ إذن الجذر الآخر $L$\n$L + 2 + i = 3 - 2i \\Rightarrow L = 3 - 2i - 2 - i = 1 - 3i$\nإذن الجذر الآخر هو $1 - 3i$\n\nالطريقة الثانية :\nبما أن حاصل ضرب الجذرين $m \\cdot L = 5 - 5i$\n$(2 + i) \\cdot L = 5 - 5i \\Rightarrow L = \\frac{5 - 5i}{2 + i} \\cdot \\frac{2 - i}{2 - i}$\n$L = \\frac{10 - 5i - 10i - 5}{5} = \\frac{5 - 15i}{5} = 1 - 3i$\nمجموع الجذرين $h = m + L = (2 + i) + (1 - 3i) = 3 - 2i$",
-        "years": ["تمهيدي 2019"]
+        "years": [
+          "تمهيدي 2019"
+        ]
       },
       {
         "question": "س/ جد المعادلة التربيعية التي جذراها $(2 + 2i) , (-2 - 2i)$؟",
         "answer": "sol :\nمجموع الجذرين $= (2 + 2i) + (-2 - 2i) = 0$\nحاصل ضرب الجذرين $= (2 + 2i)(-2 - 2i) = -4 - 4i - 4i + 4 = -8i$\nالمعادلة هي : $x^2 - 0x - 8i = 0 \\Rightarrow x^2 - 8i = 0$",
-        "years": ["2/2020 احيائي"]
+        "years": [
+          "2/2020 احيائي"
+        ]
       },
       {
         "question": "س/ كون المعادلة التربيعية التي جذراها $(1 - i) , (1 + 2i)$؟",
         "answer": "sol :\nنفرض $L = 1 + 2i , M = 1 - i$\n$L + M = (1 + 2i) + (1 - i) = 2 + i$\n$L \\cdot M = (1 + 2i)(1 - i) = 1 - i + 2i + 2 = 3 + i$\nالمعادلة هي : $x^2 - (2 + i)x + (3 + i) = 0$",
-        "years": ["3/2020 احيائي"]
+        "years": [
+          "3/2020 احيائي"
+        ]
       },
       {
         "question": "س/ إذا كان أحد جذري المعادلة التربيعية $x^2 + (1 - a)x + b + 8 = 0$ هو $(1 - 3i)$ ، جد قيمة $a, b \\in R$",
         "answer": "sol :\nبما أن المعاملات حقيقية إذن الجذران مترافقان\nالجذران هما $(1 - 3i), (1 + 3i)$\nمجموع الجذرين $= 1 - 3i + 1 + 3i = 2$\nمقارنة بالمعادلة : $-(1 - a) = 2 \\Rightarrow a - 1 = 2 \\Rightarrow a = 3$\nحاصل ضرب الجذرين $= (1 - 3i)(1 + 3i) = 1 + 9 = 10$\nبالمقارنة : $b + 8 = 10 \\Rightarrow b = 2$",
-        "years": ["2/2020 تطبيقي"]
+        "years": [
+          "2/2020 تطبيقي"
+        ]
       },
       {
         "question": "س/ جد المعادلة التربيعية ذات المعاملات الحقيقية والتي أحد جذريها هو $(\\frac{3 + 4i}{1 - 2i})$؟",
         "answer": "sol :\n$L = \\frac{3 + 4i}{1 - 2i} \\cdot \\frac{1 + 2i}{1 + 2i} = \\frac{3 + 6i + 4i - 8}{1 + 4} = \\frac{-5 + 10i}{5} = -1 + 2i$\nبما أن المعاملات حقيقية إذن الجذر الآخر هو $M = -1 - 2i$\n$L + M = (-1 + 2i) + (-1 - 2i) = -2$\n$L \\cdot M = (-1 + 2i)(-1 - 2i) = 1 + 4 = 5$\nالمعادلة هي : $x^2 + 2x + 5 = 0$",
-        "years": ["تمهيدي 2022 احيائي"]
+        "years": [
+          "تمهيدي 2022 احيائي"
+        ]
       },
       {
         "question": "س/ إذا كان $(1 + 2i)$ أحد جذري المعادلة $2x^2 - 2x - bx + a - 7 = 0$ فما قيمة $a, b \\in R$؟",
         "answer": "sol :\nبما أن $a, b \\in R$ إذن المعاملات حقيقية والجذران مترافقان\nالجذران هما $M = 1 + 2i , L = 1 - 2i$\nمجموع الجذرين $M + L = (1 + 2i) + (1 - 2i) = 2$\nحاصل ضرب الجذرين $M \\cdot L = (1 + 2i)(1 - 2i) = 1 + 4 = 5$\nالمعادلة الأصلية : $2x^2 - (2 + b)x + (a - 7) = 0 \\div 2$\n$x^2 - \\frac{2 + b}{2}x + \\frac{a - 7}{2} = 0$\nبالمقارنة مع $x^2 - (M+L)x + ML = 0$\n$\\frac{2 + b}{2} = 2 \\Rightarrow 2 + b = 4 \\Rightarrow b = 2$\n$\\frac{a - 7}{2} = 5 \\Rightarrow a - 7 = 10 \\Rightarrow a = 17$",
-        "years": ["1/2021 احيائي"]
+        "years": [
+          "1/2021 احيائي"
+        ]
       },
       {
         "question": "س/ كون المعادلة التربيعية ذات المعاملات الحقيقية وأحد جذريها هو $(5 - i)$؟",
         "answer": "sol :\nبما أن المعاملات حقيقية إذن الجذر الآخر هو $5 + i$\n$L + M = (5 - i) + (5 + i) = 10$\n$L \\cdot M = (5 - i)(5 + i) = 25 + 1 = 26$\nالمعادلة هي : $x^2 - 10x + 26 = 0$",
-        "years": ["تمهيدي 2022 تطبيقي"]
+        "years": [
+          "تمهيدي 2022 تطبيقي"
+        ]
       },
       {
         "question": "س/ إذا كان $(1 + \\sqrt{-9})$ أحد جذري المعادلة $x^2 - 3x - 2xi + a = 0$ فما قيمة $a \\in C$ وما هو الجذر الآخر؟",
         "answer": "sol :\nالجذر الأول $m = 1 + 3i$\nالمعادلة : $x^2 - (3 + 2i)x + a = 0$\nمجموع الجذرين $= 3 + 2i$\n$(1 + 3i) + L = 3 + 2i \\Rightarrow L = 3 + 2i - 1 - 3i = 2 - i$\nإذن الجذر الآخر هو $2 - i$\nحاصل ضرب الجذرين $a = m \\cdot L = (1 + 3i)(2 - i)$\n$a = 2 - i + 6i + 3 = 5 + 5i$",
-        "years": ["2/2025"]
+        "years": [
+          "2/2025"
+        ]
       },
       {
         "question": "س/ إذا كان $M = (1 - i)^6, L = 8i^{12n+3}$ حيث $n$ عدد طبيعي، أثبت أن $M, L$ مترافقان، ثم كون المعادلة التربيعية التي جذراها $M, L$؟",
         "answer": "sol :\n$M = (1 - i)^6 = ((1 - i)^2)^3 = (1 - 2i + i^2)^3 = (-2i)^3 = -8i^3 = 8i$\n$L = 8i^{12n} \\cdot i^3 = 8(i^4)^{3n} \\cdot (-i) = 8(1)^{3n} \\cdot (-i) = -8i$\nبما أن $M = 8i$ و $L = -8i$ فإنهما مترافقان (الواحد مرافق للآخر)\n$M + L = 8i - 8i = 0$\n$M \\cdot L = (8i)(-8i) = -64i^2 = 64$\nالمعادلة هي : $x^2 - 0x + 64 = 0 \\Rightarrow x^2 + 64 = 0$",
-        "years": ["3/2023 تكميلي"]
+        "years": [
+          "3/2023 تكميلي"
+        ]
       },
       {
         "question": "س/ جد المعادلة التربيعية التي جذراها $(3wi - \\frac{2w^2}{i}) , (2wi - \\frac{3w^2}{i})$؟",
         "answer": "sol :\n$h = 3wi - \\frac{2w^2}{i} = 3wi + 2w^2 i = i(3w + 2w^2)$\n$k = 2wi - \\frac{3w^2}{i} = 2wi + 3w^2 i = i(2w + 3w^2)$\n$h + k = i(3w + 2w^2 + 2w + 3w^2) = i(5w + 5w^2) = 5i(w + w^2) = -5i$\n$h \\cdot k = i(3w + 2w^2) \\cdot i(2w + 3w^2) = i^2 (6w^2 + 9w^3 + 4w^3 + 6w^4)$\n$= -1(6w^2 + 9 + 4 + 6w) = -1(13 + 6(w^2 + w)) = -1(13 - 6) = -7$\nالمعادلة هي : $x^2 + 5ix - 7 = 0$",
-        "years": ["تمهيدي 2019"]
+        "years": [
+          "تمهيدي 2019"
+        ]
       },
       {
         "question": "س/ اذا كان $(2-4i)$ هو احد جذري المعادلة $2x^2 - x - bx + c - 6 = 0$ ومعاملاتها حقيقية، جد قيمتي $b, c \\in R$",
         "answer": "sol :\nالمعادلة : $2x^2 - (1+b)x + (c-6) = 0 \\div 2$\n$x^2 - \\frac{1+b}{2}x + \\frac{c-6}{2} = 0$\nبما أن المعاملات حقيقية إذن الجذران مترافقان\nالجذر الأول $m = 2-4i$ إذن الجذر الثاني $L = 2+4i$\nمجموع الجذرين $= 2-4i + 2+4i = 4$\n$\\frac{1+b}{2} = 4 \\Rightarrow 1+b = 8 \\Rightarrow b = 7$\nحاصل ضرب الجذرين $= (2-4i)(2+4i) = 4 + 16 = 20$\n$\\frac{c-6}{2} = 20 \\Rightarrow c-6 = 40 \\Rightarrow c = 46$",
-        "years": ["2/2015"]
+        "years": [
+          "2/2015"
+        ]
       },
       {
         "question": "س/ اذا كان احد جذري المعادلة التربيعية $x^2 + x - bx + c + 8 = 0$ هو $(1-3i)$ ، جد قيمة $b, c$ الحقيقيتين",
         "answer": "sol :\nالمعادلة : $x^2 - (b-1)x + (c+8) = 0$\nبما أن $b, c$ حقيقية إذن الجذران مترافقان\nالجذران هما $(1-3i), (1+3i)$\nمجموع الجذرين $= 1-3i + 1+3i = 2$\n$b-1 = 2 \\Rightarrow b = 3$\nحاصل ضرب الجذرين $= (1-3i)(1+3i) = 1 + 9 = 10$\n$c+8 = 10 \\Rightarrow c = 2$",
-        "years": ["2/2018 خارج القطر"]
+        "years": [
+          "2/2018 خارج القطر"
+        ]
       },
       {
         "question": "س/ اذا كان كل من $Z_1, Z_2$ عدداً مركباً، وكان $Z_1 + Z_2 = 4 , Z_1 Z_2 = 29$ جد $Z_1, Z_2$ ثم كون المعادلة التربيعية التي جذراها $Z_1, Z_2$",
         "answer": "sol :\nبما أن حاصل ضربهما وجمعهما أعداد حقيقية إذن الجذران مترافقان\nنفرض $Z_1 = a+bi , Z_2 = a-bi$\n$Z_1 + Z_2 = 2a = 4 \\Rightarrow a = 2$\n$Z_1 Z_2 = a^2 + b^2 = 29 \\Rightarrow 4 + b^2 = 29 \\Rightarrow b^2 = 25 \\Rightarrow b = \\pm 5$\nإذن الجذران هما $2+5i , 2-5i$\nالمعادلة هي : $x^2 - 4x + 29 = 0$",
-        "years": ["2/2022 تطبيقي"]
+        "years": [
+          "2/2022 تطبيقي"
+        ]
       },
       {
         "question": "س/ اذا كان $(3-4i)$ هو احد جذري المعادلة التربيعية $x^2 - nx + (10-5i) = 0$ فما هو الجذر الثاني؟ وما قيمة $n$؟",
         "answer": "sol :\nنفرض $M = 3-4i$ والجذر الثاني $L$\nحاصل ضرب الجذرين $M \\cdot L = 10 - 5i$\n$(3-4i) \\cdot L = 10 - 5i \\Rightarrow L = \\frac{10-5i}{3-4i} \\cdot \\frac{3+4i}{3+4i}$\n$L = \\frac{30 + 40i - 15i + 20}{9 + 16} = \\frac{50 + 25i}{25} = 2 + i$\nقيمة $n = M + L = (3-4i) + (2+i) = 5 - 3i$",
-        "years": ["2/2019"]
+        "years": [
+          "2/2019"
+        ]
       },
       {
         "question": "س/ كون المعادلة التربيعية التي جذراها $(2w^2 i - \\frac{2w}{i}) , (2wi - \\frac{2w^2}{i})$",
         "answer": "sol :\n$h = 2w^2 i - \\frac{2w}{i} = 2w^2 i + 2wi = 2i(w^2 + w) = -2i$\n$k = 2wi - \\frac{2w^2}{i} = 2wi + 2w^2 i = 2i(w + w^2) = -2i$\n$h + k = -2i - 2i = -4i$\n$h \\cdot k = (-2i)(-2i) = 4i^2 = -4$\n$\\therefore$ المعادلة هي : $x^2 + 4ix - 4 = 0$",
-        "years": ["1/1999"]
+        "years": [
+          "1/1999"
+        ]
       },
       {
         "question": "س/ كون المعادلة التربيعية التي جذراها $(3w^2 - 2i) , (3w - 2i)$",
         "answer": "sol :\n$h + k = (3w^2 - 2i) + (3w - 2i) = 3(w^2 + w) - 4i = -3 - 4i$\n$h \\cdot k = (3w^2 - 2i)(3w - 2i) = 9w^3 - 6w^2 i - 6wi + 4i^2$\n$= 9 - 6i(w^2 + w) - 4 = 9 + 6i - 4 = 5 + 6i$\n$\\therefore$ المعادلة هي : $x^2 + (3 + 4i)x + (5 + 6i) = 0$",
-        "years": ["2/2001"]
+        "years": [
+          "2/2001"
+        ]
       },
       {
         "question": "س/ جد المعادلة التربيعية ذات المعاملات الحقيقية وأحد جذريها هو $\\frac{2+wi+w^2i}{1-wi-w^2i}$",
         "answer": "sol :\n$L = \\frac{2 + i(w+w^2)}{1 - i(w+w^2)} = \\frac{2-i}{1+i} \\cdot \\frac{1-i}{1-i}$\n$L = \\frac{2 - 2i - i - 1}{2} = \\frac{1 - 3i}{2} = \\frac{1}{2} - \\frac{3}{2}i$\nبما أن المعاملات حقيقية إذن الجذر الآخر هو $m = \\frac{1}{2} + \\frac{3}{2}i$\n$L + m = \\frac{1}{2} + \\frac{1}{2} = 1$\n$L \\cdot m = (\\frac{1}{2})^2 + (\\frac{3}{2})^2 = \\frac{1}{4} + \\frac{9}{4} = \\frac{10}{4} = \\frac{5}{2}$\n$\\therefore$ المعادلة هي : $x^2 - x + \\frac{5}{2} = 0$",
-        "years": ["3/2018"]
+        "years": [
+          "3/2018"
+        ]
       },
       {
         "question": "س/ كون المعادلة التربيعية التي جذراها $(2-3iw) , (2-3iw^2)$؟",
         "answer": "sol :\n$h = 2 - 3iw , k = 2 - 3iw^2$\n$h + k = 4 - 3i(w + w^2) = 4 + 3i$\n$h \\cdot k = 4 - 6iw^2 - 6iw + 9i^2 w^3 = 4 - 6i(w^2 + w) - 9 = -5 + 6i$\nالمعادلة هي : $x^2 - (4 + 3i)x + (-5 + 6i) = 0$",
-        "years": ["1/2001"]
+        "years": [
+          "1/2001"
+        ]
       },
       {
         "question": "س/ كون المعادلة التربيعية التي جذراها $(2 - 2w - 2w^2)^2 , (2w + 2w^2 - 1)^2$؟",
         "answer": "sol :\n$h = [2 - 2(w + w^2)]^2 = [2 + 2]^2 = 16$\n$k = [2(w + w^2) - 1]^2 = [-2 - 1]^2 = 9$\n$h + k = 16 + 9 = 25$\n$h \\cdot k = 16 \\cdot 9 = 144$\nالمعادلة هي : $x^2 - 25x + 144 = 0$",
-        "years": ["2/1997"]
+        "years": [
+          "2/1997"
+        ]
       },
       {
         "question": "س/ كون المعادلة التربيعية التي جذراها $(\\frac{1}{w}) , (\\frac{1+3w}{w^2+3})$؟",
         "answer": "sol :\n$h = \\frac{1}{w} = w^2$\n$k = \\frac{1+3w}{w^2+3} = \\frac{w^3+3w}{w^2+3} = \\frac{w(w^2+3)}{w^2+3} = w$\n$h + k = w^2 + w = -1$\n$h \\cdot k = w^2 \\cdot w = w^3 = 1$\nالمعادلة هي : $x^2 + x + 1 = 0$",
-        "years": ["3/2016"]
+        "years": [
+          "3/2016"
+        ]
       },
       {
         "question": "س/ كون المعادلة التربيعية التي جذراها $(2iw^2 - w) , (2iw - w^2)$؟",
         "answer": "sol :\n$h + k = 2i(w^2 + w) - (w + w^2) = -2i + 1 = 1 - 2i$\n$h \\cdot k = (2iw^2 - w)(2iw - w^2) = 4i^2 w^3 - 2iw^4 - 2iw^2 + w^3$\n$= -4 - 2iw - 2iw^2 + 1 = -3 - 2i(w + w^2) = -3 + 2i$\nالمعادلة هي : $x^2 - (1 - 2i)x + (-3 + 2i) = 0$",
-        "years": ["2/1998"]
+        "years": [
+          "2/1998"
+        ]
       },
       {
         "question": "س/ كون المعادلة التربيعية التي جذراها $(\\frac{w}{1+2w}) , (\\frac{w^2}{1+2w^2})$؟",
         "answer": "sol :\n$h + k = \\frac{w(1+2w^2) + w^2(1+2w)}{(1+2w)(1+2w^2)} = \\frac{w + 2w^3 + w^2 + 2w^3}{1 + 2w^2 + 2w + 4w^3}$\n$= \\frac{(w + w^2) + 4}{1 + 2(w^2 + w) + 4} = \\frac{-1 + 4}{5 - 2} = \\frac{3}{3} = 1$\n$h \\cdot k = \\frac{w^3}{(1+2w)(1+2w^2)} = \\frac{1}{3}$\nالمعادلة هي : $x^2 - x + \\frac{1}{3} = 0$",
-        "years": ["2/2010"]
+        "years": [
+          "2/2010"
+        ]
       },
       {
         "question": "س/ كون المعادلة التربيعية التي جذراها $(\\frac{3}{1-w^2}) , (\\frac{3}{1-w})$؟",
         "answer": "sol :\n$h + k = \\frac{3(1-w) + 3(1-w^2)}{(1-w^2)(1-w)} = \\frac{3 - 3w + 3 - 3w^2}{1 - w - w^2 + w^3}$\n$= \\frac{6 - 3(w + w^2)}{1 - (w + w^2) + 1} = \\frac{6 + 3}{1 + 1 + 1} = \\frac{9}{3} = 3$\n$h \\cdot k = \\frac{9}{3} = 3$\nالمعادلة هي : $x^2 - 3x + 3 = 0$",
-        "years": ["تمهيدي 2012"]
+        "years": [
+          "تمهيدي 2012"
+        ]
       },
       {
         "question": "س/ كون المعادلة التربيعية التي جذراها $(1 - iw^2) , (1 - iw)$؟",
         "answer": "sol :\n$h + k = 1 - iw^2 + 1 - iw = 2 - i(w^2 + w) = 2 + i$\n$h \\cdot k = (1 - iw^2)(1 - iw) = 1 - iw - iw^2 + i^2 w^3 = 1 - i(w + w^2) - 1 = i$\nالمعادلة هي : $x^2 - (2 + i)x + i = 0$",
-        "years": ["3/2012"]
+        "years": [
+          "3/2012"
+        ]
       },
       {
         "question": "س/ كون المعادلة التربيعية التي جذراها $(3w^2 + \\frac{i}{w}) , (3w + \\frac{i}{w^2})$؟",
         "answer": "sol :\n$h = 3w^2 + iw^2 = w^2(3 + i)$\n$k = 3w + iw = w(3 + i)$\n$h + k = (3 + i)(w^2 + w) = -(3 + i) = -3 - i$\n$h \\cdot k = (3 + i)^2 (w^3) = 9 + 6i - 1 = 8 + 6i$\nالمعادلة هي : $x^2 + (3 + i)x + (8 + 6i) = 0$",
-        "years": ["1/2008"]
+        "years": [
+          "1/2008"
+        ]
       },
       {
         "question": "س/ كون المعادلة التربيعية التي جذراها $(\\frac{w}{1+3w}) , (\\frac{w^2}{1+3w^2})$؟",
         "answer": "sol :\n$h + k = \\frac{w+3w^3+w^2+3w^3}{1+3w^2+3w+9w^3} = \\frac{(w+w^2)+6}{1+3(w+w^2)+9} = \\frac{-1+6}{10-3} = \\frac{5}{7}$\n$h \\cdot k = \\frac{w^3}{7} = \\frac{1}{7}$\nالمعادلة هي : $x^2 - \\frac{5}{7}x + \\frac{1}{7} = 0$",
-        "years": ["1/2008 خارج القطر"]
+        "years": [
+          "1/2008 خارج القطر"
+        ]
       },
       {
         "question": "س/ كون المعادلة التربيعية التي جذراها $(\\frac{w^2}{3-w}) , (\\frac{w}{3-w^2})$؟",
         "answer": "sol :\n$h + k = \\frac{3w^2 - w^4 + 3w - w^2}{(3-w)(3-w^2)} = \\frac{3w^2 - w + 3w - w^2}{9 - 3w^2 - 3w + w^3} = \\frac{2w^2 + 2w}{10 - 3(w^2 + w)} = \\frac{-2}{13}$\n$h \\cdot k = \\frac{w^3}{13} = \\frac{1}{13}$\nالمعادلة هي : $x^2 + \\frac{2}{13}x + \\frac{1}{13} = 0$",
-        "years": ["تمهيدي 2014"]
+        "years": [
+          "تمهيدي 2014"
+        ]
       },
       {
         "question": "س/ كون المعادلة التربيعية ذات المعاملات الحقيقية وأحد جذريها هو $\\frac{7 + iw + iw^2}{2 + iw^4 + iw^5}$؟",
         "answer": "sol :\n$L = \\frac{7 + i(w + w^2)}{2 + i(w + w^2)} = \\frac{7 - i}{2 - i} \\cdot \\frac{2 + i}{2 + i} = \\frac{14 + 7i - 2i + 1}{4 + 1} = \\frac{15 + 5i}{5} = 3 + i$\nبما أن المعاملات حقيقية إذن الجذر الآخر هو $M = 3 - i$\n$L + M = 6 , L \\cdot M = 10$\nالمعادلة هي : $x^2 - 6x + 10 = 0$",
-        "years": ["1/2016 خارج القطر"]
+        "years": [
+          "1/2016 خارج القطر"
+        ]
       },
       {
         "question": "س/ كون المعادلة التربيعية التي جذراها $(\\frac{5}{w} - i) , (\\frac{5}{w^2} + i)$؟",
         "answer": "sol :\n$h = 5w^2 - i , k = 5w + i$\n$h + k = 5(w^2 + w) = -5$\n$h \\cdot k = (5w^2 - i)(5w + i) = 25w^3 + 5iw^2 - 5iw - i^2 = 25 + 5i(w^2 - w) + 1$\n$= 26 + 5i(\\pm \\sqrt{3}i) = 26 \\mp 5\\sqrt{3}$\nالمعادلة هي : $x^2 + 5x + 26 \\mp 5\\sqrt{3} = 0$",
-        "years": ["2/2015 خارج القطر"]
+        "years": [
+          "2/2015 خارج القطر"
+        ]
       }
     ]
   },
@@ -770,307 +1078,499 @@
       {
         "question": "س/ اذا كان $z$ عدداً مركباً مقياسه $3$ وسعته $\\frac{\\pi}{3}$ جد الشكل الديكارتي (أرجاند) والشكل الجبري له.",
         "answer": "sol :\n$z = r(\\cos \\theta + i \\sin \\theta)$\n$= 3(\\cos \\frac{\\pi}{3} + i \\sin \\frac{\\pi}{3})$\n$= 3(\\frac{1}{2} + \\frac{\\sqrt{3}}{2}i)$\n$= \\frac{3}{2} + \\frac{3\\sqrt{3}}{2}i = (\\frac{3}{2} , \\frac{3\\sqrt{3}}{2})$",
-        "years": ["2/2003"]
+        "years": [
+          "2/2003"
+        ]
       },
       {
         "question": "س/ اذا كان $Z$ عدداً مركباً مقياسه $4$ وسعته $\\frac{5\\pi}{6}$ جد كلاً من الشكل الديكارتي والجبري له.",
         "answer": "sol :\n$z = r(\\cos \\theta + i \\sin \\theta)$\n$= 4(\\cos \\frac{5\\pi}{6} + i \\sin \\frac{5\\pi}{6})$\n$= 4(-\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i)$\n$= -2\\sqrt{3} + 2i = (-2\\sqrt{3} , 2)$",
-        "years": ["1/2006"]
+        "years": [
+          "1/2006"
+        ]
       },
       {
         "question": "س/ ضع المقدار $\\frac{7+\\sqrt{3}i}{1+2\\sqrt{3}i}$ بالصيغة العادية للعدد المركب ثم جد مقياسه وسعته الأساسية.",
         "answer": "sol :\n$Z = \\frac{7+\\sqrt{3}i}{1+2\\sqrt{3}i} \\cdot \\frac{1-2\\sqrt{3}i}{1-2\\sqrt{3}i}$\n$= \\frac{7 - 14\\sqrt{3}i + \\sqrt{3}i + 6}{1 + 12} = \\frac{13 - 13\\sqrt{3}i}{13} = 1 - \\sqrt{3}i$\n$Mod z = r = \\sqrt{x^2 + y^2} = \\sqrt{(1)^2 + (-\\sqrt{3})^2} = \\sqrt{1 + 3} = \\sqrt{4} = 2$\n$\\cos \\theta = \\frac{x}{r} = \\frac{1}{2} , \\sin \\theta = \\frac{y}{r} = \\frac{-\\sqrt{3}}{2}$\nزاوية الاسناد $= \\frac{\\pi}{3}$ تقع في الربع الرابع\n$\\theta = 2\\pi - \\frac{\\pi}{3} = \\frac{5\\pi}{3}$",
-        "years": ["1/2001"]
+        "years": [
+          "1/2001"
+        ]
       },
       {
         "question": "س/ عبر عن العدد المركب $2\\sqrt{3} - 2i$ بالصيغة القطبية.",
         "answer": "sol :\n$r = \\sqrt{x^2 + y^2} = \\sqrt{(2\\sqrt{3})^2 + (-2)^2} = \\sqrt{12 + 4} = \\sqrt{16} = 4$\n$\\cos \\theta = \\frac{2\\sqrt{3}}{4} = \\frac{\\sqrt{3}}{2} , \\sin \\theta = \\frac{-2}{4} = -\\frac{1}{2}$\nزاوية الاسناد هي $\\frac{\\pi}{6}$ والسعة $\\theta$ تقع بالربع الرابع\n$\\arg(z) = \\theta = 2\\pi - \\frac{\\pi}{6} = \\frac{11\\pi}{6}$\nالصورة القطبية : $z = 4(\\cos \\frac{11\\pi}{6} + i \\sin \\frac{11\\pi}{6})$",
-        "years": ["1/2012", "1/2013 خارج القطر", "1/2014 نازحين", "3/2023 تطبيقي"]
+        "years": [
+          "1/2012",
+          "1/2013 خارج القطر",
+          "1/2014 نازحين",
+          "3/2023 تطبيقي"
+        ]
       },
       {
         "question": "س/ اذا كان $z = -2 + 2i$ عبر عن $z$ بالصيغة القطبية.",
         "answer": "sol :\n$r = \\sqrt{(-2)^2 + (2)^2} = \\sqrt{4 + 4} = \\sqrt{8} = 2\\sqrt{2}$\n$\\cos \\theta = \\frac{-2}{2\\sqrt{2}} = -\\frac{1}{\\sqrt{2}} , \\sin \\theta = \\frac{2}{2\\sqrt{2}} = \\frac{1}{\\sqrt{2}}$\nزاوية الاسناد هي $\\frac{\\pi}{4}$ والسعة $\\theta$ تقع بالربع الثاني\n$\\arg(z) = \\theta = \\pi - \\frac{\\pi}{4} = \\frac{3\\pi}{4}$\nالصورة القطبية : $z = 2\\sqrt{2}(\\cos \\frac{3\\pi}{4} + i \\sin \\frac{3\\pi}{4})$",
-        "years": ["1/2013"]
+        "years": [
+          "1/2013"
+        ]
       },
       {
         "question": "س/ اكتب الصيغة القطبية للعدد المركب $3 - 3\\sqrt{3}i$",
         "answer": "sol :\n$r = \\sqrt{(3)^2 + (-3\\sqrt{3})^2} = \\sqrt{9 + 27} = \\sqrt{36} = 6$\n$\\cos \\theta = \\frac{3}{6} = \\frac{1}{2} , \\sin \\theta = \\frac{-3\\sqrt{3}}{6} = -\\frac{\\sqrt{3}}{2}$\nزاوية الاسناد هي $\\frac{\\pi}{3}$ والسعة $\\theta$ تقع بالربع الرابع\n$\\arg(z) = \\theta = 2\\pi - \\frac{\\pi}{3} = \\frac{5\\pi}{3}$\nالصورة القطبية : $z = 6(\\cos \\frac{5\\pi}{3} + i \\sin \\frac{5\\pi}{3})$",
-        "years": ["3/2015"]
+        "years": [
+          "3/2015"
+        ]
       },
       {
         "question": "س/ جد الصيغة القطبية للعدد المركب $Z = 5 - 5i$",
         "answer": "sol :\n$r = \\sqrt{(5)^2 + (-5)^2} = \\sqrt{25 + 25} = \\sqrt{50} = 5\\sqrt{2}$\n$\\cos \\theta = \\frac{5}{5\\sqrt{2}} = \\frac{1}{\\sqrt{2}} , \\sin \\theta = \\frac{-5}{5\\sqrt{2}} = -\\frac{1}{\\sqrt{2}}$\nزاوية الاسناد هي $\\frac{\\pi}{4}$ والسعة $\\theta$ تقع بالربع الرابع\n$\\arg(z) = \\theta = 2\\pi - \\frac{\\pi}{4} = \\frac{7\\pi}{4}$\nالصورة القطبية : $z = 5\\sqrt{2}(\\cos \\frac{7\\pi}{4} + i \\sin \\frac{7\\pi}{4})$",
-        "years": ["3/2014"]
+        "years": [
+          "3/2014"
+        ]
       },
       {
         "question": "س/ إذا كان $z = (1 , -\\sqrt{3})$ اكتب الشكل الجبري له ثم جد مقياسه والقيمة الأساسية للسعة؟",
         "answer": "sol :\nالشكل الجبري هو : $Z = 1 - \\sqrt{3}i$\n$Mod z = r = \\sqrt{x^2 + y^2} = \\sqrt{(1)^2 + (-\\sqrt{3})^2} = \\sqrt{1 + 3} = 2$\n$\\cos \\theta = \\frac{1}{2} , \\sin \\theta = \\frac{-\\sqrt{3}}{2} \\Rightarrow$ زاوية الاسناد $\\frac{\\pi}{3}$\nبما أن السعة تقع بالربع الرابع إذن $\\theta = 2\\pi - \\frac{\\pi}{3} = \\frac{5\\pi}{3}$",
-        "years": ["2/2002"]
+        "years": [
+          "2/2002"
+        ]
       },
       {
         "question": "س/ إذا كان $z = (1 + \\sqrt{3}i)$ عدداً مركباً اكتب الشكل الديكارتي له ثم جد مقياسه والقيمة الأساسية للسعة؟",
         "answer": "sol :\nالشكل الديكارتي هو : $Z = (1 , \\sqrt{3})$\n$Mod z = r = \\sqrt{1^2 + (\\sqrt{3})^2} = 2$\n$\\cos \\theta = \\frac{1}{2} , \\sin \\theta = \\frac{\\sqrt{3}}{2} \\Rightarrow$ زاوية الاسناد $\\frac{\\pi}{3}$\nبما أن السعة تقع بالربع الأول إذن $\\theta = \\frac{\\pi}{3}$",
-        "years": ["2/2006"]
+        "years": [
+          "2/2006"
+        ]
       },
       {
         "question": "س/ جد المقياس والقيمة الأساسية للسعة للعدد المركب $\\frac{4}{1 - \\sqrt{3}i}$؟",
         "answer": "sol :\n$z = \\frac{4}{1 - \\sqrt{3}i} \\cdot \\frac{1 + \\sqrt{3}i}{1 + \\sqrt{3}i} = \\frac{4(1 + \\sqrt{3}i)}{4} = 1 + \\sqrt{3}i$\n$r = \\sqrt{1^2 + (\\sqrt{3})^2} = 2$\n$\\cos \\theta = \\frac{1}{2} , \\sin \\theta = \\frac{\\sqrt{3}}{2} \\Rightarrow \\theta = \\frac{\\pi}{3}$ (الربع الأول)",
-        "years": ["2/2008"]
+        "years": [
+          "2/2008"
+        ]
       },
       {
         "question": "س/ جد المقياس والقيمة الأساسية للسعة للعدد المركب $\\frac{2i}{1 + i}$؟",
         "answer": "sol :\n$z = \\frac{2i}{1 + i} \\cdot \\frac{1 - i}{1 - i} = \\frac{2i - 2i^2}{2} = \\frac{2i + 2}{2} = 1 + i$\n$r = \\sqrt{1^2 + 1^2} = \\sqrt{2}$\n$\\cos \\theta = \\frac{1}{\\sqrt{2}} , \\sin \\theta = \\frac{1}{\\sqrt{2}} \\Rightarrow \\theta = \\frac{\\pi}{4}$ (الربع الأول)",
-        "years": ["2/2007"]
+        "years": [
+          "2/2007"
+        ]
       },
       {
         "question": "س/ جد المقياس والقيمة الأساسية للسعة للعدد المركب $(1 + \\sqrt{3}i)^2$؟",
         "answer": "sol :\n$z = (1 + \\sqrt{3}i)^2 = 1 + 2\\sqrt{3}i - 3 = -2 + 2\\sqrt{3}i$\n$r = \\sqrt{(-2)^2 + (2\\sqrt{3})^2} = \\sqrt{4 + 12} = 4$\n$\\cos \\theta = \\frac{-2}{4} = -\\frac{1}{2} , \\sin \\theta = \\frac{2\\sqrt{3}}{4} = \\frac{\\sqrt{3}}{2} \\Rightarrow$ زاوية الاسناد $\\frac{\\pi}{3}$\nبما أن السعة تقع بالربع الثاني إذن $\\theta = \\pi - \\frac{\\pi}{3} = \\frac{2\\pi}{3}$",
-        "years": ["1/2008"]
+        "years": [
+          "1/2008"
+        ]
       },
       {
         "question": "س/ إذا كان $z = -1 + \\sqrt{3}i$ عدداً مركباً جد مقياسه والقيمة الأساسية للسعة؟",
         "answer": "sol :\n$r = \\sqrt{(-1)^2 + (\\sqrt{3})^2} = \\sqrt{1 + 3} = 2$\n$\\cos \\theta = \\frac{-1}{2} , \\sin \\theta = \\frac{\\sqrt{3}}{2} \\Rightarrow$ زاوية الاسناد $\\frac{\\pi}{3}$\nبما أن السعة تقع بالربع الثاني إذن $\\theta = \\pi - \\frac{\\pi}{3} = \\frac{2\\pi}{3}$",
-        "years": ["1/2008 خارج القطر"]
+        "years": [
+          "1/2008 خارج القطر"
+        ]
       },
       {
         "question": "س/ اكتب العدد $z = (1 + \\sqrt{3}i)^2$ بالصيغة القطبية؟",
         "answer": "sol :\nنفرض $M = 1 + \\sqrt{3}i \\Rightarrow r = 2, \\theta = \\frac{\\pi}{3}$\n$M = 2(\\cos \\frac{\\pi}{3} + i \\sin \\frac{\\pi}{3})$\n$z = M^2 = 2^2(\\cos \\frac{2\\pi}{3} + i \\sin \\frac{2\\pi}{3}) = 4(\\cos \\frac{2\\pi}{3} + i \\sin \\frac{2\\pi}{3})$",
-        "years": ["1/2016 خارج القطر"]
+        "years": [
+          "1/2016 خارج القطر"
+        ]
       },
       {
         "question": "س/ عبر عن العدد المركب $2 - 2\\sqrt{3}i$ بالصيغة القطبية؟",
         "answer": "sol :\n$r = \\sqrt{(2)^2 + (-2\\sqrt{3})^2} = \\sqrt{4 + 12} = 4$\n$\\cos \\theta = \\frac{2}{4} = \\frac{1}{2} , \\sin \\theta = \\frac{-2\\sqrt{3}}{4} = -\\frac{\\sqrt{3}}{2} \\Rightarrow$ زاوية الاسناد $\\frac{\\pi}{3}$\nبما أن السعة تقع بالربع الرابع إذن $\\theta = 2\\pi - \\frac{\\pi}{3} = \\frac{5\\pi}{3}$\nالصيغة القطبية : $z = 4(\\cos \\frac{5\\pi}{3} + i \\sin \\frac{5\\pi}{3})$",
-        "years": ["تمهيدي 2015"]
+        "years": [
+          "تمهيدي 2015"
+        ]
       }
     ]
   },
   {
-    "subject": "مبرهنة ديموافر ونتيجتها",
+    "subject": "مبرهنة ديموافر",
     "questions": [
       {
-        "question": "س/ احسب باستخدام مبرهنة ديموافر : $(1 + i)^{11}$",
-        "answer": "sol :\n$z = 1 + i$\n$r = \\sqrt{1^2 + 1^2} = \\sqrt{2}$\n$\\cos \\theta = \\frac{1}{\\sqrt{2}} , \\sin \\theta = \\frac{1}{\\sqrt{2}} \\Rightarrow \\theta = \\frac{\\pi}{4}$\n$z = \\sqrt{2}(\\cos \\frac{\\pi}{4} + i \\sin \\frac{\\pi}{4})$\n$z^{11} = (\\sqrt{2})^{11}(\\cos \\frac{11\\pi}{4} + i \\sin \\frac{11\\pi}{4})$\n$(\\sqrt{2})^{11} = 32\\sqrt{2}$\n$\\frac{11\\pi}{4} = 2\\pi + \\frac{3\\pi}{4} \\Rightarrow$ تقع في الربع الثاني\n$z^{11} = 32\\sqrt{2}(\\cos \\frac{3\\pi}{4} + i \\sin \\frac{3\\pi}{4})$\n$= 32\\sqrt{2}(-\\frac{1}{\\sqrt{2}} + \\frac{1}{\\sqrt{2}}i) = -32 + 32i$",
-        "years": ["2/2011", "تمهيدي تطبيقي 2019", "تمهيدي احيائي 2020"]
+        "question": "س/ جد باستخدام مبرهنة ديموافر: $(1 + i)^{11}$",
+        "answer": "sol :\nz = 1 + i\n$Mod z = \\| z \\| = r = \\sqrt{x^2 + y^2} = \\sqrt{(1)^2 + (1)^2}$\n$= \\sqrt{1 + 1} = \\sqrt{2}$\n$\\cos\\theta = \\frac{x}{\\| z \\|} = \\frac{1}{\\sqrt{2}} , \\sin\\theta = \\frac{y}{\\| z \\|} = \\frac{1}{\\sqrt{2}}$\n$arg(z) = \\theta = \\frac{\\pi}{4}$\nالسعة تساوي زاوية الاسناد لان العدد المركب يقع بالربع الاول $\\frac{\\pi}{4}$\n$z = r(\\cos\\theta + i \\sin\\theta) \\rightarrow z = \\sqrt{2} (\\cos\\frac{\\pi}{4} + i \\sin\\frac{\\pi}{4})$\n$\\rightarrow z^{11} = [\\sqrt{2}(\\cos\\frac{\\pi}{4} + i \\sin\\frac{\\pi}{4})]^{11}$\n$z^{11} = [(\\sqrt{2})^{11} (\\cos\\frac{11\\pi}{4} + i \\sin\\frac{11\\pi}{4})]$\n$= 32\\sqrt{2} (\\cos\\frac{11\\pi}{4} + i \\sin\\frac{11\\pi}{4})$\n$= 32\\sqrt{2} (\\cos\\frac{3\\pi}{4} + i \\sin\\frac{3\\pi}{4})$\n$= 32\\sqrt{2} (-\\frac{1}{\\sqrt{2}} + i \\frac{1}{\\sqrt{2}})$\n$= 32\\sqrt{2} (\\frac{-1}{\\sqrt{2}} + i \\frac{1}{\\sqrt{2}})$\n$= 32(-1 + i) = -32 + 32i$",
+        "years": [
+          "2/2011",
+          "2019/تمهيدي \"تطبيقي\"",
+          "2020/تمهيدي \"احيائي\""
+        ]
       },
       {
-        "question": "س/ احسب باستخدام مبرهنة ديموافر او التعميم : $(1 - i)^7$",
-        "answer": "sol :\n$z = 1 - i \\Rightarrow r = \\sqrt{2} , \\theta = \\frac{7\\pi}{4}$\n$z = \\sqrt{2}(\\cos \\frac{7\\pi}{4} + i \\sin \\frac{7\\pi}{4})$\n$z^7 = (\\sqrt{2})^7(\\cos \\frac{49\\pi}{4} + i \\sin \\frac{49\\pi}{4})$\n$\\frac{49\\pi}{4} = 12\\pi + \\frac{\\pi}{4} \\Rightarrow \\theta = \\frac{\\pi}{4}$\n$z^7 = 8\\sqrt{2}(\\cos \\frac{\\pi}{4} + i \\sin \\frac{\\pi}{4})$\n$= 8\\sqrt{2}(\\frac{1}{\\sqrt{2}} + \\frac{1}{\\sqrt{2}}i) = 8 + 8i$",
-        "years": ["1/2012", "تمهيدي 2013", "1/2020 تطبيقي", "1/2022 احيائي"]
+        "question": "س/ جد باستخدام مبرهنة ديموافر: $(1 - i)^7$ (أو) باستخدام مبرهنة ديموافر ( أو التعميم ) احسب ما يأتي : $(1 - \\sqrt{-1})^7$",
+        "answer": "sol :\nz = 1 - i\n$Mod z = \\| z \\| = r = \\sqrt{x^2 + y^2} = \\sqrt{(1)^2 + (-1)^2}$\n$= \\sqrt{1 + 1} = \\sqrt{2}$\n$\\cos\\theta = \\frac{x}{\\| z \\|} = \\frac{1}{\\sqrt{2}} , \\sin\\theta = \\frac{y}{\\| z \\|} = \\frac{-1}{\\sqrt{2}}$\n$\\therefore arg(z) = \\theta = 2\\pi - \\frac{\\pi}{4} = \\frac{7\\pi}{4}$ الربع الرابع\n$z = r(\\cos\\theta + i \\sin\\theta)$\n$\\rightarrow z = \\sqrt{2} (\\cos\\frac{7\\pi}{4} + i \\sin\\frac{7\\pi}{4})$\n$\\rightarrow z^7 = [\\sqrt{2} (\\cos\\frac{7\\pi}{4} + i \\sin\\frac{7\\pi}{4})]^7$\n$= (\\sqrt{2})^7 (\\cos\\frac{49\\pi}{4} + i \\sin\\frac{49\\pi}{4})$\n$= 8\\sqrt{2} (\\cos\\frac{\\pi}{4} + i \\sin\\frac{\\pi}{4})$\n$= 8\\sqrt{2} (\\frac{1}{\\sqrt{2}} + i \\frac{1}{\\sqrt{2}}) = 8 + 8i$",
+        "years": [
+          "1/2012",
+          "2013/تمهيدي",
+          "1/2020/تطبيقي",
+          "1/2022/احيائي"
+        ]
       },
       {
-        "question": "س/ احسب باستخدام مبرهنة ديموافر : $(\\sqrt{3} + i)^{-9}$",
-        "answer": "sol :\n$z = \\sqrt{3} + i \\Rightarrow r = 2 , \\theta = \\frac{\\pi}{6}$\n$z = 2(\\cos \\frac{\\pi}{6} + i \\sin \\frac{\\pi}{6})$\n$z^{-9} = 2^{-9}(\\cos \\frac{-9\\pi}{6} + i \\sin \\frac{-9\\pi}{6})$\n$= \\frac{1}{512}(\\cos \\frac{3\\pi}{2} - i \\sin \\frac{3\\pi}{2})$\n$= \\frac{1}{512}(0 - i(-1)) = \\frac{1}{512}i$",
-        "years": ["1/2012 خارج القطر", "2/2014", "تمهيدي احيائي 2023"]
+        "question": "س/ جد الجذور التربيعية للعدد المركب $8i$",
+        "answer": "sol :\n$\\sqrt{8i} = x + yi$ بتربيع الطرفين\n$8i = (x^2 - y^2) + (2xy)i$\n$x^2 - y^2 = 0$ ... (1)\n$2xy = 8 \\rightarrow y = \\frac{8}{2x} = \\frac{4}{x}$ ... (2)\nنعوض (2) في (1)\n$x^2 - (\\frac{4}{x})^2 = 0$\n$\\rightarrow [x^2 - \\frac{16}{x^2} = 0] . x^2$\n$\\rightarrow x^4 - 16 = 0$\n$(x^2 - 4)(x^2 + 4) = 0$\nيهمل (مجموع مربعين ليس له حل في الاعداد الحقيقية) $x^2 + 4 = 0$\nاو $x^2 - 4 = 0 \\rightarrow x^2 = 4 \\rightarrow x = \\pm 2$\n$\\rightarrow y = (\\frac{4}{\\pm 2}) \\rightarrow y = \\pm 2$\nans: $\\sqrt{8i} = \\{\\pm(2 + 2i)\\}$\n\nملاحظة : يمكن حل هذا السؤال بطريقة مبرهنة ديموافر $8i^{1/2}$\n$z = 8i = 8(\\cos\\frac{\\pi}{2} + i \\sin\\frac{\\pi}{2})$\n$\\rightarrow z^{1/2} = \\sqrt{8} (\\cos\\frac{\\frac{\\pi}{2} + 2k\\pi}{2} + i \\sin\\frac{\\frac{\\pi}{2} + 2k\\pi}{2})$\n$k = 0, 1$\nIf $k = 0 \\rightarrow z^{1/2} = \\sqrt{8} (\\cos\\frac{\\pi}{4} + i \\sin\\frac{\\pi}{4})$\n$= 2\\sqrt{2} (\\frac{1}{\\sqrt{2}} + i \\frac{1}{\\sqrt{2}}) = 2 + 2i$\nIf $k = 1 \\rightarrow z^{1/2} = \\sqrt{8} (\\cos\\frac{5\\pi}{4} + i \\sin\\frac{5\\pi}{4})$\n$= 2\\sqrt{2} (-\\frac{1}{\\sqrt{2}} - i \\frac{1}{\\sqrt{2}}) = -2 - 2i$",
+        "years": [
+          "1/2011 \"خارج القطر\""
+        ]
       },
       {
-        "question": "س/ بسط المقدار الآتي : $\\frac{(\\cos 2\\theta + i \\sin 2\\theta)^5}{(\\cos 3\\theta + i \\sin 3\\theta)^2}$",
-        "answer": "sol :\n$= \\frac{((\\cos \\theta + i \\sin \\theta)^2)^5}{((\\cos \\theta + i \\sin \\theta)^3)^2}$\n$= \\frac{(\\cos \\theta + i \\sin \\theta)^{10}}{(\\cos \\theta + i \\sin \\theta)^6}$\n$= (\\cos \\theta + i \\sin \\theta)^{10-6} = (\\cos \\theta + i \\sin \\theta)^4$\n$= \\cos 4\\theta + i \\sin 4\\theta$",
-        "years": ["2/2017 احيائي"]
+        "question": "س/ احسب ما يأتي: $[\\cos \\frac{5}{24}\\pi + i \\sin \\frac{5}{24}\\pi]^4$",
+        "answer": "sol :\n$[\\cos\\frac{5}{24}\\pi + i \\sin\\frac{5}{24}\\pi]^4$\n$= \\cos\\frac{20\\pi}{24} + i \\sin\\frac{20\\pi}{24}$\n$= \\cos\\frac{5\\pi}{6} + i \\sin\\frac{5\\pi}{6}$\n$= -\\cos\\frac{\\pi}{6} + i \\sin\\frac{\\pi}{6}$\n$= -\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i$",
+        "years": [
+          "2012/\"تمهيدي\""
+        ]
       },
       {
-        "question": "س/ جد الجذور التكعيبية للعدد $125i$ باستخدام مبرهنة ديموافر.",
-        "answer": "sol :\n$z = 125i = 125(\\cos \\frac{\\pi}{2} + i \\sin \\frac{\\pi}{2})$\n$z^{\\frac{1}{3}} = (125)^{\\frac{1}{3}}(\\cos \\frac{\\frac{\\pi}{2} + 2k\\pi}{3} + i \\sin \\frac{\\frac{\\pi}{2} + 2k\\pi}{3})$\n$z^{\\frac{1}{3}} = 5(\\cos \\frac{\\pi + 4k\\pi}{6} + i \\sin \\frac{\\pi + 4k\\pi}{6})$ حيث $k=0,1,2$\n- $k=0 \\Rightarrow 5(\\cos \\frac{\\pi}{6} + i \\sin \\frac{\\pi}{6}) = 5(\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i) = \\frac{5\\sqrt{3}}{2} + \\frac{5}{2}i$\n- $k=1 \\Rightarrow 5(\\cos \\frac{5\\pi}{6} + i \\sin \\frac{5\\pi}{6}) = 5(-\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i) = -\\frac{5\\sqrt{3}}{2} + \\frac{5}{2}i$\n- $k=2 \\Rightarrow 5(\\cos \\frac{9\\pi}{6} + i \\sin \\frac{9\\pi}{6}) = 5(\\cos \\frac{3\\pi}{2} + i \\sin \\frac{3\\pi}{2}) = 5(0 - i) = -5i$",
-        "years": ["1/2015", "تمهيدي 2017", "2/2019 تطبيقي"]
+        "question": "س/ جد مجموعة حل المعادلة في مجموعة الاعداد المركبة $x^3 - 8i = 0$ باستخدام مبرهنة ديموافر",
+        "answer": "sol :\n$x^3 = 8i = 8(\\cos\\frac{\\pi}{2} + i \\sin\\frac{\\pi}{2})$\n$\\rightarrow x = \\sqrt[3]{8} (\\cos\\frac{\\frac{\\pi}{2} + 2k\\pi}{3} + i \\sin\\frac{\\frac{\\pi}{2} + 2k\\pi}{3})$\n$k = 0, 1, 2$\nIf $k = 0 \\rightarrow x = 2 (\\cos\\frac{\\pi}{6} + i \\sin\\frac{\\pi}{6})$\n$= 2 (\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i) = \\sqrt{3} + i$\nIf $k = 1 \\rightarrow x = 2 (\\cos\\frac{5\\pi}{6} + i \\sin\\frac{5\\pi}{6})$\n$= 2 (-\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i) = -\\sqrt{3} + i$\nIf $k = 2 \\rightarrow x = 2 (\\cos\\frac{9\\pi}{6} + i \\sin\\frac{9\\pi}{6})$\n$= 2 (\\cos\\frac{3\\pi}{2} + i \\sin\\frac{3\\pi}{2}) = 2 (0 - i) = -2i$",
+        "years": [
+          "4/2015 \"أسئلة النازحين\""
+        ]
       },
       {
-        "question": "س/ حل المعادلة $x^4 + 16 = 0$ باستخدام نتيجة مبرهنة ديموافر.",
-        "answer": "sol :\n$x^4 = -16 \\Rightarrow x^4 = 16(\\cos \\pi + i \\sin \\pi)$\n$x = (16)^{\\frac{1}{4}}(\\cos \\frac{\\pi + 2k\\pi}{4} + i \\sin \\frac{\\pi + 2k\\pi}{4})$ حيث $k=0,1,2,3$\n$x = 2(\\cos \\frac{\\pi + 2k\\pi}{4} + i \\sin \\frac{\\pi + 2k\\pi}{4})$\n- $k=0 \\Rightarrow 2(\\cos \\frac{\\pi}{4} + i \\sin \\frac{\\pi}{4}) = 2(\\frac{1}{\\sqrt{2}} + \\frac{1}{\\sqrt{2}}i) = \\sqrt{2} + \\sqrt{2}i$\n- $k=1 \\Rightarrow 2(\\cos \\frac{3\\pi}{4} + i \\sin \\frac{3\\pi}{4}) = 2(-\\frac{1}{\\sqrt{2}} + \\frac{1}{\\sqrt{2}}i) = -\\sqrt{2} + \\sqrt{2}i$\n- $k=2 \\Rightarrow 2(\\cos \\frac{5\\pi}{4} + i \\sin \\frac{5\\pi}{4}) = 2(-\\frac{1}{\\sqrt{2}} - \\frac{1}{\\sqrt{2}}i) = -\\sqrt{2} - \\sqrt{2}i$\n- $k=3 \\Rightarrow 2(\\cos \\frac{7\\pi}{4} + i \\sin \\frac{7\\pi}{4}) = 2(\\frac{1}{\\sqrt{2}} - \\frac{1}{\\sqrt{2}}i) = \\sqrt{2} - \\sqrt{2}i$",
-        "years": ["1/2018 احيائي", "3/2024 محاولات احيائي"]
+        "question": "س/ جد الجذور التربيعية للعدد المركب $-8i$",
+        "answer": "sol :\n$\\sqrt{-8i} = x + yi$ بتربيع الطرفين\n$-8i = (x^2 - y^2) + (2xy)i$\n$x^2 - y^2 = 0$ ... (1)\n$2xy = -8 \\rightarrow y = \\frac{-8}{2x} = \\frac{-4}{x}$ ... (2)\nنعوض (2) في (1)\n$x^2 - (\\frac{-4}{x})^2 = 0$\n$\\rightarrow [x^2 - \\frac{16}{x^2} = 0] . x^2$\n$\\rightarrow x^4 - 16 = 0$\n$(x^2 - 4)(x^2 + 4) = 0$\nيهمل (مجموع مربعين ليس له حل في الاعداد الحقيقية) $x^2 + 4 = 0$\nاو $x^2 - 4 = 0 \\rightarrow x^2 = 4 \\rightarrow x = \\pm 2$\n$\\rightarrow y = (\\frac{-4}{\\pm 2}) \\rightarrow y = \\mp 2$\nans: $\\sqrt{8i} = \\{\\pm(2 - 2i)\\}$\n\nملاحظة : يمكن حل هذا السؤال بطريقة مبرهنة ديموافر $-8i^{1/2}$\n$z = -8i = 8(\\cos\\frac{3\\pi}{2} + i \\sin\\frac{3\\pi}{2})$\n$\\rightarrow z^{1/2} = \\sqrt{8} (\\cos\\frac{\\frac{3\\pi}{2} + 2k\\pi}{2} + i \\sin\\frac{\\frac{3\\pi}{2} + 2k\\pi}{2})$\n$k = 0, 1$\nIf $k = 0 \\rightarrow z^{1/2} = \\sqrt{8} (\\cos\\frac{3\\pi}{4} + i \\sin\\frac{3\\pi}{4})$\n$= 2\\sqrt{2} (-\\frac{1}{\\sqrt{2}} + i \\frac{1}{\\sqrt{2}}) = -2 + 2i$\nIf $k = 1 \\rightarrow z^{1/2} = \\sqrt{8} (\\cos\\frac{7\\pi}{4} + i \\sin\\frac{7\\pi}{4})$\n$= 2\\sqrt{2} (\\frac{1}{\\sqrt{2}} - i \\frac{1}{\\sqrt{2}}) = 2 - 2i$",
+        "years": [
+          "2013/\"تمهيدي\""
+        ]
       },
       {
-        "question": "س/ جد الجذور التربيعية للعدد المركب $-1 + \\sqrt{3}i$ باستخدام مبرهنة ديموافر.",
-        "answer": "sol :\n$z = -1 + \\sqrt{3}i \\Rightarrow r=2, \\theta = \\frac{2\\pi}{3}$\n$z = 2(\\cos \\frac{2\\pi}{3} + i \\sin \\frac{2\\pi}{3})$\n$z^{\\frac{1}{2}} = \\sqrt{2}(\\cos \\frac{\\frac{2\\pi}{3} + 2k\\pi}{2} + i \\sin \\frac{\\frac{2\\pi}{3} + 2k\\pi}{2})$ حيث $k=0,1$\n- $k=0 \\Rightarrow \\sqrt{2}(\\cos \\frac{\\pi}{3} + i \\sin \\frac{\\pi}{3}) = \\sqrt{2}(\\frac{1}{2} + \\frac{\\sqrt{3}}{2}i) = \\frac{1}{\\sqrt{2}} + \\frac{\\sqrt{3}}{\\sqrt{2}}i$\n- $k=1 \\Rightarrow \\sqrt{2}(\\cos \\frac{4\\pi}{3} + i \\sin \\frac{4\\pi}{3}) = \\sqrt{2}(-\\frac{1}{2} - \\frac{\\sqrt{3}}{2}i) = -\\frac{1}{\\sqrt{2}} - \\frac{\\sqrt{3}}{\\sqrt{2}}i$",
-        "years": ["1/2014 خارج القطر", "3/2017", "3/2020 تطبيقي"]
+        "question": "س/ باستخدام مبرهنة ديموافر جد : $(\\sqrt{3} + i)^{-9}$",
+        "answer": "sol :\nz = sqrt(3) + i\n$Mod z = \\| z \\| = r = \\sqrt{x^2 + y^2} = \\sqrt{(\\sqrt{3})^2 + (1)^2}$\n$= \\sqrt{3 + 1} = \\sqrt{4} = 2$\n$\\cos\\theta = \\frac{\\sqrt{3}}{2} , \\sin\\theta = \\frac{1}{2}$\n$\\theta = \\frac{\\pi}{6}$ لان السعة تقع الربع الاول\n$z = 2(\\cos\\frac{\\pi}{6} + i \\sin\\frac{\\pi}{6})$\n$\\rightarrow z^{-9} = [2(\\cos\\frac{\\pi}{6} + i \\sin\\frac{\\pi}{6})]^{-9}$\n$= (2)^{-9} (\\cos\\frac{9\\pi}{6} - i \\sin\\frac{9\\pi}{6})$\n$= \\frac{1}{512} (\\cos\\frac{3\\pi}{2} - i \\sin\\frac{3\\pi}{2})$\n$= \\frac{1}{512} (0 + i) = \\frac{1}{512}i$",
+        "years": [
+          "2023/تمهيدي \"احيائي\"",
+          "1/2012 \"خارج القطر\"",
+          "2/2014"
+        ]
       },
       {
-        "question": "س/ اثبت ان $\\frac{(\\cos 3\\theta + i \\sin 3\\theta)^4}{(\\cos 5\\theta + i \\sin 5\\theta)^2} \\cdot (\\cos \\theta + i \\sin \\theta)^{-2} = 1$",
-        "answer": "sol :\nLHS: $\\frac{(\\cos \\theta + i \\sin \\theta)^{12}}{(\\cos \\theta + i \\sin \\theta)^{10}} \\cdot (\\cos \\theta + i \\sin \\theta)^{-2}$\n$= (\\cos \\theta + i \\sin \\theta)^{12-10} \\cdot (\\cos \\theta + i \\sin \\theta)^{-2}$\n$= (\\cos \\theta + i \\sin \\theta)^2 \\cdot (\\cos \\theta + i \\sin \\theta)^{-2}$\n$= (\\cos \\theta + i \\sin \\theta)^{2-2} = (\\cos \\theta + i \\sin \\theta)^0 = 1 = RHS$",
-        "years": ["2/2023 تطبيقي"]
+        "question": "س/ باستخدام مبرهنة ديموافر جد الجذور التربيعية للعدد المركب : $-1 + \\sqrt{3}i$",
+        "answer": "sol :\nz = -1 + sqrt(3)i\n$Mod z = \\| z \\| = r = \\sqrt{x^2 + y^2} = \\sqrt{(-1)^2 + (\\sqrt{3})^2}$\n$= \\sqrt{1 + 3} = \\sqrt{4} = 2$\n$\\cos\\theta = \\frac{-1}{2} , \\sin\\theta = \\frac{\\sqrt{3}}{2} \\rightarrow \\theta = \\frac{2\\pi}{3}$ تقع في ربع الثاني زاوية الاسناد $\\frac{\\pi}{3}$\n$z = 2(\\cos\\frac{2\\pi}{3} + i \\sin\\frac{2\\pi}{3})$\n$z^{1/2} = [2(\\cos\\frac{2\\pi}{3} + i \\sin\\frac{2\\pi}{3})]^{1/2}$\n$z^{1/2} = \\sqrt{2} (\\cos\\frac{2\\pi/3 + 2k\\pi}{2} + i \\sin\\frac{2\\pi/3 + 2k\\pi}{2})$\n$k = 0, 1$\nIf $k = 0 \\rightarrow z^{1/2} = \\sqrt{2} (\\cos\\frac{\\pi}{3} + i \\sin\\frac{\\pi}{3})$\n$= \\sqrt{2} (\\frac{1}{2} + \\frac{\\sqrt{3}}{2}i) = \\frac{1}{\\sqrt{2}} + \\frac{\\sqrt{3}}{\\sqrt{2}}i$\nIf $k = 1 \\rightarrow z^{1/2} = \\sqrt{2} (\\cos\\frac{4\\pi}{3} + i \\sin\\frac{4\\pi}{3})$\n$= \\sqrt{2} (-\\frac{1}{2} - \\frac{\\sqrt{3}}{2}i) = -\\frac{1}{\\sqrt{2}} - \\frac{\\sqrt{3}}{\\sqrt{2}}i$",
+        "years": [
+          "1/2014 \"خارج القطر\"",
+          "3/2017"
+        ]
       },
       {
-        "question": "س/ اذا كان $Z = \\cos \\theta + i \\sin \\theta$ فأثبت ان $\\frac{Z^n}{1+Z^{2n}} = \\frac{1}{2 \\cos n\\theta}$",
-        "answer": "sol :\nLHS: $\\frac{(\\cos \\theta + i \\sin \\theta)^n}{1 + (\\cos \\theta + i \\sin \\theta)^{2n}}$\n$= \\frac{\\cos n\\theta + i \\sin n\\theta}{1 + \\cos 2n\\theta + i \\sin 2n\\theta}$\nاستخدام قوانين نصف الزاوية: $1 + \\cos 2\\alpha = 2 \\cos^2 \\alpha$ و $\\sin 2\\alpha = 2 \\sin \\alpha \\cos \\alpha$\n$= \\frac{\\cos n\\theta + i \\sin n\\theta}{2 \\cos^2 n\\theta + 2i \\sin n\\theta \\cos n\\theta}$\n$= \\frac{\\cos n\\theta + i \\sin n\\theta}{2 \\cos n\\theta (\\cos n\\theta + i \\sin n\\theta)}$\n$= \\frac{1}{2 \\cos n\\theta} = RHS$",
-        "years": ["2/2019 احيائي"]
+        "question": "س/ جد الصيغة القطبية للجذور الخمسة للعدد المركب $(\\sqrt{3} + i)^2$",
+        "answer": "sol :\nz = sqrt(3) + i\n$Mod z = \\| z \\| = r = \\sqrt{x^2 + y^2} = \\sqrt{(\\sqrt{3})^2 + (1)^2}$\n$= \\sqrt{3 + 1} = \\sqrt{4} = 2$\n$\\cos\\theta = \\frac{\\sqrt{3}}{2} , \\sin\\theta = \\frac{1}{2}$\n$\\theta = \\frac{\\pi}{6}$ لان السعة تقع الربع الاول\n$z = 2(\\cos\\frac{\\pi}{6} + i \\sin\\frac{\\pi}{6})$\n$\\rightarrow z^{2/5} = (z^2)^{1/5} = 4^{1/5} (\\cos\\frac{\\pi}{3} + i \\sin\\frac{\\pi}{3})^{1/5}$\n$k = 0, 1, 2, 3, 4$\nIf k = 0\n$\\rightarrow z^{2/5} = \\sqrt[5]{4} (\\cos\\frac{\\pi}{15} + i \\sin\\frac{\\pi}{15})$\nIf k = 1\n$\\rightarrow z^{2/5} = \\sqrt[5]{4} (\\cos\\frac{\\pi/3 + 2\\pi}{5} + i \\sin\\frac{\\pi/3 + 2\\pi}{5})$\n$= \\sqrt[5]{4} (\\cos\\frac{7\\pi}{15} + i \\sin\\frac{7\\pi}{15})$\nIf k = 2\n$\\rightarrow z^{2/5} = \\sqrt[5]{4} (\\cos\\frac{\\pi/3 + 4\\pi}{5} + i \\sin\\frac{\\pi/3 + 4\\pi}{5})$\n$= \\sqrt[5]{4} (\\cos\\frac{13\\pi}{15} + i \\sin\\frac{13\\pi}{15})$\nIf k = 3\n$\\rightarrow z^{2/5} = \\sqrt[5]{4} (\\cos\\frac{\\pi/3 + 6\\pi}{5} + i \\sin\\frac{\\pi/3 + 6\\pi}{5})$\n$= \\sqrt[5]{4} (\\cos\\frac{19\\pi}{15} + i \\sin\\frac{19\\pi}{15})$\nIf k = 4\n$\\rightarrow z^{2/5} = \\sqrt[5]{4} (\\cos\\frac{\\pi/3 + 8\\pi}{5} + i \\sin\\frac{\\pi/3 + 8\\pi}{5})$\n$= \\sqrt[5]{4} (\\cos\\frac{25\\pi}{15} + i \\sin\\frac{25\\pi}{15}) = \\sqrt[5]{4} (\\cos\\frac{5\\pi}{3} + i \\sin\\frac{5\\pi}{3})$",
+        "years": [
+          "1/2014"
+        ]
       },
       {
-        "question": "س/ احسب باستخدام ديموافر : $(\\cos \\frac{13\\pi}{8} + i \\sin \\frac{13\\pi}{8}) (\\cos \\frac{9\\pi}{8} - i \\sin \\frac{9\\pi}{8})$",
-        "answer": "sol :\n$= (\\cos \\frac{\\pi}{8} + i \\sin \\frac{\\pi}{8})^{13} \\cdot (\\cos \\frac{\\pi}{8} + i \\sin \\frac{\\pi}{8})^{-9}$\n$= (\\cos \\frac{\\pi}{8} + i \\sin \\frac{\\pi}{8})^{13-9} = (\\cos \\frac{\\pi}{8} + i \\sin \\frac{\\pi}{8})^4$\n$= \\cos \\frac{4\\pi}{8} + i \\sin \\frac{4\\pi}{8} = \\cos \\frac{\\pi}{2} + i \\sin \\frac{\\pi}{2} = 0 + i$",
-        "years": ["2/2022 احيائي"]
+        "question": "س/ جد الجذور التكعيبية للعدد $125i$ باستخدام مبرهنة ديموافر",
+        "answer": "sol :\nz = 125i = 125(\\cos\\frac{\\pi}{2} + i \\sin\\frac{\\pi}{2})\n\\rightarrow z^{\\frac{1}{3}} = [125(\\cos\\frac{\\pi}{2} + i \\sin\\frac{\\pi}{2})]^{\\frac{1}{3}}\n\\therefore r = 125, \\theta = \\frac{\\pi}{2}\n\\rightarrow z^{\\frac{1}{3}} = (125)^{\\frac{1}{3}} (\\cos\\frac{\\frac{\\pi}{2} + 2k\\pi}{3} + i \\sin\\frac{\\frac{\\pi}{2} + 2k\\pi}{3})\nk = 0, 1, 2\nIf k = 0 \\rightarrow z^{\\frac{1}{3}} = 5 (\\cos\\frac{\\pi}{6} + i \\sin\\frac{\\pi}{6})\n= 5 (\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i) = \\frac{5\\sqrt{3}}{2} + \\frac{5}{2}i\nIf k = 1 \\rightarrow z^{\\frac{1}{3}} = 5 (\\cos\\frac{\\frac{\\pi}{2}+2\\pi}{3} + i \\sin\\frac{\\frac{\\pi}{2}+2\\pi}{3})\n= 5 (\\cos\\frac{5\\pi}{6} + i \\sin\\frac{5\\pi}{6})\n= 5 (-\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i) = -\\frac{5\\sqrt{3}}{2} + \\frac{5}{2}i\nIf k = 2 \\rightarrow z^{\\frac{1}{3}} = 5 (\\cos\\frac{\\frac{\\pi}{2}+4\\pi}{3} + i \\sin\\frac{\\frac{\\pi}{2}+4\\pi}{3})\n= 5 (\\cos\\frac{9\\pi}{6} + i \\sin\\frac{9\\pi}{6})\n= 5 (\\cos\\frac{3\\pi}{2} + i \\sin\\frac{3\\pi}{2})\n= 5 (0 - i) = -5i",
+        "years": [
+          "1/2015",
+          "2017/تمهيدي",
+          "2/2019 تطبيقي"
+        ]
       },
       {
-        "question": "س/ بسط ما يأتي : $\\frac{(\\cos 5\\theta + i \\sin 5\\theta)^2}{(\\cos 3\\theta + i \\sin 3\\theta)^3}$؟",
-        "answer": "sol :\n$= \\frac{(\\cos \\theta + i \\sin \\theta)^{10}}{(\\cos \\theta + i \\sin \\theta)^9} = \\cos \\theta + i \\sin \\theta$",
-        "years": ["2/2013"]
+        "question": "س/ حل المعادلة باستخدام مبرهنة ديموافر: $x^3 - 125i = 0$",
+        "answer": "sol :\nx^3 - 125i = 0\nx^3 = 125i\n\\rightarrow x^3 = 125(\\cos\\frac{\\pi}{2} + i \\sin\\frac{\\pi}{2})\nتكملة الحل مثل ما موجود في الجواب السابق (الجذور التكعيبية للعدد 125i)",
+        "years": [
+          "1/2017 خارج القطر"
+        ]
       },
       {
-        "question": "س/ أثبت أن : $\\frac{(\\cos 2\\theta + i \\sin 2\\theta)^5}{(\\cos 4\\theta + i \\sin 4\\theta)^2} - (\\cos \\theta + i \\sin \\theta)^2 = 0$؟",
-        "answer": "sol :\nLHS: $\\frac{(\\cos \\theta + i \\sin \\theta)^{10}}{(\\cos \\theta + i \\sin \\theta)^8} - (\\cos \\theta + i \\sin \\theta)^2$\n$= (\\cos \\theta + i \\sin \\theta)^2 - (\\cos \\theta + i \\sin \\theta)^2 = 0 = RHS$",
-        "years": ["2/2016 خارج القطر"]
+        "question": "س/ بسط ما يأتي: $\\frac{(\\cos 5\\theta + i \\sin 5\\theta)^2}{(\\cos 3\\theta + i \\sin 3\\theta)^3}$",
+        "answer": "sol :\n\\frac{(\\cos 5\\theta + i \\sin 5\\theta)^2}{(\\cos 3\\theta + i \\sin 3\\theta)^3}\n= \\frac{[(\\cos\\theta + i \\sin\\theta)^5]^2}{[(\\cos\\theta + i \\sin\\theta)^3]^3}\n= \\frac{(\\cos\\theta + i \\sin\\theta)^{10}}{(\\cos\\theta + i \\sin\\theta)^9} = \\cos\\theta + i \\sin\\theta",
+        "years": [
+          "2/2013"
+        ]
       },
       {
-        "question": "س/ احسب باستخدام مبرهنة ديموافر : $[\\cos \\frac{7\\pi}{12} + i \\sin \\frac{7\\pi}{12}]^{-3}$؟",
-        "answer": "sol :\n$= \\cos \\frac{21\\pi}{12} - i \\sin \\frac{21\\pi}{12} = \\cos \\frac{7\\pi}{4} - i \\sin \\frac{7\\pi}{4}$\n$= \\frac{1}{\\sqrt{2}} - i(-\\frac{1}{\\sqrt{2}}) = \\frac{1}{\\sqrt{2}} + \\frac{1}{\\sqrt{2}}i$",
-        "years": ["1/2015 خارج القطر", "2/2017 احيائي"]
+        "question": "س/ ضع في ابسط صورة المقدار $\\frac{(\\cos 2\\theta + i \\sin 2\\theta)^5}{(\\cos 5\\theta + i \\sin 5\\theta)^2}$",
+        "answer": "sol :\n\\frac{(\\cos 2\\theta + i \\sin 2\\theta)^5}{(\\cos 5\\theta + i \\sin 5\\theta)^2}\n= \\frac{[(\\cos\\theta + i \\sin\\theta)^2]^5}{[(\\cos\\theta + i \\sin\\theta)^5]^2} = \\frac{(\\cos\\theta + i \\sin\\theta)^{10}}{(\\cos\\theta + i \\sin\\theta)^{10}} = 1",
+        "years": [
+          "2/2013 تكميلي خارج القطر"
+        ]
       },
       {
-        "question": "س/ أثبت أن : $\\frac{(\\cos 2\\theta + i \\sin 2\\theta)^3}{(\\cos 5\\theta + i \\sin 5\\theta)} \\cdot (\\cos \\theta - i \\sin \\theta) = 1$؟",
-        "answer": "sol :\nLHS: $\\frac{(\\cos \\theta + i \\sin \\theta)^6}{(\\cos \\theta + i \\sin \\theta)^5} \\cdot (\\cos \\theta + i \\sin \\theta)^{-1}$\n$= (\\cos \\theta + i \\sin \\theta)^1 \\cdot (\\cos \\theta + i \\sin \\theta)^{-1} = (\\cos \\theta + i \\sin \\theta)^0 = 1 = RHS$",
-        "years": ["3/2018 احيائي"]
+        "question": "س/ جد بابسط صورة\na) $(\\cos \\frac{7\\pi}{12} + i \\sin \\frac{7\\pi}{12})^{-3}$\nb) $(\\cos\\theta + i \\sin\\theta)^8 \\cdot (\\cos\\theta - i \\sin\\theta)^4$",
+        "answer": "sol :\na) (\\cos \\frac{7\\pi}{12} + i \\sin \\frac{7\\pi}{12})^{-3}\n= (\\cos \\frac{21\\pi}{12} - i \\sin \\frac{21\\pi}{12}) = (\\cos \\frac{7\\pi}{4} - i \\sin \\frac{7\\pi}{4})\n= \\frac{1}{\\sqrt{2}} + \\frac{1}{\\sqrt{2}}i\nb) (\\cos\\theta + i \\sin\\theta)^8 \\cdot (\\cos\\theta - i \\sin\\theta)^4\n= (\\cos\\theta + i \\sin\\theta)^8 \\cdot (\\cos\\theta + i \\sin\\theta)^{-4}\n= (\\cos\\theta + i \\sin\\theta)^4 = \\cos 4\\theta + i \\sin 4\\theta\nاو (\\cos\\theta + i \\sin\\theta)^8 \\cdot (\\cos\\theta - i \\sin\\theta)^4\n= (\\cos\\theta + i \\sin\\theta)^4 \\cdot (\\cos\\theta + i \\sin\\theta)^4 \\cdot (\\cos\\theta - i \\sin\\theta)^4\n= (\\cos 4\\theta + i \\sin 4\\theta) [(\\cos\\theta + i \\sin\\theta)(\\cos\\theta - i \\sin\\theta)]^4\n= (\\cos 4\\theta + i \\sin 4\\theta) [\\cos^2\\theta + \\sin^2\\theta]^4\n= \\cos 4\\theta + i \\sin 4\\theta",
+        "years": [
+          "1/2015 خارج القطر"
+        ]
       },
       {
-        "question": "س/ اختصر ما يأتي لأبسط صورة : $\\frac{(\\cos 2\\theta + i \\sin 2\\theta)^5}{(\\cos 3\\theta + i \\sin 3\\theta)^3}$؟",
-        "answer": "sol :\n$= \\frac{(\\cos \\theta + i \\sin \\theta)^{10}}{(\\cos \\theta + i \\sin \\theta)^9} = \\cos \\theta + i \\sin \\theta$",
-        "years": ["تمهيدي 2021 تطبيقي"]
+        "question": "س/ هل ان: $\\frac{(\\cos 2\\theta + i \\sin 2\\theta)^5}{(\\cos 4\\theta + i \\sin 4\\theta)^2} - (\\cos\\theta + i \\sin\\theta)^2 = 0$ اثبت ذلك",
+        "answer": "sol :\n\\frac{(\\cos 2\\theta + i \\sin 2\\theta)^5}{(\\cos 4\\theta + i \\sin 4\\theta)^2} - (\\cos\\theta + i \\sin\\theta)^2\n= \\frac{(\\cos\\theta + i \\sin\\theta)^{10}}{(\\cos\\theta + i \\sin\\theta)^8} - (\\cos\\theta + i \\sin\\theta)^2\n= (\\cos\\theta + i \\sin\\theta)^{10-8} - (\\cos\\theta + i \\sin\\theta)^2\n= (\\cos\\theta + i \\sin\\theta)^2 - (\\cos\\theta + i \\sin\\theta)^2 = 0",
+        "years": [
+          "2/2016 خارج القطر"
+        ]
       },
       {
-        "question": "س/ احسب باستخدام مبرهنة ديموافر : $(\\sqrt{3} + i)^{-\\frac{3}{2}}$؟",
-        "answer": "sol :\nنفرض $z = \\sqrt{3} + i \\Rightarrow r = 2, \\theta = \\frac{\\pi}{6}$\n$z^{-3} = 2^{-3}(\\cos \\frac{-3\\pi}{6} + i \\sin \\frac{-3\\pi}{6}) = \\frac{1}{8}(\\cos \\frac{\\pi}{2} - i \\sin \\frac{\\pi}{2}) = \\frac{1}{8}(0 - i) = -\\frac{1}{8}i$\nالان نجد الجذور التربيعية لـ $-\\frac{1}{8}i$ :\n$z^{-\\frac{3}{2}} = (\\frac{1}{8})^{\\frac{1}{2}}(\\cos \\frac{\\frac{3\\pi}{2} + 2k\\pi}{2} + i \\sin \\frac{\\frac{3\\pi}{2} + 2k\\pi}{2})$ حيث $k=0,1$\n- $k=0 \\Rightarrow \\frac{1}{2\\sqrt{2}}(\\cos \\frac{3\\pi}{4} + i \\sin \\frac{3\\pi}{4}) = \\frac{1}{2\\sqrt{2}}(-\\frac{1}{\\sqrt{2}} + \\frac{1}{\\sqrt{2}}i) = -\\frac{1}{4} + \\frac{1}{4}i$\n- $k=1 \\Rightarrow \\frac{1}{2\\sqrt{2}}(\\cos \\frac{7\\pi}{4} + i \\sin \\frac{7\\pi}{4}) = \\frac{1}{2\\sqrt{2}}(\\frac{1}{\\sqrt{2}} - \\frac{1}{\\sqrt{2}}i) = \\frac{1}{4} - \\frac{1}{4}i$",
-        "years": ["1/2017", "1/2024", "1/2024 محاولات"]
+        "question": "س/ جد الجذور التكعيبية للعدد المركب $(1+i)^2$ على وفق مبرهنة ديموافر.",
+        "answer": "sol :\nz = 1 + i\nMod z = || z || = r = \\sqrt{x^2 + y^2} = \\sqrt{(1)^2 + (1)^2} = \\sqrt{2}\n\\cos\\theta = \\frac{1}{\\sqrt{2}}, \\sin\\theta = \\frac{1}{\\sqrt{2}}\narg(z) = \\theta = \\frac{\\pi}{4}\nالسعة تساوي زاوية الاسناد لان العدد المركب يقع الربع الاول\nz = \\sqrt{2} (\\cos \\frac{\\pi}{4} + i \\sin \\frac{\\pi}{4})\nz^2 = [(\\sqrt{2})^2 (\\cos \\frac{\\pi}{4} + i \\sin \\frac{\\pi}{4})^2] = 2(\\cos \\frac{\\pi}{2} + i \\sin \\frac{\\pi}{2})\n(z^2)^{\\frac{1}{3}} = [2(\\cos \\frac{\\pi}{2} + i \\sin \\frac{\\pi}{2})]^{\\frac{1}{3}}\n= 2^{\\frac{1}{3}} (\\cos \\frac{\\pi/2 + 2k\\pi}{3} + i \\sin \\frac{\\pi/2 + 2k\\pi}{3})\nk = 0, 1, 2\nIf k = 0 \\rightarrow (z^2)^{\\frac{1}{3}} = \\sqrt[3]{2} (\\cos \\frac{\\pi}{6} + i \\sin \\frac{\\pi}{6})\n= \\sqrt[3]{2} (\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i)\nIf k = 1 \\rightarrow (z^2)^{\\frac{1}{3}} = \\sqrt[3]{2} (\\cos \\frac{5\\pi}{6} + i \\sin \\frac{5\\pi}{6})\n= \\sqrt[3]{2} (-\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i)\nIf k = 2 \\rightarrow (z^2)^{\\frac{1}{3}} = \\sqrt[3]{2} (\\cos \\frac{3\\pi}{2} + i \\sin \\frac{3\\pi}{2})\n= \\sqrt[3]{2} (0 - i) = -\\sqrt[3]{2}i\n\nالطريقة الثانية:\nz = (1+i)^2 = 1 + 2i + i^2 = 2i\n= 2(\\cos \\frac{\\pi}{2} + i \\sin \\frac{\\pi}{2})\n(z)^{\\frac{1}{3}} = [2(\\cos \\frac{\\pi}{2} + i \\sin \\frac{\\pi}{2})]^{\\frac{1}{3}}\n... (تكملة الحل مثل ما موجود في الطريقة الاولى)",
+        "years": [
+          "2/2015 خارج القطر"
+        ]
       },
       {
-        "question": "س/ ضع بأبسط صورة : $\\frac{(\\cos 5\\theta + i \\sin 5\\theta)^2}{(\\cos 3\\theta + i \\sin 3\\theta)^2} \\cdot [\\cos \\theta - i \\sin \\theta]^4$؟",
-        "answer": "sol :\n$= \\frac{(\\cos \\theta + i \\sin \\theta)^{10}}{(\\cos \\theta + i \\sin \\theta)^6} \\cdot (\\cos \\theta + i \\sin \\theta)^{-4}$\n$= (\\cos \\theta + i \\sin \\theta)^4 \\cdot (\\cos \\theta + i \\sin \\theta)^{-4} = (\\cos \\theta + i \\sin \\theta)^0 = 1$",
-        "years": ["2/2018 احيائي"]
+        "question": "س/ باستخدام مبرهنة ديموافر، بسط ما يأتي: $\\frac{(\\cos 2\\theta + i \\sin 2\\theta)^5}{(\\cos 3\\theta + i \\sin 3\\theta)^2}$",
+        "answer": "sol :\nالطريقة الأولى:\n\\frac{(\\cos 2\\theta + i \\sin 2\\theta)^5}{(\\cos 3\\theta + i \\sin 3\\theta)^2} = \\frac{(\\cos\\theta + i \\sin\\theta)^{10}}{(\\cos\\theta + i \\sin\\theta)^6}\n= (\\cos\\theta + i \\sin\\theta)^4 = \\cos 4\\theta + i \\sin 4\\theta\nالطريقة الثانية:\n\\frac{(\\cos 2\\theta + i \\sin 2\\theta)^3}{(\\cos 3\\theta + i \\sin 3\\theta)^2} . (\\cos 2\\theta + i \\sin 2\\theta)^2\n= \\frac{(\\cos 6\\theta + i \\sin 6\\theta)}{(\\cos 6\\theta + i \\sin 6\\theta)} . (\\cos 2\\theta + i \\sin 2\\theta)^2\n= \\cos 4\\theta + i \\sin 4\\theta",
+        "years": [
+          "2/2017 احيائي"
+        ]
       },
       {
-        "question": "س/ باستخدام مبرهنة ديموافر احسب : $(-1 - \\sqrt{-1})^{-3}$؟",
-        "answer": "sol :\n$z = -1 - i \\Rightarrow r = \\sqrt{2}, \\theta = \\frac{5\\pi}{4}$\n$z^{-3} = (\\sqrt{2})^{-3}(\\cos \\frac{-15\\pi}{4} + i \\sin \\frac{-15\\pi}{4})$\n$= \\frac{1}{2\\sqrt{2}}(\\cos \\frac{15\\pi}{4} - i \\sin \\frac{15\\pi}{4})$\n$\\frac{15\\pi}{4} = 4\\pi - \\frac{\\pi}{4} \\Rightarrow \\theta = \\frac{7\\pi}{4}$\n$= \\frac{1}{2\\sqrt{2}}(\\frac{1}{\\sqrt{2}} - i(-\\frac{1}{\\sqrt{2}})) = \\frac{1}{4} + \\frac{1}{4}i$",
-        "years": ["1/2018 خارج القطر"]
+        "question": "س/ احسب: $[\\cos \\frac{3\\pi}{8} + i \\sin \\frac{3\\pi}{8}]^{-4}$",
+        "answer": "sol :\n[\\cos \\frac{3\\pi}{8} + i \\sin \\frac{3\\pi}{8}]^{-4} = \\cos \\frac{12\\pi}{8} - i \\sin \\frac{12\\pi}{8}\n= \\cos \\frac{3\\pi}{2} - i \\sin \\frac{3\\pi}{2} = 0 + i = i",
+        "years": [
+          "2/2017 احيائي",
+          "2/2018 احيائي"
+        ]
       },
       {
-        "question": "س/ باستخدام مبرهنة ديموافر احسب : $(2\\sqrt{3} - 2i)^{-2}$؟",
-        "answer": "sol :\n$z = 2\\sqrt{3} - 2i \\Rightarrow r = 4, \\theta = \\frac{11\\pi}{6}$\n$z^{-2} = 4^{-2}(\\cos \\frac{-22\\pi}{6} + i \\sin \\frac{-22\\pi}{6})$\n$= \\frac{1}{16}(\\cos \\frac{11\\pi}{3} - i \\sin \\frac{11\\pi}{3})$\n$\\frac{11\\pi}{3} = 4\\pi - \\frac{\\pi}{3} \\Rightarrow \\theta = \\frac{5\\pi}{3}$\n$= \\frac{1}{16}(\\frac{1}{2} - i(-\\frac{\\sqrt{3}}{2})) = \\frac{1}{32} + \\frac{\\sqrt{3}}{32}i$",
-        "years": ["1/2019 احيائي"]
+        "question": "س/ احسب: $[\\cos \\frac{7\\pi}{12} + i \\sin \\frac{7\\pi}{12}]^{-3}$",
+        "answer": "sol :\n[\\cos \\frac{7\\pi}{12} + i \\sin \\frac{7\\pi}{12}]^{-3} = \\cos \\frac{21\\pi}{12} - i \\sin \\frac{21\\pi}{12} = [\\cos \\frac{7\\pi}{4} - i \\sin \\frac{7\\pi}{4}]\n= \\cos \\frac{\\pi}{4} + i \\sin \\frac{\\pi}{4} لان \\frac{7\\pi}{4} للربع الرابع\n= \\frac{1}{\\sqrt{2}} + \\frac{1}{\\sqrt{2}}i",
+        "years": [
+          "2/2017 خارج القطر احيائي"
+        ]
       },
       {
-        "question": "س/ حل المعادلة $x^3 + 1 = 0$ باستخدام نتيجة مبرهنة ديموافر؟",
-        "answer": "sol :\n$x^3 = -1 = \\cos \\pi + i \\sin \\pi$\n$x = (\\cos \\frac{\\pi + 2k\\pi}{3} + i \\sin \\frac{\\pi + 2k\\pi}{3})$ حيث $k=0,1,2$\n- $k=0 \\Rightarrow \\cos \\frac{\\pi}{3} + i \\sin \\frac{\\pi}{3} = \\frac{1}{2} + \\frac{\\sqrt{3}}{2}i$\n- $k=1 \\Rightarrow \\cos \\pi + i \\sin \\pi = -1 + 0i$\n- $k=2 \\Rightarrow \\cos \\frac{5\\pi}{3} + i \\sin \\frac{5\\pi}{3} = \\frac{1}{2} - \\frac{\\sqrt{3}}{2}i$\nمجموعة الحل : $S = \\{\\frac{1}{2} + \\frac{\\sqrt{3}}{2}i , -1 , \\frac{1}{2} - \\frac{\\sqrt{3}}{2}i\\}$",
-        "years": ["3/2019", "2/2024", "تمهيدي 2025"]
+        "question": "س/ احسب باستخدام مبرهنة ديموافر: $(\\sqrt{3} + i)^{-\\frac{3}{2}}$",
+        "answer": "sol :\nLet z = \\sqrt{3} + i\nMod z = || z || = r = \\sqrt{x^2 + y^2} = \\sqrt{(\\sqrt{3})^2 + (1)^2} = \\sqrt{3+1} = \\sqrt{4} = 2\n\\cos\\theta = \\frac{\\sqrt{3}}{2}, \\sin\\theta = \\frac{1}{2}\n\\theta = \\frac{\\pi}{6} السعة تقع الربع الاول\n:: z = r(\\cos\\theta + i \\sin\\theta)\nz = 2(\\cos \\frac{\\pi}{6} + i \\sin \\frac{\\pi}{6})\nz^{-3/2} = (z^{-3})^{1/2}\n= (2^{-3} (\\cos \\frac{\\pi}{6} + i \\sin \\frac{\\pi}{6})^{-3})^{1/2}\n= (\\frac{1}{8} (\\cos \\frac{3\\pi}{6} - i \\sin \\frac{3\\pi}{6}))^{1/2}\n= \\frac{1}{\\sqrt{8}} (\\cos \\frac{\\pi/2 + 2k\\pi}{2} - i \\sin \\frac{\\pi/2 + 2k\\pi}{2})\n:: k = 0, 1\nIf k = 0 \\rightarrow z^{-3/2} = \\frac{1}{2\\sqrt{2}} (\\cos \\frac{\\pi}{4} - i \\sin \\frac{\\pi}{4})\n= \\frac{1}{2\\sqrt{2}} (\\frac{1}{\\sqrt{2}} - i \\frac{1}{\\sqrt{2}}) = \\frac{1}{4} - \\frac{1}{4}i\nIf k = 1 \\rightarrow z^{-3/2} = \\frac{1}{2\\sqrt{2}} (\\cos \\frac{\\pi/2 + 2\\pi}{2} - i \\sin \\frac{\\pi/2 + 2\\pi}{2})\n= \\frac{1}{2\\sqrt{2}} (\\cos \\frac{5\\pi}{4} - i \\sin \\frac{5\\pi}{4})\n= \\frac{1}{2\\sqrt{2}} (-\\cos \\frac{\\pi}{4} + i \\sin \\frac{\\pi}{4})\n= \\frac{1}{2\\sqrt{2}} (-\\frac{1}{\\sqrt{2}} + i \\frac{1}{\\sqrt{2}}) = -\\frac{1}{4} + \\frac{1}{4}i\n\nملاحظة/ بأمكان الطالب ايجاد اولا $z^{-3}$ بتغير اشارة الوسط فقط وثم $z^3$ ومن ثم $z^{\\frac{1}{2}}$ وهكذا",
+        "years": [
+          "1/2017 احيائي",
+          "1/2024",
+          "1/2024 محاولات احيائي"
+        ]
       },
       {
-        "question": "س/ جد الجذور التكعيبية للعدد $27i$ باستخدام نتيجة مبرهنة ديموافر؟",
-        "answer": "sol :\n$z = 27i = 27(\\cos \\frac{\\pi}{2} + i \\sin \\frac{\\pi}{2})$\n$z^{\\frac{1}{3}} = 3(\\cos \\frac{\\frac{\\pi}{2} + 2k\\pi}{3} + i \\sin \\frac{\\frac{\\pi}{2} + 2k\\pi}{3})$ حيث $k=0,1,2$\n- $k=0 \\Rightarrow 3(\\cos \\frac{\\pi}{6} + i \\sin \\frac{\\pi}{6}) = 3(\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i) = \\frac{3\\sqrt{3}}{2} + \\frac{3}{2}i$\n- $k=1 \\Rightarrow 3(\\cos \\frac{5\\pi}{6} + i \\sin \\frac{5\\pi}{6}) = 3(-\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i) = -\\frac{3\\sqrt{3}}{2} + \\frac{3}{2}i$\n- $k=2 \\Rightarrow 3(\\cos \\frac{9\\pi}{6} + i \\sin \\frac{9\\pi}{6}) = 3(\\cos \\frac{3\\pi}{2} + i \\sin \\frac{3\\pi}{2}) = -3i$\nمجموعة الحل : $S = \\{\\frac{3\\sqrt{3}}{2} + \\frac{3}{2}i , -\\frac{3\\sqrt{3}}{2} + \\frac{3}{2}i , -3i\\}$",
-        "years": ["1/2019 خارج القطر"]
+        "question": "س/ اثبت ان: $\\frac{(\\cos 2\\theta + i \\sin 2\\theta)^3}{(\\cos 5\\theta + i \\sin 5\\theta)} \\cdot (\\cos \\theta - i \\sin \\theta) = 1$",
+        "answer": "sol :\n\\frac{(\\cos 2\\theta + i \\sin 2\\theta)^3}{(\\cos 5\\theta + i \\sin 5\\theta)} \\cdot (\\cos \\theta - i \\sin \\theta)\n= \\frac{(\\cos\\theta + i \\sin\\theta)^6}{(\\cos\\theta + i \\sin\\theta)^5} \\cdot (\\cos\\theta - i \\sin\\theta)\n= (\\cos\\theta + i \\sin\\theta) . (\\cos\\theta - i \\sin\\theta)\n= \\cos^2\\theta + \\sin^2\\theta = 1",
+        "years": [
+          "3/2018 احيائي"
+        ]
       },
       {
-        "question": "س/ جد الجذور التربيعية للعدد المركب $(1 - \\sqrt{-3})$ باستخدام نتيجة مبرهنة ديموافر؟",
-        "answer": "sol :\n$z = 1 - \\sqrt{3}i \\Rightarrow r = 2, \\theta = \\frac{5\\pi}{3}$\n$z^{\\frac{1}{2}} = \\sqrt{2}(\\cos \\frac{\\frac{5\\pi}{3} + 2k\\pi}{2} + i \\sin \\frac{\\frac{5\\pi}{3} + 2k\\pi}{2})$ حيث $k=0,1$\n- $k=0 \\Rightarrow \\sqrt{2}(\\cos \\frac{5\\pi}{6} + i \\sin \\frac{5\\pi}{6}) = \\sqrt{2}(-\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i) = -\\frac{\\sqrt{3}}{\\sqrt{2}} + \\frac{1}{\\sqrt{2}}i$\n- $k=1 \\Rightarrow \\sqrt{2}(\\cos \\frac{11\\pi}{6} + i \\sin \\frac{11\\pi}{6}) = \\sqrt{2}(\\frac{\\sqrt{3}}{2} - \\frac{1}{2}i) = \\frac{\\sqrt{3}}{\\sqrt{2}} - \\frac{1}{\\sqrt{2}}i$",
-        "years": ["3/2019 تطبيقي"]
+        "question": "س/ جد باستخدام مبرهنة ديموافر او التعميم: $(1+i)^{-5}$",
+        "answer": "sol :\nz = 1 + i\nMod z = || z || = r = \\sqrt{x^2 + y^2} = \\sqrt{(1)^2 + (1)^2} = \\sqrt{1 + 1} = \\sqrt{2}\n\\cos\\theta = \\frac{1}{\\sqrt{2}}, \\sin\\theta = \\frac{1}{\\sqrt{2}}\narg(z) = \\theta = \\frac{\\pi}{4} تقع في الربع الاول\nz = r(\\cos\\theta + i \\sin\\theta)\n\\rightarrow z = \\sqrt{2} (\\cos \\frac{\\pi}{4} + i \\sin \\frac{\\pi}{4})\n\\rightarrow z^{-5} = [(\\sqrt{2})^{-5} (\\cos \\frac{5\\pi}{4} - i \\sin \\frac{5\\pi}{4})]\n= \\frac{1}{4\\sqrt{2}} (\\cos \\frac{5\\pi}{4} - i \\sin \\frac{5\\pi}{4})\n:: \\frac{5\\pi}{4} تقع في الربع الثالث\nz^{-5} = \\frac{1}{4\\sqrt{2}} (-\\cos \\frac{\\pi}{4} + i \\sin \\frac{\\pi}{4})\n= \\frac{1}{4\\sqrt{2}} (-\\frac{1}{\\sqrt{2}} + i \\frac{1}{\\sqrt{2}}) = \\frac{-1}{8} + \\frac{1}{8}i",
+        "years": [
+          "2018/تمهيدي"
+        ]
       },
       {
-        "question": "س/ جد الجذور التكعيبية للعدد $(8i)$ باستخدام نتيجة مبرهنة ديموافر؟",
-        "answer": "sol :\n$z = 8i = 8(\\cos \\frac{\\pi}{2} + i \\sin \\frac{\\pi}{2})$\n$z^{\\frac{1}{3}} = 2(\\cos \\frac{\\frac{\\pi}{2} + 2k\\pi}{3} + i \\sin \\frac{\\frac{\\pi}{2} + 2k\\pi}{3})$ حيث $k=0,1,2$\n- $k=0 \\Rightarrow 2(\\cos \\frac{\\pi}{6} + i \\sin \\frac{\\pi}{6}) = 2(\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i) = \\sqrt{3} + i$\n- $k=1 \\Rightarrow 2(\\cos \\frac{5\\pi}{6} + i \\sin \\frac{5\\pi}{6}) = 2(-\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i) = -\\sqrt{3} + i$\n- $k=2 \\Rightarrow 2(\\cos \\frac{9\\pi}{6} + i \\sin \\frac{9\\pi}{6}) = 2(0 - i) = -2i$",
-        "years": ["تمهيدي احيائي 2021"]
+        "question": "س/ اختصر ما يأتي لابسط صورة : $\\frac{(\\cos 2\\theta + i \\sin 2\\theta)^5}{(\\cos 3\\theta + i \\sin 3\\theta)^3}$",
+        "answer": "sol :\n\\frac{(\\cos 2\\theta + i \\sin 2\\theta)^5}{(\\cos 3\\theta + i \\sin 3\\theta)^3}\n= \\frac{(\\cos\\theta + i \\sin\\theta)^{10}}{(\\cos\\theta + i \\sin\\theta)^9}\n= \\cos\\theta + i \\sin\\theta",
+        "years": [
+          "2/2021 تمهيدي تطبيقي"
+        ]
       },
       {
-        "question": "س/ احسب باستخدام مبرهنة ديموافر : $\\sqrt{2} [\\cos \\frac{5\\pi}{24} + i \\sin \\frac{5\\pi}{24}]^{-6}$؟",
-        "answer": "sol :\n$= \\sqrt{2} [\\cos \\frac{30\\pi}{24} - i \\sin \\frac{30\\pi}{24}] = \\sqrt{2} [\\cos \\frac{5\\pi}{4} - i \\sin \\frac{5\\pi}{4}]$\n$= \\sqrt{2} [-\\frac{1}{\\sqrt{2}} - i(-\\frac{1}{\\sqrt{2}})] = \\sqrt{2} [-\\frac{1}{\\sqrt{2}} + \\frac{1}{\\sqrt{2}}i] = -1 + i$",
-        "years": ["1/2021 احيائي", "1/2022 احيائي"]
+        "question": "س/ ضع بابسط صورة : $\\frac{[\\cos 5\\theta + i \\sin 5\\theta]^2}{[\\cos 3\\theta + i \\sin 3\\theta]^2} [\\cos \\theta - i \\sin \\theta]^4$",
+        "answer": "sol :\n[\\cos \\theta - i \\sin \\theta]^{4} \\frac{(\\cos\\theta + i \\sin\\theta)^{10}}{(\\cos\\theta + i \\sin\\theta)^6}\n= [\\cos \\theta + i \\sin \\theta]^{-4} . [\\cos \\theta + i \\sin \\theta]^4\n= [\\cos \\theta + i \\sin \\theta]^0 = 1",
+        "years": [
+          "2/2018 احيائي"
+        ]
       },
       {
-        "question": "س/ ضع بالصيغة العادية للعدد المركب : $\\frac{(1 + i)^7}{8}$؟",
-        "answer": "sol :\nنجد $(1 + i)^7$ بديموافر : $r = \\sqrt{2}, \\theta = \\frac{\\pi}{4}$\n$(1 + i)^7 = (\\sqrt{2})^7 (\\cos \\frac{7\\pi}{4} + i \\sin \\frac{7\\pi}{4}) = 8\\sqrt{2} (\\frac{1}{\\sqrt{2}} - \\frac{1}{\\sqrt{2}}i) = 8(1 - i)$\nالمقدار $= \\frac{8(1 - i)}{8} = 1 - i$",
-        "years": ["2/2021 احيائي"]
+        "question": "س/ جد حل المعادلة حيث $x \\in C$ وباستخدام مبرهنة ديموافر $x^4 + 16 = 0$ (أو) جد الجذور الأربعة للعدد $(-16)$ باستخدام نتيجة مبرهنة ديموافر",
+        "answer": "sol :\nx^4 = -16\nx^4 = 16(\\cos\\pi + i \\sin\\pi)\nx = 2(\\cos\\pi + i \\sin\\pi)^{1/4}\nx = 2(\\cos \\frac{\\pi + 2k\\pi}{4} + i \\sin \\frac{\\pi + 2k\\pi}{4})\nk = 0, 1, 2, 3\nIf k = 0\nx = 2(\\cos \\frac{\\pi}{4} + i \\sin \\frac{\\pi}{4}) = 2(\\frac{1}{\\sqrt{2}} + i \\frac{1}{\\sqrt{2}}) = \\sqrt{2} + \\sqrt{2}i\nIf k = 1\nx = 2(\\cos \\frac{3\\pi}{4} + i \\sin \\frac{3\\pi}{4}) = 2(-\\frac{1}{\\sqrt{2}} + i \\frac{1}{\\sqrt{2}}) = -\\sqrt{2} + \\sqrt{2}i\nIf k = 2\nx = 2(\\cos \\frac{5\\pi}{4} + i \\sin \\frac{5\\pi}{4}) = 2(-\\frac{1}{\\sqrt{2}} - i \\frac{1}{\\sqrt{2}}) = -\\sqrt{2} - \\sqrt{2}i\nIf k = 3\nx = 2(\\cos \\frac{7\\pi}{4} + i \\sin \\frac{7\\pi}{4}) = 2(\\frac{1}{\\sqrt{2}} - i \\frac{1}{\\sqrt{2}}) = \\sqrt{2} - \\sqrt{2}i",
+        "years": [
+          "1/2018 احيائي",
+          "3/2024 محاولات احيائي",
+          "3/2024"
+        ]
       },
       {
-        "question": "س/ بسط المقدار الآتي : $(\\cos \\theta + i \\sin \\theta)^8 (\\cos \\theta - i \\sin \\theta)^4$؟",
-        "answer": "sol :\n$= (\\cos \\theta + i \\sin \\theta)^8 (\\cos \\theta + i \\sin \\theta)^{-4} = (\\cos \\theta + i \\sin \\theta)^4$\n$= \\cos 4\\theta + i \\sin 4\\theta$",
-        "years": ["2/2022 تطبيقي"]
+        "question": "س/ باستخدام مبرهنة ديموافر احسب: $(-1 - \\sqrt{-1})^{-3}$",
+        "answer": "sol :\nLet z = -1 - \\sqrt{-1} = -1 - i\nMod z = || z || = r = \\sqrt{x^2 + y^2} = \\sqrt{1 + 1} = \\sqrt{2}\n\\cos\\theta = \\frac{-1}{\\sqrt{2}}, \\sin\\theta = \\frac{-1}{\\sqrt{2}}\n\\theta = \\pi + \\pi/4 = \\frac{5\\pi}{4} لان السعة تقع الربع الثالث\nz = r(\\cos\\theta + i \\sin\\theta)\nz = \\sqrt{2} (\\cos \\frac{5\\pi}{4} + i \\sin \\frac{5\\pi}{4})\n\\rightarrow z^{-3} = (\\sqrt{2})^{-3} (\\cos \\frac{5\\pi}{4} + i \\sin \\frac{5\\pi}{4})^{-3}\n= \\frac{1}{(\\sqrt{2})^3} (\\cos \\frac{15\\pi}{4} - i \\sin \\frac{15\\pi}{4})\n= \\frac{1}{2\\sqrt{2}} (\\cos \\frac{7\\pi}{4} - i \\sin \\frac{7\\pi}{4})\n= \\frac{1}{2\\sqrt{2}} (\\frac{1}{\\sqrt{2}} + i \\frac{1}{\\sqrt{2}}) = \\frac{1}{4} + \\frac{1}{4}i",
+        "years": [
+          "1/2018 خارج القطر"
+        ]
       },
       {
-        "question": "س/ باستخدام مبرهنة ديموافر احسب : $(-2 + 2i)^5$؟",
-        "answer": "sol :\n$z = -2 + 2i \\Rightarrow r = 2\\sqrt{2}, \\theta = \\frac{3\\pi}{4}$\n$z^5 = (2\\sqrt{2})^5 (\\cos \\frac{15\\pi}{4} + i \\sin \\frac{15\\pi}{4})$\n$(2\\sqrt{2})^5 = 32 \\cdot 4\\sqrt{2} = 128\\sqrt{2}$\n$\\frac{15\\pi}{4} = 4\\pi - \\frac{\\pi}{4} \\Rightarrow \\theta = \\frac{7\\pi}{4}$\n$z^5 = 128\\sqrt{2} (\\frac{1}{\\sqrt{2}} - \\frac{1}{\\sqrt{2}}i) = 128 - 128i$",
-        "years": ["2/2022 تطبيقي"]
+        "question": "س/ جد الصيغة القطبية للمقدار $(1+i)^2$ ثم جد الجذور التكعيبية له باستخدام نتيجة مبرهنة ديموافر.",
+        "answer": "sol :\nLet z = 1 + i\nr = \\sqrt{1 + 1} = \\sqrt{2}\n\\cos\\theta = \\frac{1}{\\sqrt{2}}, \\sin\\theta = \\frac{1}{\\sqrt{2}}\n\\theta = \\frac{\\pi}{4} بالربع الاول\nz = r[\\cos\\theta + i \\sin\\theta]\nz = \\sqrt{2} (\\cos \\frac{\\pi}{4} + i \\sin \\frac{\\pi}{4})\nz^2 = [(\\sqrt{2})^2 (\\cos \\frac{\\pi}{4} + i \\sin \\frac{\\pi}{4})^2]\n= 2(\\cos \\frac{\\pi}{2} + i \\sin \\frac{\\pi}{2})\n(z^2)^{\\frac{1}{3}} = [2(\\cos \\frac{\\pi}{2} + i \\sin \\frac{\\pi}{2})]^{\\frac{1}{3}}\n= 2^{\\frac{1}{3}} (\\cos \\frac{\\pi/2 + 2k\\pi}{3} + i \\sin \\frac{\\pi/2 + 2k\\pi}{3})\nk = 0, 1, 2\nIf k = 0,\nR_1 = \\sqrt[3]{2} (\\cos \\frac{\\pi/2 + 2(0)\\pi}{3} + i \\sin \\frac{\\pi/2 + 2(0)\\pi}{3})\n= \\sqrt[3]{2} (\\cos \\frac{\\pi}{6} + i \\sin \\frac{\\pi}{6}) = \\sqrt[3]{2} (\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i)\nIf k = 1,\nR_2 = \\sqrt[3]{2} (\\cos \\frac{\\pi/2 + 2(1)\\pi}{3} + i \\sin \\frac{\\pi/2 + 2(1)\\pi}{3})\n= \\sqrt[3]{2} (\\cos \\frac{5\\pi}{6} + i \\sin \\frac{5\\pi}{6}) = \\sqrt[3]{2} (-\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i)\nIf k = 2,\nR_3 = \\sqrt[3]{2} (\\cos \\frac{\\pi/2 + 2(2)\\pi}{3} + i \\sin \\frac{\\pi/2 + 2(2)\\pi}{3})\n= \\sqrt[3]{2} (\\cos \\frac{9\\pi}{6} + i \\sin \\frac{9\\pi}{6}) = \\sqrt[3]{2} (\\cos \\frac{3\\pi}{2} + i \\sin \\frac{3\\pi}{2})\n= \\sqrt[3]{2} (0 - i) = -\\sqrt[3]{2}i\n* ملاحظة : يمكن ايجاد الصيغة القطبية للعدد\n$(1+i)^2 = 1 + 2i + i^2 = 2i$\n$2i = 2 * i = 2(\\cos\\frac{\\pi}{2} + i \\sin\\frac{\\pi}{2})$\nثم ايجاد الجذور التكعيبية له ..",
+        "years": [
+          "2019/تمهيدي احيائي",
+          "2/2025"
+        ]
       },
       {
-        "question": "س/ باستخدام مبرهنة ديموافر جد الجذور التربيعية للعدد المركب $\\frac{1 + wi + w^2i}{1 - wi - w^2i}$؟",
-        "answer": "sol :\n$z = \\frac{1 + i(w + w^2)}{1 - i(w + w^2)} = \\frac{1 - i}{1 + i} \\cdot \\frac{1 - i}{1 - i} = \\frac{-2i}{2} = -i$\n$z = -i = \\cos \\frac{3\\pi}{2} + i \\sin \\frac{3\\pi}{2}$\nالجذور التربيعية : $z^{\\frac{1}{2}} = \\cos \\frac{\\frac{3\\pi}{2} + 2k\\pi}{2} + i \\sin \\frac{\\frac{3\\pi}{2} + 2k\\pi}{2}$ حيث $k=0,1$\n- $k=0 \\Rightarrow \\cos \\frac{3\\pi}{4} + i \\sin \\frac{3\\pi}{4} = -\\frac{1}{\\sqrt{2}} + \\frac{1}{\\sqrt{2}}i$\n- $k=1 \\Rightarrow \\cos \\frac{7\\pi}{4} + i \\sin \\frac{7\\pi}{4} = \\frac{1}{\\sqrt{2}} - \\frac{1}{\\sqrt{2}}i$",
-        "years": ["1/2016"]
+        "question": "س/ باستخدام مبرهنة ديموافر، احسب $(2\\sqrt{3} - 2i)^{-2}$",
+        "answer": "sol :\nz = 2\\sqrt{3} - 2i\nr = \\sqrt{x^2 + y^2} = \\sqrt{12 + 4} = \\sqrt{16} = 4 المقياس\n\\cos \\theta = \\frac{x}{r} = \\frac{2\\sqrt{3}}{4} = \\frac{\\sqrt{3}}{2}\n\\sin \\theta = \\frac{y}{r} = \\frac{-2}{4} = \\frac{-1}{2}\nزاوية الاسناد = \\frac{\\pi}{6}\n\\theta تقع في الربع الرابع\nArg(z) = 2\\pi - \\frac{\\pi}{6} = \\frac{11\\pi}{6} = \\theta\nz = r(\\cos\\theta + i \\sin\\theta)\nz = 4(\\cos \\frac{11\\pi}{6} + i \\sin \\frac{11\\pi}{6})\nz^{-2} = (4)^{-2} (\\cos \\frac{11\\pi}{6} + i \\sin \\frac{11\\pi}{6})^{-2}\nz^{-2} = \\frac{1}{16} (\\cos \\frac{22\\pi}{6} - i \\sin \\frac{22\\pi}{6})\nz^{-2} = \\frac{1}{16} (\\cos \\frac{11\\pi}{3} - i \\sin \\frac{11\\pi}{3})\nz^{-2} = \\frac{1}{16} (\\cos \\frac{5\\pi}{3} - i \\sin \\frac{5\\pi}{3})\nz^{-2} = \\frac{1}{16} (\\cos \\frac{\\pi}{3} + i \\sin \\frac{\\pi}{3})\nz^{-2} = \\frac{1}{16} (\\frac{1}{2} + \\frac{\\sqrt{3}}{2}i) = \\frac{1}{32} + \\frac{\\sqrt{3}}{32}i",
+        "years": [
+          "1/2019 \"احيائي\""
+        ]
       },
       {
-        "question": "س/ حل المعادلة $\\frac{2z^3}{i} + 16 = 0$ باستخدام نتيجة مبرهنة ديموافر؟",
-        "answer": "sol :\n$\\frac{2z^3}{i} = -16 \\Rightarrow 2z^3 = -16i \\Rightarrow z^3 = -8i$\n$z^3 = 8(\\cos \\frac{3\\pi}{2} + i \\sin \\frac{3\\pi}{2})$\n$z = 2(\\cos \\frac{\\frac{3\\pi}{2} + 2k\\pi}{3} + i \\sin \\frac{\\frac{3\\pi}{2} + 2k\\pi}{3})$ حيث $k=0,1,2$\n- $k=0 \\Rightarrow 2(\\cos \\frac{\\pi}{2} + i \\sin \\frac{\\pi}{2}) = 2i$\n- $k=1 \\Rightarrow 2(\\cos \\frac{7\\pi}{6} + i \\sin \\frac{7\\pi}{6}) = -\\sqrt{3} - i$\n- $k=2 \\Rightarrow 2(\\cos \\frac{11\\pi}{6} + i \\sin \\frac{11\\pi}{6}) = \\sqrt{3} - i$\nمجموعة الحل : $S = \\{2i , -\\sqrt{3} - i , \\sqrt{3} - i\\}$",
-        "years": ["1/2023 احيائي"]
+        "question": "س/ حل المعادلة التالية في $C$ باستخدام نتيجة مبرهنة ديموافر: $\\frac{x^3}{i} - 27 = 0$",
+        "answer": "sol :\n[\\frac{x^3}{i} - 27 = 0] . i\nx^3 - 27i = 0 \\Rightarrow x^3 = 27i\n= 27 (\\cos \\frac{\\pi}{2} + i \\sin \\frac{\\pi}{2})\n\\therefore x = 27^{1/3} (\\cos \\frac{\\pi}{2} + i \\sin \\frac{\\pi}{2})^{1/3}\n= 3 (\\cos \\frac{\\pi/2 + 2k\\pi}{3} + i \\sin \\frac{\\pi/2 + 2k\\pi}{3})\nk = 0, 1, 2\nعندما k = 0 \\Rightarrow x_1 = 3 (\\cos \\frac{\\pi}{6} + i \\sin \\frac{\\pi}{6})\n= 3 (\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i) = \\frac{3\\sqrt{3}}{2} + \\frac{3}{2}i\nعندما k = 1 \\Rightarrow x_2 = 3 (\\cos \\frac{5\\pi}{6} + i \\sin \\frac{5\\pi}{6})\n= 3 (-\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i) = \\frac{-3\\sqrt{3}}{2} + \\frac{3}{2}i\nعندما k = 2 \\Rightarrow x_3 = 3 (\\cos \\frac{9\\pi}{6} + i \\sin \\frac{9\\pi}{6})\n= 3 (0 + i(-1)) = -3i\n\\therefore S = \\{\\frac{3\\sqrt{3}}{2} + \\frac{3}{2}i, \\frac{-3\\sqrt{3}}{2} + \\frac{3}{2}i, -3i\\}",
+        "years": [
+          "1/2019 \"تطبيقي\"",
+          "1/2024 \"محاولات تطبيقي\""
+        ]
       },
       {
-        "question": "س/ جد الصيغة القطبية للمقدار $(\\sqrt{3} + i)^3$ ثم جد الجذور التربيعية له باستخدام نتيجة ديموافر؟",
-        "answer": "sol :\n$M = \\sqrt{3} + i \\Rightarrow r = 2, \\theta = \\frac{\\pi}{6}$\n$z = M^3 = 2^3 (\\cos \\frac{3\\pi}{6} + i \\sin \\frac{3\\pi}{6}) = 8(\\cos \\frac{\\pi}{2} + i \\sin \\frac{\\pi}{2})$\nالجذور التربيعية : $z^{\\frac{1}{2}} = \\sqrt{8} (\\cos \\frac{\\frac{\\pi}{2} + 2k\\pi}{2} + i \\sin \\frac{\\frac{\\pi}{2} + 2k\\pi}{2})$ حيث $k=0,1$\n- $k=0 \\Rightarrow 2\\sqrt{2}(\\cos \\frac{\\pi}{4} + i \\sin \\frac{\\pi}{4}) = 2 + 2i$\n- $k=1 \\Rightarrow 2\\sqrt{2}(\\cos \\frac{5\\pi}{4} + i \\sin \\frac{5\\pi}{4}) = -2 - 2i$",
-        "years": ["3/2023 تكميلي احيائي"]
+        "question": "س/ باستخدام نتيجة مبرهنة ديموافر جد الجذور التكعيبية للعدد (27i)",
+        "answer": "sol :\nZ = 27i\n\\sqrt[3]{Z} = (27i)^{1/3}\n(0, 27) تكتب بالصورة الديكارتية\nZ = r(\\cos\\theta + i \\sin\\theta) بالصورة القطبية\nZ = 27 (\\cos \\frac{\\pi}{2} + i \\sin \\frac{\\pi}{2})\nZ^{1/3} = 27^{1/3} (\\cos \\frac{\\pi}{2} + i \\sin \\frac{\\pi}{2})^{1/3}\n\\frac{\\theta + 2k\\pi}{n} = \\frac{\\pi/2 + 2k\\pi}{3} \\quad k = 0, 1, 2\nعندما k = 0 \\Rightarrow \\frac{\\pi}{6}\nZ_1 = 3 (\\cos \\frac{\\theta + 2k\\pi}{3} + i \\sin \\frac{\\theta + 2k\\pi}{3}) \\quad k = 0\nZ_1 = 3 (\\cos \\frac{\\pi}{6} + i \\sin \\frac{\\pi}{6})\n= 3 (\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i) = (\\frac{3\\sqrt{3}}{2} + \\frac{3}{2}i)\nعندما k = 1 \\Rightarrow \\frac{\\pi/2 + 2\\pi}{3} = \\frac{5\\pi}{6} تقع في الربع الثاني\nZ_2 = 3 (-\\cos \\frac{\\pi}{6} + i \\sin \\frac{\\pi}{6})\n= 3 (-\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i) = (-\\frac{3\\sqrt{3}}{2} + \\frac{3}{2}i)\nعندما k = 2 \\Rightarrow \\frac{\\pi/2 + 2(2)\\pi}{3} = \\frac{9\\pi}{6}\nZ_3 = 3 (\\cos \\frac{3\\pi}{2} + i \\sin \\frac{3\\pi}{2})\n= 3 (0 - i) = -3i\n\\therefore S = \\{\\frac{3\\sqrt{3}}{2} + \\frac{3}{2}i, -\\frac{3\\sqrt{3}}{2} + \\frac{3}{2}i, -3i\\}",
+        "years": [
+          "1/2019 \"خارج القطر\" \"تطبيقي\""
+        ]
       },
       {
-        "question": "س/ بسط باستخدام مبرهنة ديموافر : $\\sqrt{2} [\\cos \\frac{5\\pi}{24} + i \\sin \\frac{5\\pi}{24}]^6$؟",
-        "answer": "sol :\n$= \\sqrt{2} [\\cos \\frac{30\\pi}{24} + i \\sin \\frac{30\\pi}{24}] = \\sqrt{2} [\\cos \\frac{5\\pi}{4} + i \\sin \\frac{5\\pi}{4}]$\n$= \\sqrt{2} [-\\frac{1}{\\sqrt{2}} - \\frac{1}{\\sqrt{2}}i] = -1 - i$",
-        "years": ["3/2023 احيائي"]
+        "question": "س/ اذا كان $Z = \\cos 2x + i \\sin 2x$ فاثبت ان $\\frac{2}{1+Z} = 1 - i \\tan x$",
+        "answer": "sol :\n\\frac{2}{1+Z} = 1 - i \\tan x\nالطرف الايسر \\frac{2}{1+\\cos 2x + i \\sin 2x}\n= \\frac{2}{2 \\cos^2 x + i(2 \\sin x \\cdot \\cos x)} = \\frac{2}{2 \\cos x(\\cos x + i \\sin x)}\n= \\frac{1}{\\cos x(\\cos x + i \\sin x)} * \\frac{\\cos x - i \\sin x}{\\cos x - i \\sin x}\n= \\frac{\\cos x - i \\sin x}{\\cos x(\\cos^2 x + \\sin^2 x)} = \\frac{\\cos x - i \\sin x}{\\cos x(1)}\n= \\frac{\\cos x}{\\cos x} - i \\frac{\\sin x}{\\cos x}\n= 1 - i \\tan x = الطرف الايمن",
+        "years": [
+          "1/2019 \"خارج القطر\""
+        ]
       },
       {
-        "question": "س/ جد الصيغة القطبية للمقدار $(1 + i)^2$ ثم جد الجذور التكعيبية له باستخدام نتيجة ديموافر؟",
-        "answer": "sol :\n$(1 + i)^2 = 1 + 2i - 1 = 2i = 2(\\cos \\frac{\\pi}{2} + i \\sin \\frac{\\pi}{2})$\nالجذور التكعيبية :\n$z^{\\frac{1}{3}} = \\sqrt[3]{2}(\\cos \\frac{\\frac{\\pi}{2} + 2k\\pi}{3} + i \\sin \\frac{\\frac{\\pi}{2} + 2k\\pi}{3})$ حيث $k=0,1,2$\n- $k=0 \\Rightarrow \\sqrt[3]{2}(\\cos \\frac{\\pi}{6} + i \\sin \\frac{\\pi}{6}) = \\sqrt[3]{2}(\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i)$\n- $k=1 \\Rightarrow \\sqrt[3]{2}(\\cos \\frac{5\\pi}{6} + i \\sin \\frac{5\\pi}{6}) = \\sqrt[3]{2}(-\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i)$\n- $k=2 \\Rightarrow \\sqrt[3]{2}(\\cos \\frac{3\\pi}{2} + i \\sin \\frac{3\\pi}{2}) = -\\sqrt[3]{2}i$",
-        "years": ["تمهيدي احيائي 2019", "2/2025"]
+        "question": "س/ حل المعادلة $x^3 + 1 = 0$ باستخدام نتيجة مبرهنة ديموافر حيث $x \\in C$",
+        "answer": "sol :\nx^3 + 1 = 0\nx^3 = -1 = \\cos\\pi + i \\sin\\pi\nx = [\\cos \\frac{\\pi + 2k\\pi}{3} + i \\sin \\frac{\\pi + 2k\\pi}{3}]\nحيث k = 0, 1, 2\nعندما K = 0\nx_1 = \\cos \\frac{\\pi}{3} + i \\sin \\frac{\\pi}{3} = \\frac{1}{2} + \\frac{\\sqrt{3}}{2}i\nعندما K = 1\nx_2 = (\\cos \\frac{\\pi + 2\\pi}{3} + i \\sin \\frac{\\pi + 2\\pi}{3})\n= \\cos \\frac{3\\pi}{3} + i \\sin \\frac{3\\pi}{3} = -1 + 0i\nعندما K = 2\nx_3 = (\\cos \\frac{\\pi + 4\\pi}{3} + i \\sin \\frac{\\pi + 4\\pi}{3})\n= \\cos \\frac{5\\pi}{3} + i \\sin \\frac{5\\pi}{3} = \\frac{1}{2} - \\frac{\\sqrt{3}}{2}i\n\\therefore S = \\{(\\frac{1}{2} + \\frac{\\sqrt{3}}{2}i), (-1 + 0i), (\\frac{1}{2} - \\frac{\\sqrt{3}}{2}i)\\}",
+        "years": [
+          "3/2019",
+          "2/2024",
+          "2025/تمهيدي"
+        ]
       },
       {
-        "question": "س/ جد الجذور التربيعية للعدد المركب $8i$ باستخدام مبرهنة ديموافر.",
-        "answer": "sol :\n$z = 8i = 8(\\cos \\frac{\\pi}{2} + i \\sin \\frac{\\pi}{2})$\n$z^{\\frac{1}{2}} = \\sqrt{8}(\\cos \\frac{\\frac{\\pi}{2} + 2k\\pi}{2} + i \\sin \\frac{\\frac{\\pi}{2} + 2k\\pi}{2})$ حيث $k=0,1$\n- $k=0 \\Rightarrow 2\\sqrt{2}(\\cos \\frac{\\pi}{4} + i \\sin \\frac{\\pi}{4}) = 2\\sqrt{2}(\\frac{1}{\\sqrt{2}} + \\frac{1}{\\sqrt{2}}i) = 2 + 2i$\n- $k=1 \\Rightarrow 2\\sqrt{2}(\\cos \\frac{5\\pi}{4} + i \\sin \\frac{5\\pi}{4}) = 2\\sqrt{2}(-\\frac{1}{\\sqrt{2}} - \\frac{1}{\\sqrt{2}}i) = -2 - 2i$",
-        "years": ["1/2011 خارج القطر"]
+        "question": "س/ جد الجذور التربيعية للعدد المركب $(1 - \\sqrt{-3})$ باستخدام نتيجة مبرهنة ديموافر",
+        "answer": "sol :\nZ = 1 - \\sqrt{-3} = 1 - \\sqrt{3}i\nr = \\sqrt{x^2 + y^2} = \\sqrt{1+3} = \\sqrt{4} = 2\n\\cos\\theta = \\frac{x}{r} = \\frac{1}{2}\n\\sin\\theta = \\frac{y}{r} = \\frac{-\\sqrt{3}}{2}\nزاوية الاسناد = \\frac{\\pi}{3}\nوتقع في الربع الرابع (+, -)\narg(Z) = 2\\pi - \\frac{\\pi}{3} = \\frac{5\\pi}{3}\n\\therefore \\sqrt{Z} = \\sqrt{2} (\\cos \\frac{5\\pi}{3} + i \\sin \\frac{5\\pi}{3})^{1/2}\n= \\sqrt{2} (\\cos \\frac{5\\pi/3 + 2k\\pi}{2} + i \\sin \\frac{5\\pi/3 + 2k\\pi}{2})\nعندما K = 0, 1\nعندما K = 0 \\Rightarrow Z_1 = \\sqrt{2} (\\cos \\frac{5\\pi}{6} + i \\sin \\frac{5\\pi}{6})\n= \\sqrt{2} (-\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i)\n= -\\frac{\\sqrt{3}}{\\sqrt{2}} + \\frac{1}{\\sqrt{2}}i\nعندما K = 1 \\Rightarrow Z_2 = \\sqrt{2} (\\cos \\frac{11\\pi}{6} + i \\sin \\frac{11\\pi}{6})\n= \\sqrt{2} (\\frac{\\sqrt{3}}{2} - \\frac{1}{2}i)\n= \\frac{\\sqrt{3}}{\\sqrt{2}} - \\frac{1}{\\sqrt{2}}i\n\\therefore S = \\{-\\frac{\\sqrt{3}}{\\sqrt{2}} + \\frac{1}{\\sqrt{2}}i, \\frac{\\sqrt{3}}{\\sqrt{2}} - \\frac{1}{\\sqrt{2}}i\\}",
+        "years": [
+          "3/2019 \"تطبيقي\""
+        ]
       },
       {
-        "question": "س/ احسب ما يأتي : $[\\cos \\frac{5\\pi}{24} + i \\sin \\frac{5\\pi}{24}]^4$",
-        "answer": "sol :\n$= \\cos \\frac{20\\pi}{24} + i \\sin \\frac{20\\pi}{24} = \\cos \\frac{5\\pi}{6} + i \\sin \\frac{5\\pi}{6}$\n$= -\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i$",
-        "years": ["تمهيدي 2012"]
+        "question": "س/ اذا كان $Z = \\cos \\theta + i \\sin \\theta$ فاثبت ان: \\frac{Z^n}{1+Z^{2n}} = \\frac{1}{2 \\cos n\\theta}",
+        "answer": "sol :\n\\frac{Z^n}{1+Z^{2n}} = \\frac{(\\cos\\theta + i \\sin\\theta)^n}{1+(\\cos\\theta + i \\sin\\theta)^{2n}}\n= \\frac{\\cos n\\theta + i \\sin n\\theta}{1+\\cos 2n\\theta + i \\sin 2n\\theta}\n= \\frac{\\cos n\\theta + i \\sin n\\theta}{2 \\cos^2 n\\theta + i \\cdot 2 \\sin n\\theta \\cos n\\theta}\n= \\frac{\\cos n\\theta + i \\sin n\\theta}{2 \\cos n\\theta(\\cos n\\theta + i \\sin n\\theta)}\n= \\frac{1}{2 \\cos n\\theta} = R.H",
+        "years": [
+          "2/2019 \"احيائي\""
+        ]
       },
       {
-        "question": "س/ جد الجذور التربيعية للعدد المركب $-8i$ باستخدام مبرهنة ديموافر.",
-        "answer": "sol :\n$z = -8i = 8(\\cos \\frac{3\\pi}{2} + i \\sin \\frac{3\\pi}{2})$\n$z^{\\frac{1}{2}} = \\sqrt{8}(\\cos \\frac{\\frac{3\\pi}{2} + 2k\\pi}{2} + i \\sin \\frac{\\frac{3\\pi}{2} + 2k\\pi}{2})$ حيث $k=0,1$\n- $k=0 \\Rightarrow 2\\sqrt{2}(\\cos \\frac{3\\pi}{4} + i \\sin \\frac{3\\pi}{4}) = 2\\sqrt{2}(-\\frac{1}{\\sqrt{2}} + \\frac{1}{\\sqrt{2}}i) = -2 + 2i$\n- $k=1 \\Rightarrow 2\\sqrt{2}(\\cos \\frac{7\\pi}{4} + i \\sin \\frac{7\\pi}{4}) = 2\\sqrt{2}(\\frac{1}{\\sqrt{2}} - \\frac{1}{\\sqrt{2}}i) = 2 - 2i$",
-        "years": ["تمهيدي 2013"]
+        "question": "س/ باستخدام نتيجة مبرهنة ديموافر جد الجذرين التربيعيين للعدد المركب $(-1 + \\sqrt{3}i)$",
+        "answer": "sol :\nz = -1 + \\sqrt{3}i\nr = \\sqrt{1 + 3} = 2\n\\cos\\theta = \\frac{-1}{2}, \\sin\\theta = \\frac{\\sqrt{3}}{2}\n\\theta تقع في الربع الثاني ، زاوية الاسناد \\frac{\\\\pi}{3}\n\\therefore \\theta = \\\\pi - \\frac{\\\\pi}{3} = \\frac{2\\\\pi}{3}\n\\therefore z = r[\\cos\\theta + i \\sin\\theta]\nz = 2 [\\cos \\frac{2\\\\pi}{3} + i \\sin \\frac{2\\\\pi}{3}]\nz^{1/2} = \\sqrt{2} [\\cos \\frac{2\\\\pi}{3} + i \\sin \\frac{2\\\\pi}{3}]^{1/2}\nz^{1/2} = \\sqrt{2} [\\cos \\frac{\\frac{2\\\\pi}{3} + 2k\\\\pi}{2} + i \\sin \\frac{\\frac{2\\\\pi}{3} + 2k\\\\pi}{2}]\nz^{1/2} = \\sqrt{2} [\\cos \\frac{2\\\\pi + 6k\\\\pi}{6} + i \\sin \\frac{2\\\\pi + 6k\\\\pi}{6}]\nعندما K = 0\n\\Rightarrow R_1 = \\sqrt{2} (\\cos \\frac{2\\\\pi}{6} + i \\sin \\frac{2\\\\pi}{6})\n= \\sqrt{2} (\\cos \\frac{\\\\pi}{3} + i \\sin \\frac{\\\\pi}{3})\nR_1 = \\sqrt{2} (\\frac{1}{2} + \\frac{\\sqrt{3}}{2}i) = \\frac{1}{\\sqrt{2}} + \\frac{\\sqrt{3}}{\\sqrt{2}}i\nعندما K = 1\nR_2 = \\sqrt{2} (\\cos \\frac{8\\\\pi}{6} + i \\sin \\frac{8\\\\pi}{6})\n= \\sqrt{2} (\\cos \\frac{4\\\\pi}{3} + i \\sin \\frac{4\\\\pi}{3})\n= \\sqrt{2} (-\\cos \\frac{\\\\pi}{3} - i \\sin \\frac{\\\\pi}{3})\n= \\sqrt{2} (\\frac{-1}{2} - \\frac{\\sqrt{3}}{2}i) = \\frac{-1}{\\sqrt{2}} - \\frac{\\sqrt{3}}{\\sqrt{2}}i",
+        "years": [
+          "2/2020 \"احيائي\""
+        ]
       },
       {
-        "question": "س/ جد مجموعة حل المعادلة $x^3 - 8i = 0$ باستخدام مبرهنة ديموافر.",
-        "answer": "sol :\n$x^3 = 8i \\Rightarrow x^3 = 8(\\cos \\frac{\\pi}{2} + i \\sin \\frac{\\pi}{2})$\n$x = 2(\\cos \\frac{\\frac{\\pi}{2} + 2k\\pi}{3} + i \\sin \\frac{\\frac{\\pi}{2} + 2k\\pi}{3})$ حيث $k=0,1,2$\n- $k=0 \\Rightarrow 2(\\cos \\frac{\\pi}{6} + i \\sin \\frac{\\pi}{6}) = 2(\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i) = \\sqrt{3} + i$\n- $k=1 \\Rightarrow 2(\\cos \\frac{5\\pi}{6} + i \\sin \\frac{5\\pi}{6}) = 2(-\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i) = -\\sqrt{3} + i$\n- $k=2 \\Rightarrow 2(\\cos \\frac{9\\pi}{6} + i \\sin \\frac{9\\pi}{6}) = 2(0 - i) = -2i$",
-        "years": ["4/2015 نازحين"]
+        "question": "س/ جد الجذور التربيعية للعدد المركب $(-1 + \\sqrt{3}i)$ باستخدام مبرهنة ديموافر",
+        "answer": "sol :\nZ = -1 + \\sqrt{3}i\nx = -1, y = \\sqrt{3}\nr = \\sqrt{x^2 + y^2} = \\sqrt{1 + 3} = \\sqrt{4} = 2\n\\cos\\theta = \\frac{x}{r} = \\frac{-1}{2}, \\sin\\theta = \\frac{y}{r} = \\frac{\\sqrt{3}}{2}\n\\therefore \\theta = \\\\pi - \\frac{\\\\pi}{3} = \\frac{2\\\\pi}{3} زاوية تقع في الربع الثاني زاوية الاسناد \\frac{\\\\pi}{3}\nZ = r(\\cos\\theta + i \\sin\\theta)\nZ = 2 (\\cos \\frac{2\\\\pi}{3} + i \\sin \\frac{2\\\\pi}{3})\n\\therefore Z^{\\frac{1}{2}} = [2 (\\cos \\frac{2\\\\pi}{3} + i \\sin \\frac{2\\\\pi}{3})]^{\\frac{1}{2}}\n= \\sqrt{2} (\\cos \\frac{\\frac{2\\\\pi}{3} + 2k\\\\pi}{2} + i \\sin \\frac{\\frac{2\\\\pi}{3} + 2k\\\\pi}{2}) \\quad K = 0, 1\nعندما K = 0 \\Rightarrow Z_1 = \\sqrt{2} (\\cos \\frac{\\\\pi}{3} + i \\sin \\frac{\\\\pi}{3})\nZ_1 = \\sqrt{2} (\\frac{1}{2} + \\frac{\\sqrt{3}}{2}i) = \\frac{1}{\\sqrt{2}} + \\frac{\\sqrt{3}}{\\sqrt{2}}i ... *\nعندما K = 1 \\Rightarrow Z_2 = \\sqrt{2} (\\cos \\frac{4\\\\pi}{3} + i \\sin \\frac{4\\\\pi}{3})\n= \\sqrt{2} (\\frac{-1}{2} - \\frac{\\sqrt{3}}{2}i) = \\frac{-1}{\\sqrt{2}} - \\frac{\\sqrt{3}}{\\sqrt{2}}i ... *\nملاحظة : اذا لم يذكر الطالب هذه الخطوة * يعطى درجة كاملة",
+        "years": [
+          "3/2020 \"تطبيقي\""
+        ]
       },
       {
-        "question": "س/ جد الجذور التكعيبية للعدد المركب $(1 + i)^2$ باستخدام مبرهنة ديموافر.",
-        "answer": "sol :\n$(1 + i)^2 = 1 + 2i + i^2 = 2i = 2(\\cos \\frac{\\pi}{2} + i \\sin \\frac{\\pi}{2})$\nالجذور التكعيبية :\n$z^{\\frac{1}{3}} = 2^{\\frac{1}{3}}(\\cos \\frac{\\frac{\\pi}{2} + 2k\\pi}{3} + i \\sin \\frac{\\frac{\\pi}{2} + 2k\\pi}{3})$ حيث $k=0,1,2$\n- $k=0 \\Rightarrow \\sqrt[3]{2}(\\cos \\frac{\\pi}{6} + i \\sin \\frac{\\pi}{6}) = \\sqrt[3]{2}(\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i)$\n- $k=1 \\Rightarrow \\sqrt[3]{2}(\\cos \\frac{5\\pi}{6} + i \\sin \\frac{5\\pi}{6}) = \\sqrt[3]{2}(-\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i)$\n- $k=2 \\Rightarrow \\sqrt[3]{2}(\\cos \\frac{3\\pi}{2} + i \\sin \\frac{3\\pi}{2}) = \\sqrt[3]{2}(0 - i) = -\\sqrt[3]{2}i$",
-        "years": ["2/2015 خارج القطر"]
+        "question": "س/ اذا كانت $Z = \\cos 2t + i \\sin 2t$ فبرهن ان: \\frac{2}{1+Z} = 1 - i \\tan t",
+        "answer": "sol :\nالطرف الايسر \\frac{2}{1+z} = \\frac{2}{1+\\cos 2t + i \\sin 2t}\n= \\frac{2}{2 \\cos^2 t + 2i \\sin t \\cos t}\n= \\frac{2}{2 \\cos t (\\cos t + i \\sin t)} \\quad (3/2020)\n= \\frac{1}{\\cos t} * \\frac{1}{\\cos t + i \\sin t} * \\frac{\\cos t - i \\sin t}{\\cos t - i \\sin t}\n= \\frac{1}{\\cos t} * \\frac{\\cos t - i \\sin t}{\\cos^2 t + \\sin^2 t}\n= \\frac{\\cos t - i \\sin t}{\\cos t} = \\frac{\\cos t}{\\cos t} - i \\frac{\\sin t}{\\cos t}\n= 1 - i \\tan t = الطرف الايمن",
+        "years": [
+          "3/2020"
+        ]
       },
       {
-        "question": "س/ احسب باستخدام مبرهنة ديموافر : $[\\cos \\frac{3\\pi}{8} + i \\sin \\frac{3\\pi}{8}]^{-4}$",
-        "answer": "sol :\n$= \\cos \\frac{-12\\pi}{8} + i \\sin \\frac{-12\\pi}{8} = \\cos \\frac{3\\pi}{2} - i \\sin \\frac{3\\pi}{2}$\n$= 0 - i(-1) = i$",
-        "years": ["2/2017 احيائي", "2/2018 احيائي"]
+        "question": "س/ جد الجذور التكعيبية للعدد (8i) باستخدام نتيجة مبرهنة ديموافر",
+        "answer": "sol :\nZ = 8i \\Rightarrow Z = 8(0 + i) ... (*)\n\\Rightarrow Z = 8(\\cos \\frac{\\pi}{2} + i \\sin \\frac{\\pi}{2})\n\\therefore Z^{\\frac{1}{3}} = 8^{\\frac{1}{3}} (\\cos \\frac{\\pi}{2} + i \\sin \\frac{\\pi}{2})^{\\frac{1}{3}}\n\\therefore Z^{\\frac{1}{3}} = 2 (\\cos \\frac{\\frac{\\pi}{2} + 2\\pi K}{3} + i \\sin \\frac{\\frac{\\pi}{2} + 2\\pi K}{3})\nK = 0, 1, 2 حيث\nعندما K = 0\nZ_1 = 2 (\\cos \\frac{\\pi}{6} + i \\sin \\frac{\\pi}{6})\n= 2 (\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i)\nZ_1 = \\sqrt{3} + i \\quad (2021/تمهيدي \"احيائي\")\nعندما K = 1\nZ_2 = 2 (\\cos \\frac{5\\pi}{6} + i \\sin \\frac{5\\pi}{6})\n= 2 (-\\frac{\\sqrt{3}}{2} + \\frac{1}{2}i) = -\\sqrt{3} + i\nعندما K = 2\nZ_3 = 2 (\\cos \\frac{9\\pi}{6} + i \\sin \\frac{9\\pi}{6})\n= 2 (0 - i) = 0 - 2i\nملاحظة : الخطوة (*) يمكن للطالب ان يستخدم خطوات ايجاد المقياس وسعة العدد المركب.",
+        "years": [
+          "2021/تمهيدي \"احيائي\""
+        ]
       },
       {
-        "question": "س/ احسب باستخدام مبرهنة ديموافر : $(1 + i)^{-5}$",
-        "answer": "sol :\n$z = 1 + i \\Rightarrow r = \\sqrt{2} , \\theta = \\frac{\\pi}{4}$\n$z^{-5} = (\\sqrt{2})^{-5}(\\cos \\frac{-5\\pi}{4} + i \\sin \\frac{-5\\pi}{4})$\n$= \\frac{1}{4\\sqrt{2}}(\\cos \\frac{5\\pi}{4} - i \\sin \\frac{5\\pi}{4})$\n$= \\frac{1}{4\\sqrt{2}}(-\\frac{1}{\\sqrt{2}} - i(-\\frac{1}{\\sqrt{2}})) = \\frac{1}{8}(-1 + i) = -\\frac{1}{8} + \\frac{1}{8}i$",
-        "years": ["تمهيدي 2018"]
+        "question": "س/ باستخدام مبرهنة ديموافر او التعميم ، احسب : $\\sqrt{2} [\\cos \\frac{5\\pi}{24} + i \\sin \\frac{5\\pi}{24}]^{-6}$",
+        "answer": "sol :\n= \\sqrt{2} (\\cos 6 (\\frac{5\\pi}{24}) - i \\sin 6 (\\frac{5\\pi}{24}))\n= \\sqrt{2} (\\cos \\frac{5\\pi}{4} - i \\sin \\frac{5\\pi}{4}) \\quad (1/2021 \"احيائي\")\n= \\sqrt{2} (-\\cos \\frac{\\pi}{4} + i \\sin \\frac{\\pi}{4}) \\quad (1/2022 \"احيائي\")\n= \\sqrt{2} (\\frac{-1}{\\sqrt{2}} + \\frac{1}{\\sqrt{2}}i)\n= -1 + i",
+        "years": [
+          "1/2021 \"احيائي\"",
+          "1/2022 \"احيائي\""
+        ]
       },
       {
-        "question": "س/ حل المعادلة $x^3 - \\frac{27}{i} = 0$ باستخدام مبرهنة ديموافر.",
-        "answer": "sol :\n$x^3 = \\frac{27}{i} \\cdot \\frac{-i}{-i} = -27i = 27(\\cos \\frac{3\\pi}{2} + i \\sin \\frac{3\\pi}{2})$\n$x = 3(\\cos \\frac{\\frac{3\\pi}{2} + 2k\\pi}{3} + i \\sin \\frac{\\frac{3\\pi}{2} + 2k\\pi}{3})$ حيث $k=0,1,2$\n- $k=0 \\Rightarrow 3(\\cos \\frac{\\pi}{2} + i \\sin \\frac{\\pi}{2}) = 3(0 + i) = 3i$\n- $k=1 \\Rightarrow 3(\\cos \\frac{7\\pi}{6} + i \\sin \\frac{7\\pi}{6}) = 3(-\\frac{\\sqrt{3}}{2} - \\frac{1}{2}i) = -\\frac{3\\sqrt{3}}{2} - \\frac{3}{2}i$\n- $k=2 \\Rightarrow 3(\\cos \\frac{11\\pi}{6} + i \\sin \\frac{11\\pi}{6}) = 3(\\frac{\\sqrt{3}}{2} - \\frac{1}{2}i) = \\frac{3\\sqrt{3}}{2} - \\frac{3}{2}i$",
-        "years": ["1/2019 تطبيقي", "1/2024 محاولات تطبيقي"]
+        "question": "س/ ضع بالصيغة العادية: $\\frac{(1+i)^7}{8}$",
+        "answer": "sol :\nالطريقة الأولى:\n$\\frac{(1+i)^7}{8} = \\frac{(1+i)^6 \\cdot (1+i)}{8} = \\frac{[(1+i)^2]^3 \\cdot (1+i)}{8} = \\frac{(2i)^3 (1+i)}{8} = \\frac{-8i(1+i)}{8} = -i(1+i) = 1-i$\nالطريقة الثانية: نجد $(1+i)^7$ باستخدام ديموافر\n$Z = (1+i) \\rightarrow r = \\sqrt{2} , \\theta = \\frac{\\pi}{4}$\n$Z = \\sqrt{2}(\\cos\\frac{\\pi}{4} + i\\sin\\frac{\\pi}{4})$\n$Z^7 = (\\sqrt{2})^7 (\\cos\\frac{7\\pi}{4} + i\\sin\\frac{7\\pi}{4}) = 8\\sqrt{2} (\\frac{1}{\\sqrt{2}} - \\frac{1}{\\sqrt{2}}i) = 8(1-i)$\n$\\frac{Z^7}{8} = \\frac{8(1-i)}{8} = 1-i$",
+        "years": [
+          "2/2021 احيائي"
+        ]
       },
       {
-        "question": "س/ اذا كان $Z = \\cos 2x + i \\sin 2x$ فأثبت ان $\\frac{2}{1+Z} = 1 - i \\tan x$",
-        "answer": "sol :\nLHS: $\\frac{2}{1 + \\cos 2x + i \\sin 2x}$\nاستخدام قوانين الضعف : $1 + \\cos 2x = 2 \\cos^2 x$ و $\\sin 2x = 2 \\sin x \\cos x$\n$= \\frac{2}{2 \\cos^2 x + 2i \\sin x \\cos x} = \\frac{2}{2 \\cos x (\\cos x + i \\sin x)}$\n$= \\frac{1}{\\cos x} \\cdot (\\cos x + i \\sin x)^{-1} = \\frac{1}{\\cos x} (\\cos x - i \\sin x)$\n$= \\frac{\\cos x}{\\cos x} - i \\frac{\\sin x}{\\cos x} = 1 - i \\tan x = RHS$",
-        "years": ["1/2019 خارج القطر", "3/2020"]
+        "question": "س/ اذا كان $Z = \\frac{1-\\sqrt{3}i}{1+\\sqrt{-3}}$ عدداً مركباً، جد باستخدام نتيجة مبرهنة ديموافر $\\sqrt{Z}$",
+        "answer": "sol :\n$Z = \\frac{1-\\sqrt{3}i}{1+\\sqrt{-3}} \\cdot \\frac{1-\\sqrt{3}i}{1-\\sqrt{3}i} = \\frac{1-2\\sqrt{3}i-3}{1+3} \\Rightarrow \\frac{-2-2\\sqrt{3}i}{4} = -\\frac{1}{2} - \\frac{\\sqrt{3}}{2}i$\n$r = \\sqrt{x^2+y^2} = \\sqrt{\\frac{1}{4} + \\frac{3}{4}} = 1$\n$\\cos\\theta = \\frac{x}{r} = -\\frac{1}{2} , \\sin\\theta = \\frac{y}{r} = -\\frac{\\sqrt{3}}{2}$\nزاوية الاسناد = $\\frac{\\pi}{3}$ ، $\\theta$ تقع في الربع الثالث\n$Arg(Z) = \\pi + \\frac{\\pi}{3} = \\frac{4\\pi}{3}$\n$Z = (\\cos\\frac{4\\pi}{3} + i\\sin\\frac{4\\pi}{3})$\n$Z^{\\frac{1}{2}} = (\\cos\\frac{\\frac{4\\pi}{3} + 2k\\pi}{2} + i\\sin\\frac{\\frac{4\\pi}{3} + 2k\\pi}{2})$ ، $k=0, 1$\nعندما $k=0 \\Rightarrow Z^{\\frac{1}{2}} = (\\cos\\frac{2\\pi}{3} + i\\sin\\frac{2\\pi}{3}) = -\\frac{1}{2} + \\frac{\\sqrt{3}}{2}i$ (الجذر الاول)\nعندما $k=1 \\Rightarrow Z^{\\frac{1}{2}} = (\\cos\\frac{5\\pi}{3} + i\\sin\\frac{5\\pi}{3}) = \\frac{1}{2} - \\frac{\\sqrt{3}}{2}i$ (الجذر الثاني)",
+        "years": [
+          "2/2021 احيائي"
+        ]
       },
       {
-        "question": "س/ بسط ما يأتي : $[\\sin \\frac{\\pi}{6} + i \\sin \\frac{\\pi}{3}]^{-5}$",
-        "answer": "sol :\n$\\sin \\frac{\\pi}{6} = \\frac{1}{2} , \\sin \\frac{\\pi}{3} = \\frac{\\sqrt{3}}{2}$\nإذن المقدار هو $(\\frac{1}{2} + i \\frac{\\sqrt{3}}{2})^{-5}$\n$r = \\sqrt{(\\frac{1}{2})^2 + (\\frac{\\sqrt{3}}{2})^2} = 1$\n$\\cos \\theta = \\frac{1}{2} , \\sin \\theta = \\frac{\\sqrt{3}}{2} \\Rightarrow \\theta = \\frac{\\pi}{3}$\n$(\\cos \\frac{\\pi}{3} + i \\sin \\frac{\\pi}{3})^{-5} = \\cos \\frac{-5\\pi}{3} + i \\sin \\frac{-5\\pi}{3}$\n$= \\cos \\frac{5\\pi}{3} - i \\sin \\frac{5\\pi}{3} = \\frac{1}{2} - i(-\\frac{\\sqrt{3}}{2}) = \\frac{1}{2} + \\frac{\\sqrt{3}}{2}i$",
-        "years": ["2/2021 احيائي"]
+        "question": "س/ بسط: $[\\sin\\frac{\\pi}{6} + i\\sin\\frac{\\pi}{3}]^{-5}$",
+        "answer": "sol :\nالطريقة الأولى:\n$[\\sin\\frac{\\pi}{6} + i\\sin\\frac{\\pi}{3}]^{-5} = [\\cos\\frac{\\pi}{3} + i\\sin\\frac{\\pi}{3}]^{-5} = \\cos\\frac{5\\pi}{3} - i\\sin\\frac{5\\pi}{3} = \\cos\\frac{\\pi}{3} + i\\sin\\frac{\\pi}{3} = \\frac{1}{2} + \\frac{\\sqrt{3}}{2}i$\nالطريقة الثانية:\n$[\\sin\\frac{\\pi}{6} + i\\sin\\frac{\\pi}{3}]^{-5} = [\\frac{1}{2} + \\frac{\\sqrt{3}}{2}i]^{-5}$\n$r=1, \\theta=\\frac{\\pi}{3} \\Rightarrow Z = (\\cos\\frac{\\pi}{3} + i\\sin\\frac{\\pi}{3})$\n$Z^{-5} = (\\cos\\frac{\\pi}{3} + i\\sin\\frac{\\pi}{3})^{-5} = \\cos\\frac{5\\pi}{3} - i\\sin\\frac{5\\pi}{3} = \\cos\\frac{\\pi}{3} + i\\sin\\frac{\\pi}{3} = \\frac{1}{2} + \\frac{\\sqrt{3}}{2}i$",
+        "years": [
+          "2/2021 احيائي"
+        ]
       },
       {
-        "question": "س/ احسب باستخدام مبرهنة ديموافر : $(1 - \\sqrt{3}i)^{-4}$",
-        "answer": "sol :\n$z = 1 - \\sqrt{3}i \\Rightarrow r = 2 , \\theta = \\frac{5\\pi}{3}$\n$z^{-4} = 2^{-4}(\\cos \\frac{-20\\pi}{3} + i \\sin \\frac{-20\\pi}{3})$\n$= \\frac{1}{16}(\\cos \\frac{20\\pi}{3} - i \\sin \\frac{20\\pi}{3})$\n$\\frac{20\\pi}{3} = 6\\pi + \\frac{2\\pi}{3} \\Rightarrow \\theta = \\frac{2\\pi}{3}$\n$= \\frac{1}{16}(-\\frac{1}{2} - i\\frac{\\sqrt{3}}{2}) = -\\frac{1}{32} - \\frac{\\sqrt{3}}{32}i$",
-        "years": ["2/2023 احيائي"]
+        "question": "س/ بسط المقدار: $(\\cos\\theta + i\\sin\\theta)^8 (\\cos\\theta - i\\sin\\theta)^4$",
+        "answer": "sol :\n$(\\cos\\theta + i\\sin\\theta)^8 (\\cos\\theta - i\\sin\\theta)^4 = (\\cos\\theta + i\\sin\\theta)^4 (\\cos\\theta + i\\sin\\theta)^4 (\\cos\\theta - i\\sin\\theta)^4$\n$= (\\cos\\theta + i\\sin\\theta)^4 [(\\cos\\theta + i\\sin\\theta)(\\cos\\theta - i\\sin\\theta)]^4$\n$= (\\cos\\theta + i\\sin\\theta)^4 (\\cos^2\\theta + \\sin^2\\theta)^4 = (\\cos 4\\theta + i\\sin 4\\theta) (1)^4 = \\cos 4\\theta + i\\sin 4\\theta$",
+        "years": [
+          "2/2022 تطبيقي"
+        ]
       },
       {
-        "question": "س/ جد الصيغة القطبية للجذور الخمسة للعدد المركب $(\\sqrt{3} + i)^2$ باستخدام مبرهنة ديموافر.",
-        "answer": "sol :\n$z = \\sqrt{3} + i \\Rightarrow r = 2 , \\theta = \\frac{\\pi}{6}$\n$z^2 = 2^2(\\cos \\frac{2\\pi}{6} + i \\sin \\frac{2\\pi}{6}) = 4(\\cos \\frac{\\pi}{3} + i \\sin \\frac{\\pi}{3})$\nالجذور الخمسة : $w = (z^2)^{\\frac{1}{5}} = 4^{\\frac{1}{5}}(\\cos \\frac{\\frac{\\pi}{3} + 2k\\pi}{5} + i \\sin \\frac{\\frac{\\pi}{3} + 2k\\pi}{5})$ حيث $k=0,1,2,3,4$\n- $k=0 \\Rightarrow \\sqrt[5]{4}(\\cos \\frac{\\pi}{15} + i \\sin \\frac{\\pi}{15})$\n- $k=1 \\Rightarrow \\sqrt[5]{4}(\\cos \\frac{7\\pi}{15} + i \\sin \\frac{7\\pi}{15})$\n- $k=2 \\Rightarrow \\sqrt[5]{4}(\\cos \\frac{13\\pi}{15} + i \\sin \\frac{13\\pi}{15})$\n- $k=3 \\Rightarrow \\sqrt[5]{4}(\\cos \\frac{19\\pi}{15} + i \\sin \\frac{19\\pi}{15})$\n- $k=4 \\Rightarrow \\sqrt[5]{4}(\\cos \\frac{25\\pi}{15} + i \\sin \\frac{25\\pi}{15}) = \\sqrt[5]{4}(\\cos \\frac{5\\pi}{3} + i \\sin \\frac{5\\pi}{3})$",
-        "years": ["1/2014"]
+        "question": "س/ احسب باستخدام مبرهنة ديموافر او تعميمها: $(\\cos \\frac{13\\pi}{8} + i\\sin \\frac{13\\pi}{8})(\\cos \\frac{9\\pi}{8} - i\\sin \\frac{9\\pi}{8})$",
+        "answer": "sol :\n$(\\cos \\frac{13\\pi}{8} + i\\sin \\frac{13\\pi}{8})(\\cos \\frac{9\\pi}{8} - i\\sin \\frac{9\\pi}{8})$\n$= (\\cos\\frac{\\pi}{8} + i\\sin\\frac{\\pi}{8})^{13} \\cdot (\\cos\\frac{\\pi}{8} + i\\sin\\frac{\\pi}{8})^{-9}$\n$= (\\cos\\frac{\\pi}{8} + i\\sin\\frac{\\pi}{8})^{13-9} = (\\cos\\frac{\\pi}{8} + i\\sin\\frac{\\pi}{8})^4$\n$= (\\cos\\frac{4\\pi}{8} + i\\sin\\frac{4\\pi}{8}) = (\\cos\\frac{\\pi}{2} + i\\sin\\frac{\\pi}{2}) = (0+i)$",
+        "years": [
+          "2/2022 احيائي"
+        ]
       },
       {
-        "question": "س/ اذا كان $Z = \\frac{1-\\sqrt{3}i}{1+\\sqrt{-3}}$ جد الجذور التربيعية للعدد $Z$ باستخدام نتيجة مبرهنة ديموافر.",
-        "answer": "sol :\n$Z = \\frac{1-\\sqrt{3}i}{1+\\sqrt{3}i} \\cdot \\frac{1-\\sqrt{3}i}{1-\\sqrt{3}i} = \\frac{1 - 2\\sqrt{3}i - 3}{1 + 3} = \\frac{-2-2\\sqrt{3}i}{4} = -\\frac{1}{2} - \\frac{\\sqrt{3}}{2}i$\n$r = \\sqrt{(1/4) + (3/4)} = 1$\n$\\cos \\theta = -1/2 , \\sin \\theta = -\\sqrt{3}/2 \\Rightarrow$ الربع الثالث، زاوية الاسناد $\\pi/3$\n$\\theta = \\pi + \\pi/3 = \\frac{4\\pi}{3}$\n$Z = \\cos \\frac{4\\pi}{3} + i \\sin \\frac{4\\pi}{3}$\nالجذور التربيعية : $Z^{\\frac{1}{2}} = \\cos \\frac{\\frac{4\\pi}{3} + 2k\\pi}{2} + i \\sin \\frac{\\frac{4\\pi}{3} + 2k\\pi}{2}$ حيث $k=0,1$\n- $k=0 \\Rightarrow \\cos \\frac{2\\pi}{3} + i \\sin \\frac{2\\pi}{3} = -\\frac{1}{2} + \\frac{\\sqrt{3}}{2}i$\n- $k=1 \\Rightarrow \\cos \\frac{5\\pi}{3} + i \\sin \\frac{5\\pi}{3} = \\frac{1}{2} - \\frac{\\sqrt{3}}{2}i$",
-        "years": ["2/2021 احيائي"]
+        "question": "س/ باستخدام مبرهنة ديموافر احسب ما يأتي: $(-2 + 2i)^5$",
+        "answer": "sol :\n$z = -2 + 2i$\n$r = \\sqrt{(-2)^2 + 2^2} = \\sqrt{8} = 2\\sqrt{2}$\n$\\cos\\theta = \\frac{-2}{2\\sqrt{2}} = -\\frac{1}{\\sqrt{2}} , \\sin\\theta = \\frac{2}{2\\sqrt{2}} = \\frac{1}{\\sqrt{2}}$\nزاوية الاسناد هي $\\frac{\\pi}{4}$ ، $(\\theta)$ تقع في الربع الثاني\n$\\theta = \\pi - \\frac{\\pi}{4} = \\frac{3\\pi}{4}$\n$z = 2\\sqrt{2} (\\cos\\frac{3\\pi}{4} + i\\sin\\frac{3\\pi}{4})$\n$z^5 = (2\\sqrt{2})^5 (\\cos\\frac{3\\pi}{4} + i\\sin\\frac{3\\pi}{4})^5$\n$= 128\\sqrt{2} (\\cos\\frac{15\\pi}{4} + i\\sin\\frac{15\\pi}{4}) = 128\\sqrt{2} (\\cos\\frac{7\\pi}{4} + i\\sin\\frac{7\\pi}{4})$\n$= 128\\sqrt{2} (\\frac{1}{\\sqrt{2}} - i\\frac{1}{\\sqrt{2}}) = 128 - 128i$",
+        "years": [
+          "2/2022 تطبيقي"
+        ]
+      },
+      {
+        "question": "س/ حل المعادلة باستخدام نتيجة مبرهنة ديموافر: $Z^2 - \\frac{1-\\sqrt{3}i}{1+\\sqrt{-3}} = 0$",
+        "answer": "sol :\n$Z^2 = \\frac{1-\\sqrt{3}i}{1+\\sqrt{3}i} \\cdot \\frac{1-\\sqrt{3}i}{1-\\sqrt{3}i} \\Rightarrow Z^2 = \\frac{1-2\\sqrt{3}i-3}{1+3} = \\frac{-2-2\\sqrt{3}i}{4} = -\\frac{1}{2} - \\frac{\\sqrt{3}}{2}i$\nبجذر الطرفين $Z = (-\\frac{1}{2} - \\frac{\\sqrt{3}}{2}i)^{\\frac{1}{2}}$\n$r = \\sqrt{x^2+y^2} = \\sqrt{\\frac{1}{4} + \\frac{3}{4}} = 1$\n$\\cos\\theta = -\\frac{1}{2} , \\sin\\theta = -\\frac{\\sqrt{3}}{2} \\Rightarrow$ زاوية الاسناد $\\frac{\\pi}{3}$ في الربع الثالث\n$Arg(Z) = \\pi + \\frac{\\pi}{3} = \\frac{4\\pi}{3}$\n$Z = [\\cos\\frac{4\\pi}{3} + i\\sin\\frac{4\\pi}{3}]^{\\frac{1}{2}} = (\\cos\\frac{\\frac{4\\pi}{3} + 2k\\pi}{2} + i\\sin\\frac{\\frac{4\\pi}{3} + 2k\\pi}{2})$\nIf $k=0 \\Rightarrow Z_1 = (\\cos\\frac{4\\pi}{6} + i\\sin\\frac{4\\pi}{6}) = (\\cos\\frac{2\\pi}{3} + i\\sin\\frac{2\\pi}{3}) = -\\cos\\frac{\\pi}{3} + i\\sin\\frac{\\pi}{3} = -\\frac{1}{2} + \\frac{\\sqrt{3}}{2}i$\nIf $k=1 \\Rightarrow Z_2 = (\\cos\\frac{10\\pi}{6} + i\\sin\\frac{10\\pi}{6}) = (\\cos\\frac{5\\pi}{3} + i\\sin\\frac{5\\pi}{3}) = \\cos\\frac{\\pi}{3} - i\\sin\\frac{\\pi}{3} = \\frac{1}{2} - \\frac{\\sqrt{3}}{2}i$",
+        "years": [
+          "1/2022 تطبيقي"
+        ]
+      },
+      {
+        "question": "س/ حل المعادلة باستخدام نتيجة مبرهنة ديموافر: $\\frac{2z^3}{i} + 16 = 0$",
+        "answer": "sol :\n$\\frac{2z^3}{i} + 16 = 0 \\rightarrow Z^3 + 8i = 0 \\Rightarrow Z^3 = -8i$\n$r = \\sqrt{0^2 + (-8)^2} = 8 , \\cos\\theta = 0 , \\sin\\theta = -1 \\Rightarrow \\theta = \\frac{3\\pi}{2}$\n$Z = 8(\\cos\\frac{3\\pi}{2} + i\\sin\\frac{3\\pi}{2})$\n$Z^{\\frac{1}{3}} = \\sqrt[3]{8} (\\cos \\frac{\\frac{3\\pi}{2}+2k\\pi}{3} + i\\sin \\frac{\\frac{3\\pi}{2}+2k\\pi}{3})$ ، $k=0, 1, 2$\nعندما $k=0 \\Rightarrow Z_1 = 2(\\cos\\frac{\\pi}{2} + i\\sin\\frac{\\pi}{2}) = 2(0+i) = 0+2i$\nعندما $k=1 \\Rightarrow Z_2 = 2(\\cos\\frac{7\\pi}{6} + i\\sin\\frac{7\\pi}{6}) = 2(-\\frac{\\sqrt{3}}{2} - \\frac{1}{2}i) = -\\sqrt{3}-i$\nعندما $k=2 \\Rightarrow Z_3 = 2(\\cos\\frac{11\\pi}{6} + i\\sin\\frac{11\\pi}{6}) = 2(\\frac{\\sqrt{3}}{2} - \\frac{1}{2}i) = \\sqrt{3}-i$\n$S = \\{0+2i, -\\sqrt{3}-i, \\sqrt{3}-i\\}$",
+        "years": [
+          "1/2023 احيائي"
+        ]
+      },
+      {
+        "question": "س/ باستخدام مبرهنة ديموافر جد الجذران التربيعيان للعدد المركب $\\frac{1+wi+w^2i}{1-wi-w^2i}$",
+        "answer": "sol :\n$z = \\frac{1+i(w+w^2)}{1-i(w+w^2)} = \\frac{1-i}{1+i} \\cdot \\frac{1-i}{1-i} = \\frac{-2i}{2} = -i$\n$z = (\\cos\\frac{3\\pi}{2} + i\\sin\\frac{3\\pi}{2})$\n$z^{\\frac{1}{2}} = (\\cos\\frac{\\frac{3\\pi}{2} + 2k\\pi}{2} + i\\sin\\frac{\\frac{3\\pi}{2} + 2k\\pi}{2})$ ، $k=0, 1$\nIf $k=0 \\rightarrow z^{\\frac{1}{2}} = (\\cos\\frac{3\\pi}{4} + i\\sin\\frac{3\\pi}{4}) = (-\\cos\\frac{\\pi}{4} + i\\sin\\frac{\\pi}{4}) = -\\frac{1}{\\sqrt{2}} + \\frac{1}{\\sqrt{2}}i$\nIf $k=1 \\rightarrow z^{\\frac{1}{2}} = (\\cos\\frac{7\\pi}{4} + i\\sin\\frac{7\\pi}{4}) = (\\cos\\frac{\\pi}{4} - i\\sin\\frac{\\pi}{4}) = \\frac{1}{\\sqrt{2}} - \\frac{1}{\\sqrt{2}}i$",
+        "years": [
+          "1/2016"
+        ]
+      },
+      {
+        "question": "س/ اثبت ان : $[\\frac{(\\cos 3\\theta+i\\sin 3\\theta)^4}{(\\cos 5\\theta+i\\sin 5\\theta)^2}] \\cdot (\\cos \\theta + i \\sin \\theta)^{-2} = 1$",
+        "answer": "sol :\n$= \\frac{(\\cos\\theta + i\\sin\\theta)^{12}}{(\\cos\\theta + i\\sin\\theta)^{10}} [\\cos \\theta + i \\sin \\theta]^{-2}$\n$= [\\cos \\theta + i \\sin \\theta]^2 \\cdot [\\cos \\theta + i \\sin \\theta]^{-2}$\n$= [\\cos \\theta + i \\sin \\theta]^0 = 1$",
+        "years": [
+          "2/2023 تطبيقي"
+        ]
+      },
+      {
+        "question": "س/ احسب باستخدام مبرهنة ديموافر: $(1 - \\sqrt{3}i)^{-4}$",
+        "answer": "sol :\nLet $Z = 1 - \\sqrt{3}i$\n$r = \\sqrt{1+3} = \\sqrt{4} = 2$\n$\\cos\\theta = \\frac{1}{2} , \\sin\\theta = \\frac{-\\sqrt{3}}{2} \\Rightarrow$ زاوية الاسناد $\\frac{\\pi}{3}$ في الربع الرابع\n$\\therefore Arg(Z) = 2\\pi - \\frac{\\pi}{3} = \\frac{5\\pi}{3}$\n$Z = 2(\\cos\\frac{5\\pi}{3} + i\\sin\\frac{5\\pi}{3})$\n$Z^{-4} = 2^{-4} [\\cos\\frac{5\\pi}{3} + i\\sin\\frac{5\\pi}{3}]^{-4}$\n$Z^{-4} = \\frac{1}{16} [\\cos\\frac{20\\pi}{3} - i\\sin\\frac{20\\pi}{3}] = \\frac{1}{16} [\\cos\\frac{2\\pi}{3} - i\\sin\\frac{2\\pi}{3}]$\n$= \\frac{1}{16} [-\\frac{1}{2} - \\frac{\\sqrt{3}}{2}i] = -\\frac{1}{32} - \\frac{\\sqrt{3}}{32}i$",
+        "years": [
+          "2/2023 احيائي"
+        ]
+      },
+      {
+        "question": "س/ جد الصيغة القطبية للمقدار $(\\sqrt{3} + i)^3$ ، ثم جد الجذور التربيعية له",
+        "answer": "sol : $z = \\sqrt{3} + i$\n$Mod z = || z || = r = \\sqrt{x^2+y^2} = \\sqrt{3+1} = 2$\n$\\cos\\theta = \\frac{\\sqrt{3}}{2} , \\sin\\theta = \\frac{1}{2} \\Rightarrow \\theta = \\frac{\\pi}{6}$ (الربع الاول)\n$z = 2(\\cos\\frac{\\pi}{6} + i\\sin\\frac{\\pi}{6})$\n$z^3 = 2^3 (\\cos\\frac{\\pi}{6} + i\\sin\\frac{\\pi}{6})^3 = 8(\\cos\\frac{3\\pi}{6} + i\\sin\\frac{3\\pi}{6}) = 8(\\cos\\frac{\\pi}{2} + i\\sin\\frac{\\pi}{2})$\nهذه الصيغة القطبية للمقدار.\nولإيجاد الجذران التربيعيان نستخدم مبرهنة ديموافر\n$z = 8(\\cos\\frac{\\pi}{2} + i\\sin\\frac{\\pi}{2})$\n$z^{\\frac{1}{2}} = 8^{\\frac{1}{2}} (\\cos\\frac{\\frac{\\pi}{2} + 2\\pi k}{2} + i\\sin\\frac{\\frac{\\pi}{2} + 2\\pi k}{2}) = 2\\sqrt{2} (\\cos\\frac{\\pi+4\\pi k}{4} + i\\sin\\frac{\\pi+4\\pi k}{4})$\n$k = 0, 1$\nIf $k=0 \\rightarrow z_1 = 2\\sqrt{2} (\\cos\\frac{\\pi}{4} + i\\sin\\frac{\\pi}{4}) = 2\\sqrt{2} (\\frac{1}{\\sqrt{2}} + \\frac{1}{\\sqrt{2}}i) = 2+2i$\nIf $k=1 \\rightarrow z_2 = 2\\sqrt{2} (\\cos\\frac{5\\pi}{4} + i\\sin\\frac{5\\pi}{4}) = 2\\sqrt{2} (-\\cos\\frac{\\pi}{4} - i\\sin\\frac{\\pi}{4}) = -2-2i$",
+        "years": [
+          "3/2023 تكميلي احيائي"
+        ]
+      },
+      {
+        "question": "س/ بسط باستخدام مبرهنة ديموافر: $\\sqrt{2} [\\cos \\frac{5\\pi}{24} + i \\sin \\frac{5\\pi}{24}]^6$",
+        "answer": "sol :\n$= \\sqrt{2} (\\cos 6(\\frac{5\\pi}{24}) + i \\sin 6(\\frac{5\\pi}{24}))$\n$= \\sqrt{2} (\\cos \\frac{5\\pi}{4} + i \\sin \\frac{5\\pi}{4}) = \\sqrt{2} (-\\cos \\frac{\\pi}{4} - i \\sin \\frac{\\pi}{4})$\n$= \\sqrt{2} (-\\frac{1}{\\sqrt{2}} - \\frac{1}{\\sqrt{2}}i) = -1 - i$",
+        "years": [
+          "3/2023 احيائي"
+        ]
       }
     ]
   }

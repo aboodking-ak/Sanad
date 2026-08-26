@@ -2,9 +2,10 @@
 <resources>
     <style name="LaunchTheme" parent="@android:style/Theme.Light.NoTitleBar">
         <item name="android:windowBackground">@drawable/launch_background</item>
+        <item name="android:windowIsTranslucent">true</item>
         <!-- هذا السطر يلغي ظهور أيقونة التطبيق التلقائية في أندرويد 12 فما فوق -->
         <item name="android:windowSplashScreenAnimatedIcon">@android:color/transparent</item>
-        <item name="android:windowSplashScreenBackground">@android:color/white</item>
+        <item name="android:windowSplashScreenBackground">@android:color/transparent</item>
     </style>
 
     <style name="NormalTheme" parent="@android:style/Theme.Light.NoTitleBar">
