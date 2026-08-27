@@ -7,6 +7,38 @@ import 'package:google_sign_in/google_sign_in.dart';
 class AuthService {
   final SupabaseClient _supabase = Supabase.instance.client;
 
+  // تسجيل الدخول الصامت باستخدام جوجل
+  Future<AuthResponse?> signInGoogleSilently() async {
+    try {
+      const webClientId = '218216743464-4o6489e2bde76j4f8cvqm2n8gunib55d.apps.googleusercontent.com';
+      final GoogleSignIn googleSignIn = GoogleSignIn(serverClientId: webClientId);
+      
+      final googleUser = await googleSignIn.signInSilently();
+      if (googleUser == null) return null;
+
+      final googleAuth = await googleUser.authentication;
+      final accessToken = googleAuth.accessToken;
+      final idToken = googleAuth.idToken;
+
+      if (idToken == null) return null;
+
+      final response = await _supabase.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken,
+        accessToken: accessToken,
+      );
+
+      if (response.user != null) {
+        await _saveLocalData(response.user!);
+      }
+
+      return response;
+    } catch (e) {
+      print('Silent Google Sign-In Error: $e');
+      return null;
+    }
+  }
+
   // تسجيل الدخول باستخدام جوجل
   Future<AuthResponse> signInWithGoogle() async {
     try {
@@ -142,7 +174,10 @@ class AuthService {
   Future<void> _clearLocalData() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('is_logged_in', false);
-    // يمكن مسح باقي البيانات أو إبقاء الإيميل لتسهيل الدخول القادم
+    await prefs.remove('user_email');
+    await prefs.remove('user_name');
+    await prefs.remove('user_stage');
+    await prefs.remove('profile_image_path');
   }
 
   // إنشاء حساب جديد

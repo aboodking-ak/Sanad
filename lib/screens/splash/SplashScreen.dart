@@ -9,6 +9,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../core/utils/ad_helper.dart';
 import '../../core/constants/app_assets.dart';
+import '../../core/services/auth_service.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -90,38 +91,78 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<Map<String, dynamic>?> _checkLoginStatusData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final bool isLoggedIn = prefs.getBool('is_logged_in') ?? false;
-      
-      if (!isLoggedIn) return null;
-
       final supabase = Supabase.instance.client;
-      final session = supabase.auth.currentSession;
-      final user = supabase.auth.currentUser;
+      final authService = AuthService();
+      
+      // 1. التحقق من الجلسة الحالية في Supabase
+      var session = supabase.auth.currentSession;
+      var user = supabase.auth.currentUser;
 
-      if (session != null && user != null) {
-        // التحقق من صحة الحساب مع مهلة زمنية قصيرة
-        final response = await supabase.auth.getUser().timeout(const Duration(seconds: 5));
-        
-        if (response.user != null) {
-          final userMetadata = response.user?.userMetadata;
-          final String? savedName = prefs.getString('user_name');
-          final String? savedImage = prefs.getString('profile_image_path');
-          final String? savedStage = prefs.getString('user_stage');
-          
-          if (savedImage != null && savedImage.startsWith('http') && mounted) {
-            precacheImage(NetworkImage(savedImage), context);
-          }
-
-          return {
-            'isLoggedIn': true,
-            'userName': savedName ?? userMetadata?['full_name'],
-            'profileImage': savedImage ?? userMetadata?['profile_image'],
-            'selectedStage': savedStage ?? userMetadata?['user_stage'],
-          };
+      // 2. إذا لم تكن هناك جلسة، محاولة تسجيل الدخول الصامت عبر جوجل (خاصة إذا كان مسجلاً سابقاً)
+      if (session == null || user == null) {
+        debugPrint("No active session, attempting silent Google sign-in...");
+        final response = await authService.signInGoogleSilently();
+        if (response?.session != null) {
+          session = response!.session;
+          user = response.user;
+          debugPrint("Silent Google sign-in successful");
         }
       }
+
+      // 3. التحقق من البيانات المحلية كمرجع إضافي
+      final bool wasLoggedInLocal = prefs.getBool('is_logged_in') ?? false;
+
+      if (session != null && user != null) {
+        // تحديث الحالة المحلية إذا كانت غير متوافقة
+        if (!wasLoggedInLocal) {
+          await prefs.setBool('is_logged_in', true);
+        }
+
+        // جلب بيانات المستخدم المحدثة
+        try {
+          final response = await supabase.auth.getUser().timeout(const Duration(seconds: 5));
+          final currentUser = response.user;
+          
+          if (currentUser != null) {
+            final userMetadata = currentUser.userMetadata;
+            final String? savedName = prefs.getString('user_name');
+            final String? savedImage = prefs.getString('profile_image_path');
+            final String? savedStage = prefs.getString('user_stage');
+            
+            if (savedImage != null && savedImage.startsWith('http') && mounted) {
+              precacheImage(NetworkImage(savedImage), context);
+            }
+
+            return {
+              'isLoggedIn': true,
+              'userName': savedName ?? userMetadata?['full_name'],
+              'profileImage': savedImage ?? userMetadata?['profile_image'],
+              'selectedStage': savedStage ?? userMetadata?['user_stage'],
+            };
+          }
+        } catch (e) {
+          // في حال فشل الاتصال بالسيرفر، نعتمد على البيانات المحلية إذا كان المستخدم مسجلاً أصلاً
+          debugPrint("Error fetching user data from server, using local data: $e");
+          if (wasLoggedInLocal) {
+            return {
+              'isLoggedIn': true,
+              'userName': prefs.getString('user_name'),
+              'profileImage': prefs.getString('profile_image_path'),
+              'selectedStage': prefs.getString('user_stage'),
+            };
+          }
+        }
+      }
+      
+      // إذا وصلنا هنا ولا توجد جلسة، نتأكد من مسح الحالة المحلية لتجنب التعليق
+      if (wasLoggedInLocal && session == null) {
+        debugPrint("Session expired or invalid, clearing local login state");
+        await prefs.setBool('is_logged_in', false);
+      }
+      
       return null;
     } catch (e) {
+      debugPrint("Check Login Status Data Error: $e");
       return null;
     }
   }
