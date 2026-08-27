@@ -76,31 +76,22 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _navigateWithLocalData() async {
-    final prefs = await SharedPreferences.getInstance();
-    final bool isLoggedIn = prefs.getBool('is_logged_in') ?? false;
-    final authData = {
-      'isLoggedIn': isLoggedIn,
-      'userName': prefs.getString('user_name'),
-      'profileImage': prefs.getString('profile_image_path'),
-      'selectedStage': prefs.getString('user_stage'),
-    };
-    if (mounted) _navigate(isLoggedIn ? authData : null);
+    if (mounted) Navigator.pushReplacementNamed(context, "/signin");
   }
 
-  // دالة جديدة لجلب بيانات الدخول دون الانتقال الفوري
+  // جلب بيانات الدخول مباشرة من Supabase دون الاعتماد على التخزين المحلي
   Future<Map<String, dynamic>?> _checkLoginStatusData() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
       final supabase = Supabase.instance.client;
       final authService = AuthService();
       
-      // 1. التحقق من الجلسة الحالية في Supabase
+      // 1. التحقق من الجلسة الحالية من Supabase مباشرة
       var session = supabase.auth.currentSession;
       var user = supabase.auth.currentUser;
 
-      // 2. إذا لم تكن هناك جلسة، محاولة تسجيل الدخول الصامت عبر جوجل (خاصة إذا كان مسجلاً سابقاً)
+      // 2. إذا لم تكن هناك جلسة، محاولة تسجيل الدخول الصامت عبر جوجل
       if (session == null || user == null) {
-        debugPrint("No active session, attempting silent Google sign-in...");
+        debugPrint("No active session in Supabase, attempting silent Google sign-in...");
         final response = await authService.signInGoogleSilently();
         if (response?.session != null) {
           session = response!.session;
@@ -109,55 +100,38 @@ class _SplashScreenState extends State<SplashScreen> {
         }
       }
 
-      // 3. التحقق من البيانات المحلية كمرجع إضافي
-      final bool wasLoggedInLocal = prefs.getBool('is_logged_in') ?? false;
-
+      // 3. إذا وجدت الجلسة، جلب بيانات المستخدم المحدثة مباشرة من قاعدة البيانات / Supabase Auth
       if (session != null && user != null) {
-        // تحديث الحالة المحلية إذا كانت غير متوافقة
-        if (!wasLoggedInLocal) {
-          await prefs.setBool('is_logged_in', true);
-        }
-
-        // جلب بيانات المستخدم المحدثة
         try {
           final response = await supabase.auth.getUser().timeout(const Duration(seconds: 5));
-          final currentUser = response.user;
+          final currentUser = response.user ?? user;
+          final userMetadata = currentUser.userMetadata;
           
-          if (currentUser != null) {
-            final userMetadata = currentUser.userMetadata;
-            final String? savedName = prefs.getString('user_name');
-            final String? savedImage = prefs.getString('profile_image_path');
-            final String? savedStage = prefs.getString('user_stage');
-            
-            if (savedImage != null && savedImage.startsWith('http') && mounted) {
-              precacheImage(NetworkImage(savedImage), context);
-            }
+          final String? name = userMetadata?['full_name'];
+          final String? image = userMetadata?['profile_image'];
+          final String? stage = userMetadata?['user_stage'];
+          
+          if (image != null && image.startsWith('http') && mounted) {
+            precacheImage(NetworkImage(image), context);
+          }
 
-            return {
-              'isLoggedIn': true,
-              'userName': savedName ?? userMetadata?['full_name'],
-              'profileImage': savedImage ?? userMetadata?['profile_image'],
-              'selectedStage': savedStage ?? userMetadata?['user_stage'],
-            };
-          }
+          return {
+            'isLoggedIn': true,
+            'userName': name,
+            'profileImage': image,
+            'selectedStage': stage,
+          };
         } catch (e) {
-          // في حال فشل الاتصال بالسيرفر، نعتمد على البيانات المحلية إذا كان المستخدم مسجلاً أصلاً
-          debugPrint("Error fetching user data from server, using local data: $e");
-          if (wasLoggedInLocal) {
-            return {
-              'isLoggedIn': true,
-              'userName': prefs.getString('user_name'),
-              'profileImage': prefs.getString('profile_image_path'),
-              'selectedStage': prefs.getString('user_stage'),
-            };
-          }
+          debugPrint("Error fetching user data from Supabase: $e");
+          // في حال وجود جلسة صالحة ولكن حدث خطأ مؤقت في الاتصال بالسيرفر
+          final userMetadata = user.userMetadata;
+          return {
+            'isLoggedIn': true,
+            'userName': userMetadata?['full_name'],
+            'profileImage': userMetadata?['profile_image'],
+            'selectedStage': userMetadata?['user_stage'],
+          };
         }
-      }
-      
-      // إذا وصلنا هنا ولا توجد جلسة، نتأكد من مسح الحالة المحلية لتجنب التعليق
-      if (wasLoggedInLocal && session == null) {
-        debugPrint("Session expired or invalid, clearing local login state");
-        await prefs.setBool('is_logged_in', false);
       }
       
       return null;

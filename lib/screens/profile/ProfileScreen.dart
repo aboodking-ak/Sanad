@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/services/auth_service.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -26,20 +27,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _loadUserData() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedName = prefs.getString('user_name');
-    final savedEmail = prefs.getString('user_email');
-    final savedImagePath = prefs.getString('profile_image_path');
-    final savedStage = prefs.getString('user_stage');
-    
-    if (mounted) {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user != null && mounted) {
+      final userMetadata = user.userMetadata;
       setState(() {
-        if (savedName != null && savedName.isNotEmpty) {
-          userName = savedName;
-        }
-        userEmail = savedEmail ?? "user@email.com";
-        _profileImagePath = savedImagePath;
-        selectedStage = savedStage ?? "غير محدد";
+        userName = userMetadata?['full_name'] ?? userName;
+        userEmail = user.email ?? "user@email.com";
+        _profileImagePath = userMetadata?['profile_image'];
+        selectedStage = userMetadata?['user_stage'] ?? "غير محدد";
       });
     }
   }
@@ -115,10 +110,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             // 1. تحديث في السحاب
                             await _authService.updateUserName(newName);
                             
-                            // 2. تحديث محلي
-                            final prefs = await SharedPreferences.getInstance();
-                            await prefs.setString('user_name', newName);
-                            
                             setState(() {
                               userName = newName;
                             });
@@ -178,8 +169,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // إضافة طابع زمني للرابط لتجاوز التخزين المؤقت في فلاتر
           final String publicUrlWithCache = "$publicUrl?t=${DateTime.now().millisecondsSinceEpoch}";
           
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('profile_image_path', publicUrlWithCache);
           setState(() {
             _profileImagePath = publicUrlWithCache;
           });

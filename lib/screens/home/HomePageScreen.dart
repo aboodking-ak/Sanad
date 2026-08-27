@@ -335,30 +335,37 @@ class _HomePageScreenState extends State<HomePageScreen> with SingleTickerProvid
   }
 
   Future<void> _loadUserData() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    // جلب حالة إزالة الإعلانات
-    final savedAdsStatus = prefs.getBool('user_ads_removed') ?? false;
-
-    // 1. جلب الصورة المخزنة محلياً فوراً
-    final savedImagePath = prefs.getString('profile_image_path');
-    final savedName = prefs.getString('user_name');
-    final savedEmail = prefs.getString('user_email');
-    final savedStage = prefs.getString('user_stage');
-
-    if (mounted) {
-      setState(() {
-        if (savedName != null && savedName.isNotEmpty) userName = savedName;
-        userEmail = savedEmail ?? "user@email.com";
-        _profileImagePath = savedImagePath;
-        if (savedStage != null) selectedStage = savedStage;
-        isAdsRemoved = savedAdsStatus;
-      });
-    }
-
-    // 2. تحديث البيانات من Supabase في الخلفية لضمان الدقة
     final supabase = Supabase.instance.client;
     final user = supabase.auth.currentUser;
+
+    // 1. قراءة البيانات المباشرة من كائن المستخدم والجلسة الحالية
+    if (user != null) {
+      final userMetadata = user.userMetadata;
+      if (mounted) {
+        setState(() {
+          userEmail = user.email ?? "user@email.com";
+          userName = userMetadata?['full_name'] ?? userName;
+          _profileImagePath = userMetadata?['profile_image'] ?? _profileImagePath;
+          selectedStage = userMetadata?['user_stage'] ?? selectedStage;
+        });
+      }
+    }
+
+    // 2. فحص الوسائط المستلمة إن وجدت
+    final args = ModalRoute.of(context)?.settings.arguments;
+    if (args is Map<String, dynamic>) {
+      if (mounted) {
+        setState(() {
+          if (args['userName'] != null) userName = args['userName'];
+          if (args['profileImage'] != null) _profileImagePath = args['profileImage'];
+          if (args['selectedStage'] != null) selectedStage = args['selectedStage'];
+        });
+      }
+    } else if (args is String && mounted) {
+      setState(() => selectedStage = args);
+    }
+
+    // 3. تحديث باقي البيانات وحالة الحظر والإعلانات من Supabase مباشرة
     if (user != null) {
       try {
         final profileData = await supabase
@@ -383,30 +390,19 @@ class _HomePageScreenState extends State<HomePageScreen> with SingleTickerProvid
             }
           }
 
-          // تحديث الحالة محلياً بناءً على السيرفر
-          if (adsStillRemoved != savedAdsStatus) {
-            await prefs.setBool('user_ads_removed', adsStillRemoved);
-            if (mounted) setState(() => isAdsRemoved = adsStillRemoved);
-          }
-
           final latestImageUrl = profileData['profile_image'];
           final latestName = profileData['full_name'];
 
-          if (latestImageUrl != null && latestImageUrl != _profileImagePath) {
-            await prefs.setString('profile_image_path', latestImageUrl);
-            if (mounted) {
-              setState(() {
-                _profileImagePath = latestImageUrl;
-              });
-            }
-          }
-          if (latestName != null && latestName != userName) {
-            await prefs.setString('user_name', latestName);
-            if (mounted) setState(() => userName = latestName);
+          if (mounted) {
+            setState(() {
+              isAdsRemoved = adsStillRemoved;
+              if (latestImageUrl != null) _profileImagePath = latestImageUrl;
+              if (latestName != null) userName = latestName;
+            });
           }
         }
       } catch (e) {
-        debugPrint("Error checking block status: $e");
+        debugPrint("Error checking profile data from Supabase: $e");
       }
     }
   }

@@ -29,7 +29,7 @@ class AuthService {
       );
 
       if (response.user != null) {
-        await _saveLocalData(response.user!);
+        // لا نقوم بتخزين بيانات المستخدم محلياً - نعتمد فقط على Supabase
       }
 
       return response;
@@ -69,7 +69,7 @@ class AuthService {
       );
 
       if (response.user != null) {
-        await _saveLocalData(response.user!);
+        // لا نقوم بتخزين بيانات المستخدم محلياً - نعتمد فقط على Supabase
       }
 
       return response;
@@ -85,48 +85,23 @@ class AuthService {
   // دفق حالة المصادقة
   Stream<AuthState> get authStateChanges => _supabase.auth.onAuthStateChange;
 
-  // حفظ بيانات المستخدم محلياً
+  // حفظ بيانات المستخدم محلياً (تم إلغاؤه والاعتماد الكامل على Supabase)
   Future<void> _saveLocalData(User user, {String? fullName, String? stage}) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('is_logged_in', true);
-    await prefs.setString('user_email', user.email ?? '');
-    
-    // حفظ الاسم
-    if (fullName != null) {
-      await prefs.setString('user_name', fullName);
-    } else if (user.userMetadata?['full_name'] != null) {
-      await prefs.setString('user_name', user.userMetadata?['full_name']);
-    }
-
-    // حفظ المرحلة الدراسية
-    if (stage != null) {
-      await prefs.setString('user_stage', stage);
-    } else if (user.userMetadata?['user_stage'] != null) {
-      await prefs.setString('user_stage', user.userMetadata?['user_stage']);
-    }
-
-    // حفظ الصورة الشخصية
-    if (user.userMetadata?['profile_image'] != null) {
-      await prefs.setString('profile_image_path', user.userMetadata?['profile_image']);
-    }
+    // تم إلغاء التخزين المحلي لبيانات المستخدم
   }
 
-  // تحديث المرحلة الدراسية في السحابة ومحلياً
+  // تحديث المرحلة الدراسية في السحابة فقط
   Future<void> updateUserStage(String stage) async {
     try {
       final user = _supabase.auth.currentUser;
       if (user == null) return;
 
-      // تحديث في Supabase
+      // تحديث في Supabase فقط
       await _supabase.auth.updateUser(
         UserAttributes(
           data: {'user_stage': stage},
         ),
       );
-
-      // تحديث محلياً
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_stage', stage);
     } catch (e) {
       print('Error updating stage: $e');
       rethrow;
@@ -209,7 +184,7 @@ class AuthService {
     );
     
     if (response.user != null && response.user!.emailConfirmedAt != null) {
-      await _saveLocalData(response.user!);
+      // تم تسجيل الدخول بنجاح الجلسة تحفظ تلقائيا عبر SDK Supabase
     }
     
     return response;
@@ -268,8 +243,6 @@ class AuthService {
 
       if (response.user != null) {
         print('Database updated successfully for user: ${response.user!.id}');
-        // تحديث البيانات المحلية فوراً
-        await _saveLocalData(response.user!);
       }
 
       return finalUrl;
@@ -315,7 +288,7 @@ class AuthService {
       await prefs.remove('profile_image_path');
       
       if (response.user != null) {
-        await _saveLocalData(response.user!);
+        // لا نقوم بتخزين بيانات المستخدم محلياً - نعتمد فقط على Supabase
       }
     } catch (e) {
       print('Error during image deletion: $e');

@@ -26,8 +26,19 @@ import 'screens/tools/TodosScreen.dart';
 import 'screens/profile/ProfileScreen.dart';
 import 'screens/auth/ChangePasswordScreen.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  try {
+    await Supabase.initialize(
+      url: 'https://vxdhjeefbrdjwzwdlybu.supabase.co',
+      publishableKey: 'sb_publishable_bh6MjtlteOB4F6eyax80jA_GjlXFpIh',
+      authOptions: const FlutterAuthClientOptions(authFlowType: AuthFlowType.pkce),
+    );
+  } catch (e) {
+    debugPrint("Supabase init in main: $e");
+  }
+
   runApp(const MyApp());
 }
 
@@ -68,17 +79,15 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     });
   }
 
-  static void setupAuthListener(GlobalKey<NavigatorState> navKey) {
+  void _setupAuthListener() {
     Supabase.instance.client.auth.onAuthStateChange.listen((data) {
       final AuthChangeEvent event = data.event;
+      debugPrint("Supabase Auth Event Received: $event");
       if (event == AuthChangeEvent.passwordRecovery) {
-        navKey.currentState?.pushNamedAndRemoveUntil('/change-password', (route) => false);
+        debugPrint("Password Recovery Event Detected -> Navigating to /change-password");
+        _navigatorKey.currentState?.pushNamedAndRemoveUntil('/change-password', (route) => false);
       }
     });
-  }
-
-  void _setupAuthListener() {
-    // سيتم استدعاؤها من SplashScreen بعد تهيئة Supabase
   }
 
   @override
