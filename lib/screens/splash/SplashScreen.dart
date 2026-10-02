@@ -10,6 +10,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../../core/utils/ad_helper.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/services/auth_service.dart';
+import '../onboarding/OnboardingScreen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -67,7 +68,7 @@ class _SplashScreenState extends State<SplashScreen> {
       AdHelper().loadRewardedAd();
 
       if (canProceed && mounted) {
-        _navigate(authData);
+        await _showOnboardingIfNeeded(authData);
       }
     } catch (e) {
       debugPrint("Init Error: $e");
@@ -76,7 +77,34 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _navigateWithLocalData() async {
-    if (mounted) Navigator.pushReplacementNamed(context, "/signin");
+    if (mounted) await _showOnboardingIfNeeded(null);
+  }
+
+  Future<void> _showOnboardingIfNeeded(Map<String, dynamic>? authData) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    if (prefs.getBool(OnboardingScreen.completedKey) ?? false) {
+      _navigate(authData);
+      return;
+    }
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute<void>(
+        builder: (onboardingContext) => OnboardingScreen(
+          onCompleted: () {
+            if (!onboardingContext.mounted) return;
+            final route = authData?['isLoggedIn'] == true
+                ? (authData?['selectedStage'] != null ? '/home' : '/stages')
+                : '/signin';
+            Navigator.pushReplacementNamed(
+              onboardingContext,
+              route,
+              arguments: route == '/home' ? authData : null,
+            );
+          },
+        ),
+      ),
+    );
   }
 
   // جلب بيانات الدخول مباشرة من Supabase دون الاعتماد على التخزين المحلي
