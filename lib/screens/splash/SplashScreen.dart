@@ -405,88 +405,43 @@ class _SplashScreenState extends State<SplashScreen> {
     }
 
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                width: 180,
-                height: 180,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: secondaryColor.withValues(alpha: 0.1),
-                    width: 2,
-                  ),
-                ),
+      child: TweenAnimationBuilder<double>(
+        tween: Tween<double>(begin: 0, end: 1),
+        duration: const Duration(milliseconds: 700),
+        curve: Curves.easeOutCubic,
+        builder: (context, value, child) => Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 12 * (1 - value)),
+            child: child,
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Image.asset(
+              AppAssets.logo,
+              width: 140,
+              height: 140,
+              fit: BoxFit.contain,
+              errorBuilder: (context, error, stackTrace) => Icon(
+                Icons.school,
+                size: 100,
+                color: primaryColor,
               ),
-              SizedBox(
-                width: 200,
-                height: 200,
-                child: CircularProgressIndicator(
-                  value: 0.7,
-                  strokeWidth: 4,
-                  valueColor: AlwaysStoppedAnimation<Color>(secondaryColor),
-                ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'سند',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: primaryColor,
               ),
-              Image.asset(
-                AppAssets.logo,
-                width: 125,
-                height: 125,
-                errorBuilder: (context, error, stackTrace) => Icon(
-                  Icons.school,
-                  size: 100,
-                  color: primaryColor,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 40),
-          Text(
-            "تعلم بذكاء، تقدم بثقة",
-            style: TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: primaryColor,
+              textAlign: TextAlign.center,
             ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            "كل ما تحتاجه لتتفوق في مكان واحد",
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 60),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 50),
-            child: Column(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: LinearProgressIndicator(
-                    minHeight: 8,
-                    backgroundColor: Colors.grey[200],
-                    valueColor: AlwaysStoppedAnimation<Color>(secondaryColor),
-                  ),
-                ),
-                const SizedBox(height: 15),
-                Text(
-                  "جاري التحميل...",
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[500],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
