@@ -160,12 +160,14 @@ class AuthService {
     required String email,
     required String password,
     required String fullName,
+    required String stage,
   }) async {
     final response = await _supabase.auth.signUp(
       email: email,
       password: password,
       data: {
         'full_name': fullName,
+        'user_stage': stage,
       },
       emailRedirectTo: 'com.purecompany.sanad://login-callback',
     );
@@ -174,6 +176,14 @@ class AuthService {
   }
 
   // تسجيل الدخول
+  Future<void> resendConfirmation(String email) async {
+    await _supabase.auth.resend(
+      type: OtpType.signup,
+      email: email,
+      emailRedirectTo: 'com.purecompany.sanad://login-callback',
+    );
+  }
+
   Future<AuthResponse> signIn({
     required String email,
     required String password,

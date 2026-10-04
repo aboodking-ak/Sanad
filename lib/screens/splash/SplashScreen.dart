@@ -94,7 +94,7 @@ class _SplashScreenState extends State<SplashScreen> {
           onCompleted: () {
             if (!onboardingContext.mounted) return;
             final route = authData?['isLoggedIn'] == true
-                ? (authData?['selectedStage'] != null ? '/home' : '/stages')
+                ? (authData?['selectedStage'] != null ? '/home' : '/signin')
                 : '/signin';
             Navigator.pushReplacementNamed(
               onboardingContext,
@@ -174,7 +174,7 @@ class _SplashScreenState extends State<SplashScreen> {
       if (authData['selectedStage'] != null) {
         Navigator.pushReplacementNamed(context, "/home", arguments: authData);
       } else {
-        Navigator.pushReplacementNamed(context, "/stages");
+        Navigator.pushReplacementNamed(context, "/signin");
       }
     } else {
       Navigator.pushReplacementNamed(context, "/signin");

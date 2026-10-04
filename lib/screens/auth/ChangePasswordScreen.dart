@@ -29,7 +29,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       setState(() => _isLoading = true);
       try {
         await Supabase.instance.client.auth.updateUser(
-          UserAttributes(password: _passwordController.text.trim()),
+          UserAttributes(password: _passwordController.text),
         );
         if (mounted) {
           _showSuccessDialog();
