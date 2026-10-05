@@ -1,24 +1,25 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/services/auth_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
-
   @override
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  String userName = "الطالب";
-  String userEmail = "user@email.com";
-  String? _profileImagePath;
-  String selectedStage = "غير محدد";
-  bool _isLoading = false;
+  static const _navy = Color(0xFF1A2238);
+  static const _gold = Color(0xFFF2B833);
   final _authService = AuthService();
+  String userName = 'الطالب';
+  String userEmail = '';
+  String selectedStage = 'غير محدد';
+  String? _profileImagePath;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -26,663 +27,804 @@ class _ProfileScreenState extends State<ProfileScreen> {
     _loadUserData();
   }
 
-  Future<void> _loadUserData() async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user != null && mounted) {
-      final userMetadata = user.userMetadata;
-      setState(() {
-        userName = userMetadata?['full_name'] ?? userName;
-        userEmail = user.email ?? "user@email.com";
-        _profileImagePath = userMetadata?['profile_image'];
-        selectedStage = userMetadata?['user_stage'] ?? "غير محدد";
-      });
+  void _loadUserData() {
+    final user = _authService.currentUser;
+    if (user == null || !mounted) return;
+    setState(() {
+      userName = user.userMetadata?['full_name']?.toString() ?? 'الطالب';
+      userEmail = user.email ?? '';
+      selectedStage =
+          user.userMetadata?['user_stage']?.toString() ?? 'غير محدد';
+      _profileImagePath = user.userMetadata?['profile_image']?.toString();
+    });
+  }
+
+  void _message(String text) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(text)));
+  }
+
+  String _error(Object error) {
+    if (error is AuthException) {
+      switch (error.code) {
+        case 'email_exists':
+        case 'user_already_exists':
+          return 'البريد الإلكتروني مستخدم في حساب آخر.';
+        case 'weak_password':
+          return 'كلمة المرور ضعيفة. اختر كلمة مرور أقوى.';
+        case 'same_password':
+          return 'اختر كلمة مرور مختلفة عن الحالية.';
+        case 'reauthentication_needed':
+          return 'سجّل الدخول مجدداً ثم حاول تغيير كلمة المرور.';
+        case 'over_request_rate_limit':
+        case 'over_email_send_rate_limit':
+          return 'انتظر قليلاً قبل إعادة المحاولة.';
+      }
     }
+    return 'تعذر حفظ التغيير. تحقق من اتصالك وحاول مجدداً.';
   }
 
-  String _getInitials(String name) {
-    if (name.isEmpty) return "S";
-    return name.trim().substring(0, 1).toUpperCase();
-  }
-
-  Future<void> _editNameDialog() async {
-    final TextEditingController nameController = TextEditingController(text: userName);
-    final primaryColor = Theme.of(context).colorScheme.primary;
-
-    showDialog(
+  Future<void> _edit(String kind) async {
+    if (_isLoading) return;
+    final title = switch (kind) {
+      'name' => 'تعديل الاسم',
+      'email' => 'تعديل البريد الإلكتروني',
+      'stage' => 'تعديل الفرع الدراسي',
+      _ => 'تغيير كلمة المرور',
+    };
+    final controller = TextEditingController(
+      text: kind == 'name'
+          ? userName
+          : kind == 'email'
+          ? userEmail
+          : '',
+    );
+    final confirmation = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    var stage = ['سادس علمي', 'سادس أدبي'].contains(selectedStage)
+        ? selectedStage
+        : null;
+    var saving = false;
+    var obscure = true;
+    String? error;
+    await showModalBottomSheet<void>(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: primaryColor.withAlpha(25),
-                  shape: BoxShape.circle,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (context, update) {
+          InputDecoration decoration(String label) => InputDecoration(
+            labelText: label,
+            filled: true,
+            fillColor: const Color(0xFFF5F6F8),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(14),
+              borderSide: BorderSide.none,
+            ),
+          );
+          return PopScope(
+            canPop: !saving,
+            child: Directionality(
+              textDirection: TextDirection.rtl,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  24,
+                  12,
+                  24,
+                  MediaQuery.viewInsetsOf(context).bottom + 24,
                 ),
-                child: Icon(Icons.edit_note_rounded, size: 40, color: primaryColor),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                "تعديل الاسم",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 20),
-              TextField(
-                controller: nameController,
-                textAlign: TextAlign.center,
-                style: const TextStyle(fontWeight: FontWeight.bold),
-                decoration: InputDecoration(
-                  hintText: "أدخل اسمك الجديد",
-                  filled: true,
-                  fillColor: Colors.grey[100],
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(15),
-                    borderSide: BorderSide.none,
-                  ),
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text("إلغاء", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        // إخفاء الكيبورد
-                        FocusScope.of(context).unfocus();
-
-                        final newName = nameController.text.trim();
-                        if (newName.isNotEmpty) {
-                          try {
-                            setState(() => _isLoading = true);
-                            
-                            // 1. تحديث في السحاب
-                            await _authService.updateUserName(newName);
-                            
-                            setState(() {
-                              userName = newName;
-                            });
-                            
-                            if (mounted) {
-                              Navigator.pop(context, newName); // إرجاع الاسم الجديد
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("تم تحديث الاسم بنجاح")),
-                              );
-                            }
-                          } catch (e) {
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("فشل تحديث الاسم، يرجى المحاولة لاحقاً")),
-                              );
-                            }
-                          } finally {
-                            if (mounted) setState(() => _isLoading = false);
-                          }
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        elevation: 0,
+                child: SafeArea(
+                  top: false,
+                  child: SingleChildScrollView(
+                    child: Form(
+                      key: formKey,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Center(
+                            child: Container(
+                              width: 36,
+                              height: 4,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFDDE0E5),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          Text(
+                            title,
+                            style: const TextStyle(
+                              fontSize: 21,
+                              fontWeight: FontWeight.w800,
+                              color: _navy,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            kind == 'email'
+                                ? 'سنرسل رسالة تأكيد إلى البريد الجديد. وقد تحتاج إلى تأكيد التغيير من البريد الحالي أيضاً.'
+                                : kind == 'stage'
+                                ? 'ستظهر مواد الفرع الذي تختاره في الصفحة الرئيسية.'
+                                : kind == 'password'
+                                ? 'اختر كلمة مرور جديدة لا تقل عن 6 أحرف.'
+                                : 'اكتب الاسم الذي تريد عرضه داخل سند.',
+                            style: const TextStyle(
+                              color: Color(0xFF737B8B),
+                              height: 1.6,
+                            ),
+                          ),
+                          const SizedBox(height: 22),
+                          if (kind == 'stage')
+                            DropdownButtonFormField<String>(
+                              initialValue: stage,
+                              decoration: decoration('الفرع الدراسي'),
+                              items: ['سادس علمي', 'سادس أدبي']
+                                  .map(
+                                    (value) => DropdownMenuItem(
+                                      value: value,
+                                      child: Text(value),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: saving
+                                  ? null
+                                  : (value) => stage = value,
+                              validator: (value) =>
+                                  value == null ? 'اختر الفرع الدراسي' : null,
+                            )
+                          else
+                            TextFormField(
+                              controller: controller,
+                              enabled: !saving,
+                              textDirection: kind == 'name'
+                                  ? TextDirection.rtl
+                                  : TextDirection.ltr,
+                              keyboardType: kind == 'email'
+                                  ? TextInputType.emailAddress
+                                  : TextInputType.text,
+                              obscureText: kind == 'password' && obscure,
+                              autocorrect: kind == 'name',
+                              enableSuggestions: kind == 'name',
+                              decoration:
+                                  decoration(
+                                    kind == 'name'
+                                        ? 'الاسم الكامل'
+                                        : kind == 'email'
+                                        ? 'البريد الجديد'
+                                        : 'كلمة المرور الجديدة',
+                                  ).copyWith(
+                                    suffixIcon: kind == 'password'
+                                        ? IconButton(
+                                            onPressed: saving
+                                                ? null
+                                                : () => update(
+                                                    () => obscure = !obscure,
+                                                  ),
+                                            icon: Icon(
+                                              obscure
+                                                  ? Icons
+                                                        .visibility_off_outlined
+                                                  : Icons.visibility_outlined,
+                                            ),
+                                          )
+                                        : null,
+                                  ),
+                              validator: (value) {
+                                if (kind == 'password')
+                                  return (value?.length ?? 0) < 6
+                                      ? 'كلمة المرور يجب أن تكون 6 أحرف على الأقل'
+                                      : null;
+                                final text = value?.trim() ?? '';
+                                if (text.isEmpty) return 'يرجى ملء هذا الحقل';
+                                if (kind == 'email' &&
+                                    !RegExp(
+                                      r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
+                                    ).hasMatch(text))
+                                  return 'أدخل بريداً إلكترونياً صحيحاً';
+                                return null;
+                              },
+                            ),
+                          if (kind == 'password') ...[
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: confirmation,
+                              enabled: !saving,
+                              obscureText: obscure,
+                              textDirection: TextDirection.ltr,
+                              decoration: decoration('تأكيد كلمة المرور'),
+                              validator: (value) => value != controller.text
+                                  ? 'كلمتا المرور غير متطابقتين'
+                                  : null,
+                            ),
+                          ],
+                          if (error != null)
+                            Padding(
+                              padding: const EdgeInsets.only(top: 12),
+                              child: Text(
+                                error!,
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          const SizedBox(height: 24),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: FilledButton(
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: _navy,
+                                    minimumSize: const Size(0, 50),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(14),
+                                    ),
+                                  ),
+                                  onPressed: saving
+                                      ? null
+                                      : () async {
+                                          if (!formKey.currentState!.validate())
+                                            return;
+                                          update(() {
+                                            saving = true;
+                                            error = null;
+                                          });
+                                          try {
+                                            switch (kind) {
+                                              case 'name':
+                                                await _authService
+                                                    .updateUserName(
+                                                      controller.text.trim(),
+                                                    );
+                                              case 'stage':
+                                                await _authService
+                                                    .updateUserStage(stage!);
+                                              case 'email':
+                                                await Supabase
+                                                    .instance
+                                                    .client
+                                                    .auth
+                                                    .updateUser(
+                                                      UserAttributes(
+                                                        email: controller.text
+                                                            .trim(),
+                                                      ),
+                                                      emailRedirectTo:
+                                                          'com.purecompany.sanad://login-callback',
+                                                    );
+                                              case 'password':
+                                                await Supabase
+                                                    .instance
+                                                    .client
+                                                    .auth
+                                                    .updateUser(
+                                                      UserAttributes(
+                                                        password:
+                                                            controller.text,
+                                                      ),
+                                                    );
+                                            }
+                                            if (!mounted ||
+                                                !sheetContext.mounted)
+                                              return;
+                                            _loadUserData();
+                                            Navigator.pop(sheetContext);
+                                            _message(
+                                              kind == 'email'
+                                                  ? 'تم إرسال طلب تأكيد تغيير البريد الإلكتروني.'
+                                                  : 'تم حفظ التغيير بنجاح.',
+                                            );
+                                          } catch (failure) {
+                                            if (sheetContext.mounted)
+                                              update(() {
+                                                saving = false;
+                                                error = _error(failure);
+                                              });
+                                          }
+                                        },
+                                  child: saving
+                                      ? const SizedBox(
+                                          width: 20,
+                                          height: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                          ),
+                                        )
+                                      : const Text('حفظ التغيير'),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              TextButton(
+                                onPressed: saving
+                                    ? null
+                                    : () => Navigator.pop(sheetContext),
+                                child: const Text(
+                                  'إلغاء',
+                                  style: TextStyle(color: Color(0xFF737B8B)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                      child: _isLoading 
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : const Text("حفظ", style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
-                ],
+                ),
               ),
-            ],
-          ),
-        ),
+            ),
+          );
+        },
       ),
     );
+    // Wait until the sheet finishes its closing animation before disposing fields.
+    await Future<void>.delayed(const Duration(milliseconds: 300));
+    controller.dispose();
+    confirmation.dispose();
   }
 
   Future<void> _pickImage() async {
-    final ImagePicker picker = ImagePicker();
+    if (_isLoading) return;
     try {
-      final XFile? image = await picker.pickImage(
+      final image = await ImagePicker().pickImage(
         source: ImageSource.gallery,
         maxWidth: 2000,
         maxHeight: 2000,
         imageQuality: 80,
       );
-      
-      if (image != null) {
-        setState(() => _isLoading = true);
-        
-        final File imageFile = File(image.path);
-        final String? publicUrl = await _authService.uploadProfileImage(imageFile);
-
-        if (publicUrl != null) {
-          // إضافة طابع زمني للرابط لتجاوز التخزين المؤقت في فلاتر
-          final String publicUrlWithCache = "$publicUrl?t=${DateTime.now().millisecondsSinceEpoch}";
-          
-          setState(() {
-            _profileImagePath = publicUrlWithCache;
-          });
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text("تم رفع الصورة وحفظها بنجاح")),
-            );
-          }
-        }
-      }
-    } catch (e) {
-      print("Profile image upload error: $e");
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("فشل رفع الصورة: ${e.toString().split(':').last}")),
-        );
-      }
+      if (image == null || !mounted) return;
+      setState(() => _isLoading = true);
+      final url = await _authService.uploadProfileImage(File(image.path));
+      if (!mounted) return;
+      if (url == null) throw StateError('Upload failed');
+      setState(
+        () => _profileImagePath =
+            '$url?t=${DateTime.now().millisecondsSinceEpoch}',
+      );
+      _message('تم تحديث الصورة الشخصية.');
+    } catch (_) {
+      _message('تعذر تحديث الصورة. حاول مجدداً.');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  void _showFullImageDialog() {
-    showDialog(
+  Future<void> _confirm(String action) async {
+    if (_isLoading) return;
+    final deleteAccount = action == 'account';
+    final deletePhoto = action == 'photo';
+    final title = deleteAccount
+        ? 'حذف الحساب نهائياً'
+        : deletePhoto
+        ? 'حذف الصورة الشخصية'
+        : 'تسجيل الخروج';
+    final approved = await showDialog<bool>(
       context: context,
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        insetPadding: EdgeInsets.zero,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            GestureDetector(
-              onTap: () => Navigator.pop(context),
-              child: Container(
-                width: double.infinity,
-                height: double.infinity,
-                color: Colors.black87,
+      builder: (context) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: Text(title),
+          content: Text(
+            deleteAccount
+                ? 'سيتم حذف بيانات حسابك ولا يمكن التراجع عن هذا الإجراء. هل تريد المتابعة؟'
+                : deletePhoto
+                ? 'هل تريد حذف صورتك الشخصية؟'
+                : 'هل تريد تسجيل الخروج من سند؟',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('إلغاء'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: Text(
+                deleteAccount || deletePhoto ? 'حذف' : 'خروج',
+                style: const TextStyle(color: Colors.red),
               ),
             ),
-            Hero(
-              tag: 'profile_pic',
-              child: Container(
-                width: MediaQuery.of(context).size.width * 0.9,
-                height: MediaQuery.of(context).size.width * 0.9,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  image: _profileImagePath != null
-                    ? (_profileImagePath!.startsWith('http') 
-                        ? DecorationImage(image: NetworkImage(_profileImagePath!), fit: BoxFit.cover)
-                        : DecorationImage(image: FileImage(File(_profileImagePath!)), fit: BoxFit.cover))
-                    : null,
-                  color: Theme.of(context).colorScheme.primary.withAlpha(25),
-                ),
-                child: _profileImagePath == null
-                    ? Center(
-                        child: Text(
-                          _getInitials(userName),
-                          style: const TextStyle(fontSize: 80, fontWeight: FontWeight.bold, color: Colors.white),
-                        ),
-                      )
-                    : null,
-              ),
-            ),
-            Positioned(
-              top: 40,
-              right: 20,
-              child: IconButton(
-                icon: const Icon(Icons.close_rounded, color: Colors.white, size: 35),
-                onPressed: () => Navigator.pop(context),
-              ),
-            ),
-            if (_profileImagePath != null)
-              Positioned(
-                top: 40,
-                left: 20,
-                child: IconButton(
-                  icon: const Icon(Icons.delete_forever_rounded, color: Colors.redAccent, size: 35),
-                  onPressed: () {
-                    showDialog(
-                      context: context,
-                      builder: (confirmContext) => Dialog(
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                        child: Padding(
-                          padding: const EdgeInsets.all(24.0),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.delete_forever_rounded, size: 50, color: Colors.redAccent),
-                              const SizedBox(height: 20),
-                              const Text("حذف الصورة", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                              const SizedBox(height: 12),
-                              const Text("هل أنت متأكد من رغبتك في حذف الصورة الشخصية؟", textAlign: TextAlign.center),
-                              const SizedBox(height: 24),
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: TextButton(
-                                      onPressed: () => Navigator.pop(confirmContext),
-                                      child: const Text("إلغاء"),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: ElevatedButton(
-                                      onPressed: () async {
-                                        Navigator.pop(confirmContext);
-                                        try {
-                                          setState(() => _isLoading = true);
-                                          await _authService.deleteProfileImage();
-                                          setState(() {
-                                            _profileImagePath = null;
-                                          });
-                                          if (mounted) {
-                                            Navigator.pop(context, 'deleted'); // إرجاع إشارة الحذف
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              const SnackBar(content: Text("تم حذف الصورة الشخصية بنجاح")),
-                                            );
-                                          }
-                                        } catch (e) {
-                                          if (mounted) {
-                                            ScaffoldMessenger.of(context).showSnackBar(
-                                              const SnackBar(content: Text("فشل حذف الصورة، يرجى المحاولة لاحقاً")),
-                                            );
-                                          }
-                                        } finally {
-                                          if (mounted) setState(() => _isLoading = false);
-                                        }
-                                      },
-                                      style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
-                                      child: const Text("حذف", style: TextStyle(color: Colors.white)),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
           ],
         ),
       ),
     );
+    if (approved != true || !mounted) return;
+    setState(() => _isLoading = true);
+    try {
+      if (deletePhoto) {
+        await _authService.deleteProfileImage();
+        if (mounted) setState(() => _profileImagePath = null);
+        _message('تم حذف الصورة الشخصية.');
+      } else {
+        if (deleteAccount) {
+          await _authService.deleteAccount();
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.clear();
+        } else {
+          await _authService.signOut();
+        }
+        if (mounted)
+          Navigator.pushNamedAndRemoveUntil(
+            context,
+            deleteAccount ? '/signup' : '/signin',
+            (_) => false,
+          );
+      }
+    } catch (_) {
+      _message('تعذر إتمام العملية. حاول مجدداً.');
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.redAccent.withAlpha(25),
-                  shape: BoxShape.circle,
+  Widget _avatar(double radius) {
+    final path = _profileImagePath;
+    return ClipOval(
+      child: SizedBox.square(
+        dimension: radius * 2,
+        child: path == null || path.isEmpty
+            ? Container(
+                color: const Color(0xFFF0F2F6),
+                child: const Icon(
+                  Icons.person_outline_rounded,
+                  size: 58,
+                  color: _navy,
                 ),
-                child: const Icon(Icons.logout_rounded, size: 50, color: Colors.redAccent),
+              )
+            : path.startsWith('http')
+            ? Image.network(
+                path,
+                fit: BoxFit.cover,
+                errorBuilder: (_, error, stack) => const Icon(
+                  Icons.person_outline_rounded,
+                  size: 58,
+                  color: _navy,
+                ),
+              )
+            : Image.file(
+                File(path),
+                fit: BoxFit.cover,
+                errorBuilder: (_, error, stack) => const Icon(
+                  Icons.person_outline_rounded,
+                  size: 58,
+                  color: _navy,
+                ),
               ),
-              const SizedBox(height: 20),
-              const Text(
-                "تسجيل الخروج",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                "هل أنت متأكد من رغبتك في تسجيل الخروج؟",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Colors.black87),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text("إلغاء", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        await _authService.signOut();
-                        if (context.mounted) {
-                          Navigator.pushNamedAndRemoveUntil(context, '/signin', (route) => false);
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.redAccent,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        elevation: 0,
-                      ),
-                      child: const Text("خروج", style: TextStyle(fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
 
-  void _showDeleteAccountDialog(BuildContext context) {
-    showDialog(
+  Future<void> _showFullImage() async {
+    final path = _profileImagePath;
+    final hasPhoto = path != null && path.isNotEmpty;
+    Widget fallback() => const Center(
+      child: Icon(
+        Icons.person_outline_rounded,
+        size: 96,
+        color: Color(0xFF9AA2AF),
+      ),
+    );
+    final delete = await showDialog<bool>(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        backgroundColor: Colors.white,
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.red.withAlpha(25),
-                  shape: BoxShape.circle,
+      builder: (viewerContext) => Directionality(
+        textDirection: TextDirection.rtl,
+        child: Dialog(
+          backgroundColor: Colors.white,
+          insetPadding: const EdgeInsets.all(24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 440),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Align(
+                  alignment: Alignment.topLeft,
+                  child: IconButton(
+                    tooltip: 'إغلاق',
+                    onPressed: () => Navigator.pop(viewerContext, false),
+                    icon: const Icon(
+                      Icons.close_rounded,
+                      color: Color(0xFF737B8B),
+                    ),
+                  ),
                 ),
-                child: const Icon(Icons.delete_forever_rounded, size: 50, color: Colors.red),
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                "حذف الحساب نهائياً",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.red),
-              ),
-              const SizedBox(height: 12),
-              const Text(
-                "سيؤدي هذا الإجراء إلى حذف كافة بياناتك وملاحظاتك ولا يمكن التراجع عنه. هل أنت متأكد؟",
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Colors.black87, height: 1.5),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text("تراجع", style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () async {
-                        try {
-                          setState(() => _isLoading = true);
-                          
-                          // 1. حذف الحساب من Supabase
-                          await _authService.deleteAccount();
-                          
-                          // 2. مسح البيانات المحلية
-                          final prefs = await SharedPreferences.getInstance();
-                          await prefs.clear();
-                          
-                          if (context.mounted) {
-                            Navigator.pushNamedAndRemoveUntil(context, '/signup', (route) => false);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text("تم حذف الحساب بنجاح")),
-                            );
-                          }
-                        } catch (e) {
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("فشل حذف الحساب: ${e.toString().split(':').last}")),
-                            );
-                          }
-                        } finally {
-                          if (mounted) setState(() => _isLoading = false);
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        elevation: 0,
+                Flexible(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: AspectRatio(
+                      aspectRatio: 1,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: InteractiveViewer(
+                          minScale: 1,
+                          maxScale: 4,
+                          child: SizedBox.expand(
+                            child: hasPhoto
+                                ? (path.startsWith('http')
+                                      ? Image.network(
+                                          path,
+                                          fit: BoxFit.contain,
+                                          errorBuilder: (_, error, stack) =>
+                                              fallback(),
+                                        )
+                                      : Image.file(
+                                          File(path),
+                                          fit: BoxFit.contain,
+                                          errorBuilder: (_, error, stack) =>
+                                              fallback(),
+                                        ))
+                                : fallback(),
+                          ),
+                        ),
                       ),
-                      child: _isLoading 
-                        ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                        : const Text("حذف الآن", style: TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
-                ],
-              ),
-            ],
+                ),
+                if (hasPhoto)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    child: TextButton.icon(
+                      style: TextButton.styleFrom(
+                        foregroundColor: const Color(0xFFB64B4B),
+                      ),
+                      onPressed: () => Navigator.pop(viewerContext, true),
+                      icon: const Icon(Icons.delete_outline_rounded, size: 20),
+                      label: const Text('حذف الصورة'),
+                    ),
+                  )
+                else
+                  const SizedBox(height: 20),
+              ],
+            ),
           ),
         ),
       ),
     );
+    if (delete == true && mounted) await _confirm('photo');
   }
+
+  Widget _row(
+    String title,
+    String? value,
+    IconData icon,
+    VoidCallback? tap, {
+    bool danger = false,
+    bool email = false,
+  }) {
+    final color = danger ? const Color(0xFFC44848) : _navy;
+    return ListTile(
+      enabled: !_isLoading,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
+      leading: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: danger ? const Color(0xFFFFF0F0) : const Color(0xFFF3F4F7),
+          borderRadius: BorderRadius.circular(13),
+        ),
+        child: Icon(icon, color: color, size: 22),
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontSize: 14,
+          fontWeight: value == null ? FontWeight.w600 : FontWeight.w500,
+          color: value == null ? color : const Color(0xFF737B8B),
+        ),
+      ),
+      subtitle: value == null
+          ? null
+          : Padding(
+              padding: const EdgeInsets.only(top: 5),
+              child: Text(
+                value,
+                textDirection: email ? TextDirection.ltr : TextDirection.rtl,
+                textAlign: TextAlign.right,
+                style: const TextStyle(
+                  color: _navy,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+      trailing: tap == null
+          ? null
+          : const Icon(
+              Icons.chevron_left_rounded,
+              textDirection: TextDirection.ltr,
+              size: 20,
+              color: Color(0xFFA2A9B6),
+            ),
+      onTap: _isLoading ? null : tap,
+    );
+  }
+
+  Widget _section(String title, List<Widget> rows) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      Padding(
+        padding: const EdgeInsets.fromLTRB(6, 4, 6, 12),
+        child: Text(
+          title,
+          style: const TextStyle(
+            color: _navy,
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+      Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFFE9ECF1)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 8),
+            for (var i = 0; i < rows.length; i++) ...[
+              if (i > 0)
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 20),
+                  child: Divider(height: 1, color: Color(0xFFF0F1F4)),
+                ),
+              rows[i],
+            ],
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    ],
+  );
 
   @override
-  Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
-    final secondaryColor = Theme.of(context).colorScheme.secondary;
-
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text("الملف الشخصي", style: TextStyle(fontWeight: FontWeight.bold)),
-          centerTitle: true,
-          backgroundColor: primaryColor,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
-            onPressed: () => Navigator.pop(context, true), // إرجاع true عند الضغط على زر الرجوع
-          ),
+  Widget build(BuildContext context) => Directionality(
+    textDirection: TextDirection.rtl,
+    child: Scaffold(
+      backgroundColor: const Color(0xFFF4F5F8),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFF4F5F8),
+        foregroundColor: _navy,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: const Text(
+          'الملف الشخصي',
+          style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
         ),
-        body: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 20),
-                      Center(
-                        child: Stack(
-                          children: [
-                            GestureDetector(
-                              onTap: _showFullImageDialog,
-                              child: Hero(
-                                tag: 'profile_pic',
-                                child: Container(
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: Colors.white.withOpacity(0.5), width: 2.5),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withAlpha(40),
-                                        blurRadius: 20,
-                                        spreadRadius: 2,
-                                        offset: Offset.zero, // موزعة في كل الاتجاهات
-                                      ),
-                                    ],
-                                  ),
-                                  child: CircleAvatar(
-                                    radius: 60,
-                                    backgroundColor: secondaryColor.withAlpha(25),
-                                    backgroundImage: _profileImagePath != null 
-                                        ? (_profileImagePath!.startsWith('http') 
-                                            ? NetworkImage(_profileImagePath!) as ImageProvider
-                                            : FileImage(File(_profileImagePath!)))
-                                        : null,
-                                    child: _profileImagePath == null || _isLoading
-                                        ? (_isLoading 
-                                            ? const CircularProgressIndicator()
-                                            : Text(
-                                                _getInitials(userName),
-                                                style: TextStyle(
-                                                    fontSize: 40,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: primaryColor),
-                                              ))
-                                        : null,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            Positioned(
-                              bottom: 5,
-                              right: 5,
-                              child: GestureDetector(
-                                onTap: _pickImage,
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withAlpha(40),
-                                        blurRadius: 5,
-                                        offset: const Offset(0, 2),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Icon(Icons.camera_alt_outlined, color: primaryColor, size: 20),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-                      InkWell(
-                        onTap: _editNameDialog,
-                        borderRadius: BorderRadius.circular(10),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            _buildProfileData("الاسم الكامل", userName, primaryColor),
-                            Icon(Icons.edit_note_rounded, color: secondaryColor, size: 24),
-                          ],
-                        ),
-                      ),
-                      const Divider(height: 30),
-                      _buildProfileData("البريد الإلكتروني", userEmail, primaryColor),
-                      const Divider(height: 30),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          _buildProfileData("المرحلة الدراسية والفرع", selectedStage, primaryColor),
-                          TextButton.icon(
-                            onPressed: () => Navigator.pushNamed(context, '/stages').then((_) => _loadUserData()),
-                            icon: Icon(Icons.edit_note_rounded, color: secondaryColor, size: 20),
-                            label: Text("تبديل",
-                                style: TextStyle(color: secondaryColor, fontWeight: FontWeight.bold)),
-                          ),
-                        ],
-                      ),
-                      const Divider(height: 30),
-                    ],
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(20.0),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(15),
-                          boxShadow: [
-                            BoxShadow(
-                                color: Colors.black.withAlpha(50),
-                                blurRadius: 5,
-                                offset: const Offset(0, 0)),
-                          ],
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () => _showLogoutDialog(context),
-                            borderRadius: BorderRadius.circular(15),
-                            child: const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 15),
-                              child: Center(
-                                child: Text("تسجيل الخروج",
-                                    style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.redAccent,
-                                        fontSize: 16)),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 15),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.redAccent,
-                        borderRadius: BorderRadius.circular(15),
-                        boxShadow: [
-                          BoxShadow(
-                              color: Colors.black.withAlpha(50),
-                              blurRadius: 5,
-                              offset: const Offset(0, 0)),
-                        ],
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () => _showDeleteAccountDialog(context),
-                          borderRadius: BorderRadius.circular(15),
-                          child: const Padding(
-                            padding: EdgeInsets.all(15),
-                            child: Icon(Icons.delete_outline_rounded,
-                                color: Colors.white, size: 24),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+        centerTitle: true,
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context, true),
+          icon: const Icon(
+            Icons.arrow_forward_ios_rounded,
+            size: 20,
+            textDirection: TextDirection.ltr,
           ),
         ),
       ),
-    );
-  }
-
-  Widget _buildProfileData(String hint, String value, Color primaryColor) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(hint, style: const TextStyle(color: Colors.grey, fontSize: 12)),
-        const SizedBox(height: 4),
-        Text(value,
-            style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: primaryColor)),
-      ],
-    );
-  }
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 560),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+              children: [
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 20),
+                  child: Center(
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        GestureDetector(
+                          onTap: _isLoading ? null : _showFullImage,
+                          child: Container(
+                            padding: const EdgeInsets.all(5),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: _navy.withAlpha(15),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, 8),
+                                ),
+                              ],
+                            ),
+                            child: _avatar(78),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: 0,
+                          left: 0,
+                          child: Material(
+                            color: _navy,
+                            shape: const CircleBorder(
+                              side: BorderSide(color: Colors.white, width: 3),
+                            ),
+                            child: IconButton(
+                              constraints: const BoxConstraints.tightFor(
+                                width: 44,
+                                height: 44,
+                              ),
+                              padding: const EdgeInsets.all(6),
+                              style: IconButton.styleFrom(
+                                minimumSize: const Size(44, 44),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              tooltip: 'تغيير الصورة الشخصية',
+                              onPressed: _isLoading ? null : _pickImage,
+                              icon: const Icon(
+                                Icons.camera_alt_outlined,
+                                color: Colors.white,
+                                size: 20,
+                              ),
+                            ),
+                          ),
+                        ),
+                        if (_isLoading)
+                          const Positioned.fill(
+                            child: Center(
+                              child: CircularProgressIndicator(color: _gold),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                _section('المعلومات الشخصية', [
+                  _row(
+                    'الاسم الكامل',
+                    userName,
+                    Icons.person_outline_rounded,
+                    () => _edit('name'),
+                  ),
+                  _row(
+                    'البريد الإلكتروني',
+                    userEmail,
+                    Icons.mail_outline_rounded,
+                    null,
+                    email: true,
+                  ),
+                  _row(
+                    'المرحلة والفرع الدراسي',
+                    selectedStage,
+                    Icons.school_outlined,
+                    () => _edit('stage'),
+                  ),
+                ]),
+                const SizedBox(height: 18),
+                _section('الأمان والحساب', [
+                  _row(
+                    'تغيير كلمة المرور',
+                    null,
+                    Icons.lock_outline_rounded,
+                    () => _edit('password'),
+                  ),
+                  _row(
+                    'تسجيل الخروج',
+                    null,
+                    Icons.logout_rounded,
+                    () => _confirm('logout'),
+                  ),
+                  _row(
+                    'حذف الحساب',
+                    null,
+                    Icons.delete_outline_rounded,
+                    () => _confirm('account'),
+                    danger: true,
+                  ),
+                ]),
+              ],
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
 }
