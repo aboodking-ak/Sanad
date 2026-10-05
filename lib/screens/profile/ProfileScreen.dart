@@ -460,38 +460,40 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Widget _initialAvatar(double fontSize) {
+    final name = userName.trim();
+    final initial = name.isEmpty ? 'س' : name.characters.first.toUpperCase();
+    return Container(
+      color: const Color(0xFFF0F2F6),
+      alignment: Alignment.center,
+      child: Text(
+        initial,
+        style: TextStyle(
+          fontSize: fontSize,
+          fontWeight: FontWeight.w800,
+          color: _navy,
+        ),
+      ),
+    );
+  }
+
   Widget _avatar(double radius) {
     final path = _profileImagePath;
     return ClipOval(
       child: SizedBox.square(
         dimension: radius * 2,
         child: path == null || path.isEmpty
-            ? Container(
-                color: const Color(0xFFF0F2F6),
-                child: const Icon(
-                  Icons.person_outline_rounded,
-                  size: 58,
-                  color: _navy,
-                ),
-              )
+            ? _initialAvatar(radius * 0.8)
             : path.startsWith('http')
             ? Image.network(
                 path,
                 fit: BoxFit.cover,
-                errorBuilder: (_, error, stack) => const Icon(
-                  Icons.person_outline_rounded,
-                  size: 58,
-                  color: _navy,
-                ),
+                errorBuilder: (_, error, stack) => _initialAvatar(radius * 0.8),
               )
             : Image.file(
                 File(path),
                 fit: BoxFit.cover,
-                errorBuilder: (_, error, stack) => const Icon(
-                  Icons.person_outline_rounded,
-                  size: 58,
-                  color: _navy,
-                ),
+                errorBuilder: (_, error, stack) => _initialAvatar(radius * 0.8),
               ),
       ),
     );
@@ -500,13 +502,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _showFullImage() async {
     final path = _profileImagePath;
     final hasPhoto = path != null && path.isNotEmpty;
-    Widget fallback() => const Center(
-      child: Icon(
-        Icons.person_outline_rounded,
-        size: 96,
-        color: Color(0xFF9AA2AF),
-      ),
-    );
+    Widget fallback() => _initialAvatar(80);
     final delete = await showDialog<bool>(
       context: context,
       builder: (viewerContext) => Directionality(
