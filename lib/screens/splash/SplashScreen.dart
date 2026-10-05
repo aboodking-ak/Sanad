@@ -35,7 +35,10 @@ class _SplashScreenState extends State<SplashScreen> {
 
     try {
       // 1. فحص الإنترنت أولاً
-      final hasInternet = await _checkInternet().timeout(const Duration(seconds: 4), onTimeout: () => false);
+      final hasInternet = await _checkInternet().timeout(
+        const Duration(seconds: 4),
+        onTimeout: () => false,
+      );
       if (!hasInternet) {
         setState(() => _isOffline = true);
         return;
@@ -46,7 +49,9 @@ class _SplashScreenState extends State<SplashScreen> {
         await Supabase.initialize(
           url: 'https://vxdhjeefbrdjwzwdlybu.supabase.co',
           publishableKey: 'sb_publishable_bh6MjtlteOB4F6eyax80jA_GjlXFpIh',
-          authOptions: const FlutterAuthClientOptions(authFlowType: AuthFlowType.pkce),
+          authOptions: const FlutterAuthClientOptions(
+            authFlowType: AuthFlowType.pkce,
+          ),
         );
       } catch (e) {
         // إذا كان مهيأ مسبقاً لا مشكلة
@@ -55,13 +60,14 @@ class _SplashScreenState extends State<SplashScreen> {
 
       // 3. تنفيذ الفحوصات بالتوازي (التحديثات + بيانات المستخدم + وقت الانتظار)
       final results = await Future.wait([
-        _checkAppStatus(),       // فحص الصيانة والتحديثات الإجبارية
+        _checkAppStatus(), // فحص الصيانة والتحديثات الإجبارية
         _checkLoginStatusData(), // جلب بيانات المستخدم
         Future.delayed(const Duration(seconds: 2)), // الحد الأدنى لعرض الشعار
       ]);
 
       final bool canProceed = results[0] as bool;
-      final Map<String, dynamic>? authData = results[1] as Map<String, dynamic>?;
+      final Map<String, dynamic>? authData =
+          results[1] as Map<String, dynamic>?;
 
       // تهيئة الإعلانات في الخلفية
       MobileAds.instance.initialize();
@@ -112,14 +118,16 @@ class _SplashScreenState extends State<SplashScreen> {
     try {
       final supabase = Supabase.instance.client;
       final authService = AuthService();
-      
+
       // 1. التحقق من الجلسة الحالية من Supabase مباشرة
       var session = supabase.auth.currentSession;
       var user = supabase.auth.currentUser;
 
       // 2. إذا لم تكن هناك جلسة، محاولة تسجيل الدخول الصامت عبر جوجل
       if (session == null || user == null) {
-        debugPrint("No active session in Supabase, attempting silent Google sign-in...");
+        debugPrint(
+          "No active session in Supabase, attempting silent Google sign-in...",
+        );
         final response = await authService.signInGoogleSilently();
         if (response?.session != null) {
           session = response!.session;
@@ -131,14 +139,16 @@ class _SplashScreenState extends State<SplashScreen> {
       // 3. إذا وجدت الجلسة، جلب بيانات المستخدم المحدثة مباشرة من قاعدة البيانات / Supabase Auth
       if (session != null && user != null) {
         try {
-          final response = await supabase.auth.getUser().timeout(const Duration(seconds: 5));
+          final response = await supabase.auth.getUser().timeout(
+            const Duration(seconds: 5),
+          );
           final currentUser = response.user ?? user;
           final userMetadata = currentUser.userMetadata;
-          
+
           final String? name = userMetadata?['full_name'];
           final String? image = userMetadata?['profile_image'];
           final String? stage = userMetadata?['user_stage'];
-          
+
           if (image != null && image.startsWith('http') && mounted) {
             precacheImage(NetworkImage(image), context);
           }
@@ -161,7 +171,7 @@ class _SplashScreenState extends State<SplashScreen> {
           };
         }
       }
-      
+
       return null;
     } catch (e) {
       debugPrint("Check Login Status Data Error: $e");
@@ -184,7 +194,7 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<bool> _checkAppStatus() async {
     try {
       final supabase = Supabase.instance.client;
-      
+
       // طلب البيانات من جدول app_settings
       final List<dynamic> settings = await supabase
           .from('app_settings')
@@ -192,27 +202,36 @@ class _SplashScreenState extends State<SplashScreen> {
 
       // تحويل القائمة إلى Map لسهولة الوصول
       final Map<String, dynamic> config = {
-        for (var item in settings) item['key']: item['value']
+        for (var item in settings) item['key']: item['value'],
       };
 
       // 1. فحص التحديث الإجباري باستخدام المفتاح min_app_version
       final PackageInfo packageInfo = await PackageInfo.fromPlatform();
       final String currentVersion = packageInfo.version; // مثل 1.2.0
-      final String minVersion = config['min_app_version']?.toString() ?? "1.0.0";
+      final String minVersion =
+          config['min_app_version']?.toString() ?? "1.0.0";
 
-      debugPrint("Checking Version: Current=$currentVersion | Required=$minVersion");
+      debugPrint(
+        "Checking Version: Current=$currentVersion | Required=$minVersion",
+      );
 
       if (_isVersionLower(currentVersion, minVersion)) {
         if (mounted) {
-          _showUpdateDialog(config['update_url']?.toString() ?? "https://play.google.com/store");
+          _showUpdateDialog(
+            config['update_url']?.toString() ?? "https://play.google.com/store",
+          );
         }
         return false;
       }
 
       // 2. فحص وضع الصيانة
-      if (config['maintenance_mode'] == 'true' || config['maintenance_mode'] == true) {
+      if (config['maintenance_mode'] == 'true' ||
+          config['maintenance_mode'] == true) {
         if (mounted) {
-          _showMaintenanceDialog(config['maintenance_message']?.toString() ?? "التطبيق في وضع الصيانة حالياً.");
+          _showMaintenanceDialog(
+            config['maintenance_message']?.toString() ??
+                "التطبيق في وضع الصيانة حالياً.",
+          );
         }
         return false;
       }
@@ -247,7 +266,9 @@ class _SplashScreenState extends State<SplashScreen> {
       builder: (context) => PopScope(
         canPop: false,
         child: AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: const Row(
             children: [
               Icon(Icons.construction_rounded, color: Colors.orange),
@@ -259,7 +280,10 @@ class _SplashScreenState extends State<SplashScreen> {
           actions: [
             TextButton(
               onPressed: () => SystemNavigator.pop(),
-              child: const Text("إغلاق التطبيق", style: TextStyle(color: Colors.grey)),
+              child: const Text(
+                "إغلاق التطبيق",
+                style: TextStyle(color: Colors.grey),
+              ),
             ),
           ],
         ),
@@ -274,7 +298,9 @@ class _SplashScreenState extends State<SplashScreen> {
       builder: (context) => PopScope(
         canPop: false,
         child: AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           title: const Row(
             children: [
               Icon(Icons.system_update_rounded, color: Colors.blue),
@@ -282,15 +308,23 @@ class _SplashScreenState extends State<SplashScreen> {
               Text("تحديث جديد متوفر"),
             ],
           ),
-          content: const Text("يتوفر إصدار جديد من تطبيق سند يحتوي على تحسينات مهمة. يرجى التحديث للمتابعة."),
+          content: const Text(
+            "يتوفر إصدار جديد من تطبيق سند يحتوي على تحسينات مهمة. يرجى التحديث للمتابعة.",
+          ),
           actions: [
             ElevatedButton(
               onPressed: () async {
                 final uri = Uri.parse(url);
-                if (await canLaunchUrl(uri)) await launchUrl(uri, mode: LaunchMode.externalApplication);
+                if (await canLaunchUrl(uri))
+                  await launchUrl(uri, mode: LaunchMode.externalApplication);
               },
-              style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).primaryColor),
-              child: const Text("تحديث الآن", style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Theme.of(context).primaryColor,
+              ),
+              child: const Text(
+                "تحديث الآن",
+                style: TextStyle(color: Colors.white),
+              ),
             ),
           ],
         ),
@@ -301,8 +335,9 @@ class _SplashScreenState extends State<SplashScreen> {
   Future<bool> _checkInternet() async {
     try {
       // محاولة الاتصال بمهلة زمنية قدرها 5 ثوانٍ فقط
-      final result = await InternetAddress.lookup('google.com')
-          .timeout(const Duration(seconds: 5));
+      final result = await InternetAddress.lookup(
+        'google.com',
+      ).timeout(const Duration(seconds: 5));
       return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
     } catch (_) {
       return false;
@@ -310,7 +345,6 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   // تم استبدال _checkLoginStatus القديمة بالمنطق الجديد أعلاه لزيادة السرعة
-
 
   Future<void> _forceLogout(SharedPreferences prefs) async {
     await prefs.clear();
@@ -324,7 +358,10 @@ class _SplashScreenState extends State<SplashScreen> {
   void dispose() {
     _timer?.cancel();
     // إعادة إظهار شريط الإشعارات عند الخروج من الشاشة
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values);
+    SystemChrome.setEnabledSystemUIMode(
+      SystemUiMode.manual,
+      overlays: SystemUiOverlay.values,
+    );
     super.dispose();
   }
 
@@ -339,13 +376,13 @@ class _SplashScreenState extends State<SplashScreen> {
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
-          backgroundColor: primaryColor,
+          backgroundColor: Colors.transparent,
           elevation: 0,
           toolbarHeight: 0,
           systemOverlayStyle: SystemUiOverlayStyle(
-            statusBarColor: primaryColor,
-            statusBarIconBrightness: Brightness.light,
-            statusBarBrightness: Brightness.dark,
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: Brightness.dark,
+            statusBarBrightness: Brightness.light,
           ),
         ),
         body: Stack(
@@ -435,40 +472,22 @@ class _SplashScreenState extends State<SplashScreen> {
     return Center(
       child: TweenAnimationBuilder<double>(
         tween: Tween<double>(begin: 0, end: 1),
-        duration: const Duration(milliseconds: 700),
+        duration: const Duration(milliseconds: 1000),
         curve: Curves.easeOutCubic,
         builder: (context, value, child) => Opacity(
           opacity: value,
           child: Transform.translate(
-            offset: Offset(0, 12 * (1 - value)),
-            child: child,
+            offset: Offset(0, 16 * (1 - value)),
+            child: Transform.scale(scale: 0.88 + 0.12 * value, child: child),
           ),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Image.asset(
-              AppAssets.logo,
-              width: 140,
-              height: 140,
-              fit: BoxFit.contain,
-              errorBuilder: (context, error, stackTrace) => Icon(
-                Icons.school,
-                size: 100,
-                color: primaryColor,
-              ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              'سند',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: primaryColor,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
+        child: Image.asset(
+          AppAssets.logo,
+          width: 140,
+          height: 140,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) =>
+              Icon(Icons.school, size: 100, color: primaryColor),
         ),
       ),
     );
