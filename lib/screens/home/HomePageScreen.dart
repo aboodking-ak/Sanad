@@ -335,6 +335,7 @@ class _HomePageScreenState extends State<HomePageScreen> with SingleTickerProvid
   }
 
   Future<void> _loadUserData() async {
+    if (!mounted) return;
     final supabase = Supabase.instance.client;
     final user = supabase.auth.currentUser;
 
@@ -345,35 +346,23 @@ class _HomePageScreenState extends State<HomePageScreen> with SingleTickerProvid
         setState(() {
           userEmail = user.email ?? "user@email.com";
           userName = userMetadata?['full_name'] ?? userName;
-          _profileImagePath = userMetadata?['profile_image'] ?? _profileImagePath;
+          _profileImagePath = userMetadata?['profile_image'];
           selectedStage = userMetadata?['user_stage'] ?? selectedStage;
         });
       }
     }
 
-    // 2. فحص الوسائط المستلمة إن وجدت
-    final args = ModalRoute.of(context)?.settings.arguments;
-    if (args is Map<String, dynamic>) {
-      if (mounted) {
-        setState(() {
-          if (args['userName'] != null) userName = args['userName'];
-          if (args['profileImage'] != null) _profileImagePath = args['profileImage'];
-          if (args['selectedStage'] != null) selectedStage = args['selectedStage'];
-        });
-      }
-    } else if (args is String && mounted) {
-      setState(() => selectedStage = args);
-    }
-
-    // 3. تحديث باقي البيانات وحالة الحظر والإعلانات من Supabase مباشرة
+    // بيانات الحساب من Auth؛ لا تعِد تطبيق بيانات فتح الصفحة القديمة.
+    // جدول profiles مخصص هنا لحالة الحظر والاشتراك فقط.
     if (user != null) {
       try {
         final profileData = await supabase
             .from('profiles')
-            .select('profile_image, full_name, is_blocked, ads_removed_until')
+            .select('is_blocked, ads_removed_until')
             .eq('id', user.id)
             .maybeSingle();
 
+        if (!mounted || supabase.auth.currentUser?.id != user.id) return;
         if (profileData != null) {
           // التحقق من الحظر فوراً
           if (profileData['is_blocked'] == true) {
@@ -390,14 +379,9 @@ class _HomePageScreenState extends State<HomePageScreen> with SingleTickerProvid
             }
           }
 
-          final latestImageUrl = profileData['profile_image'];
-          final latestName = profileData['full_name'];
-
           if (mounted) {
             setState(() {
               isAdsRemoved = adsStillRemoved;
-              if (latestImageUrl != null) _profileImagePath = latestImageUrl;
-              if (latestName != null) userName = latestName;
             });
           }
         }
@@ -897,6 +881,8 @@ class _HomePageScreenState extends State<HomePageScreen> with SingleTickerProvid
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    // بيانات الحساب المحفوظة أحدث من بيانات فتح الصفحة.
+    if (Supabase.instance.client.auth.currentUser != null) return;
     final args = ModalRoute.of(context)?.settings.arguments;
 
     if (args is String) {
