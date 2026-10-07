@@ -1,0 +1,3 @@
+# The handler validates the JWT with Supabase Auth, supporting asymmetric keys.
+[functions.sanad-ai]
+verify_jwt = false

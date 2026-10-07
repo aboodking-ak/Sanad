@@ -12,8 +12,10 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:intl/intl.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
-import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:flutter_math_fork/flutter_math.dart';
+import 'package:http/http.dart' as http;
 import '../../core/constants/app_assets.dart';
 import '../../core/models/subject_model.dart';
 import '../../core/utils/ad_helper.dart';
@@ -25,7 +27,58 @@ class HomePageScreen extends StatefulWidget {
   State<HomePageScreen> createState() => _HomePageScreenState();
 }
 
-class _HomePageScreenState extends State<HomePageScreen> with SingleTickerProviderStateMixin {
+class _AiUsageBorderPainter extends CustomPainter {
+  const _AiUsageBorderPainter({required this.progress});
+
+  final double progress;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    const inset = 1.5;
+    const radius = 25.0;
+    final left = inset;
+    final top = inset;
+    final right = size.width - inset;
+    final bottom = size.height - inset;
+    final borderRect = Rect.fromLTRB(left, top, right, bottom);
+    // Start at the lower-right edge, travel upward, then continue
+    // counterclockwise around the dialog.
+    final path = Path()
+      ..moveTo(right, bottom - radius)
+      ..lineTo(right, top + radius)
+      ..quadraticBezierTo(right, top, right - radius, top)
+      ..lineTo(left + radius, top)
+      ..quadraticBezierTo(left, top, left, top + radius)
+      ..lineTo(left, bottom - radius)
+      ..quadraticBezierTo(left, bottom, left + radius, bottom)
+      ..lineTo(right - radius, bottom)
+      ..quadraticBezierTo(right, bottom, right, bottom - radius);
+    final trackPaint = Paint()
+      ..color = const Color(0xFFE3E7EF)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3;
+    canvas.drawPath(path, trackPaint);
+
+    if (progress <= 0) return;
+    final metric = path.computeMetrics().first;
+    final progressPath = metric.extractPath(0, metric.length * progress);
+    final progressPaint = Paint()
+      ..shader = const LinearGradient(
+        colors: [Color(0xFFFFD66B), Color(0xFFE7A91F)],
+      ).createShader(borderRect)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    canvas.drawPath(progressPath, progressPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _AiUsageBorderPainter oldDelegate) =>
+      oldDelegate.progress != progress;
+}
+
+class _HomePageScreenState extends State<HomePageScreen>
+    with TickerProviderStateMixin {
   final AdHelper _adHelper = AdHelper();
   final InAppPurchase _inAppPurchase = InAppPurchase.instance;
   late StreamSubscription<List<PurchaseDetails>> _purchaseSubscription;
@@ -45,8 +98,9 @@ class _HomePageScreenState extends State<HomePageScreen> with SingleTickerProvid
   String? selectedStage;
   bool isAdsRemoved = false;
   int _aiMessagesCount = 0;
-  String _lastAiDate = "";
-  bool _hasShownBetaSheet = false;
+  int _aiRemaining = 50;
+  DateTime? _aiResetAt;
+  bool _aiQuotaLoaded = false;
   List<SubjectModel> _supabaseSubjects = [];
   bool _isLoadingSubjects = false; // حالة تحميل المواد
 
@@ -87,20 +141,61 @@ class _HomePageScreenState extends State<HomePageScreen> with SingleTickerProvid
 
   // Gemini AI & Search Variables
   final TextEditingController _chatController = TextEditingController();
+  final FocusNode _chatFocusNode = FocusNode();
+  late final AnimationController _sendDotsController;
+  late final AnimationController _chatHistoryPulseController;
+  late final Animation<double> _chatHistoryPulseScale;
+  XFile? _pendingChatImage;
   final ScrollController _chatScrollController = ScrollController();
   late TabController _tabController;
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
   bool _isTipVisible = false;
   final List<Map<String, dynamic>> _chatMessages = [];
+  final List<Map<String, dynamic>> _aiConversations = [];
+  static const int _chatPageSize = 30;
+  Map<String, dynamic>? _oldestChatMessageCursor;
+  int _chatLoadGeneration = 0;
+  bool _hasMoreChatMessages = false;
+  bool _isLoadingOlderMessages = false;
+  String? _currentConversationId;
   bool _isTyping = false;
   bool _isAiInitialized = false;
-  String? _groqApiKey;
+  bool _didPulseChatHistory = false;
+  bool _isHistoryButtonPressed = false;
+
   String _appVersion = "1.1.0";
 
   @override
   void initState() {
     super.initState();
+    _sendDotsController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 850),
+    )..repeat(reverse: true);
+    _chatHistoryPulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 650),
+    );
+    _chatHistoryPulseScale = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(
+          begin: 1.0,
+          end: 1.07,
+        ).chain(CurveTween(curve: Curves.easeOut)),
+        weight: 45,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(
+          begin: 1.07,
+          end: 1.0,
+        ).chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 55,
+      ),
+    ]).animate(_chatHistoryPulseController);
+    _chatFocusNode.addListener(() {
+      if (mounted) setState(() {});
+    });
     // تصفير القيم عند الدخول لأول مرة فقط (للتجربة)
     isAdsRemoved = false;
     _aiMessagesCount = 0;
@@ -115,14 +210,17 @@ class _HomePageScreenState extends State<HomePageScreen> with SingleTickerProvid
     _tabController = TabController(length: 5, vsync: this);
     _tabController.addListener(() {
       if (_tabController.index == 1) {
-        if (!_hasShownBetaSheet) {
-          _hasShownBetaSheet = true;
-          _showBetaInfoSheet();
+        if (!_didPulseChatHistory) {
+          _didPulseChatHistory = true;
+          _chatHistoryPulseController.forward(from: 0);
         }
-        // التمرير للأسفل عند الانتقال لتبويب المحادثة
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          _scrollToBottom(isInstant: true);
-        });
+        _loadAiLimit();
+        // Keep the newest messages anchored at the bottom when returning to chat.
+        if (_chatScrollController.hasClients) {
+          _chatScrollController.jumpTo(
+            _chatScrollController.position.maxScrollExtent,
+          );
+        }
       }
     });
     _initAi();
@@ -144,6 +242,9 @@ class _HomePageScreenState extends State<HomePageScreen> with SingleTickerProvid
     _timer.cancel();
     _searchController.dispose();
     _chatController.dispose();
+    _chatFocusNode.dispose();
+    _sendDotsController.dispose();
+    _chatHistoryPulseController.dispose();
     _chatScrollController.dispose();
     _tabController.dispose();
     _notificationsSubscription?.cancel();
@@ -560,118 +661,40 @@ class _HomePageScreenState extends State<HomePageScreen> with SingleTickerProvid
     );
   }
 
+  void _applyAiUsage(dynamic usage) {
+    if (!mounted || usage is! Map) return;
+    final used = usage['used'];
+    final remaining = usage['remaining'];
+    if (used is! num || remaining is! num) return;
+    setState(() {
+      _aiMessagesCount = used.toInt();
+      _aiRemaining = remaining.toInt();
+      _aiResetAt = DateTime.tryParse(usage['reset_at']?.toString() ?? '');
+      _aiQuotaLoaded = true;
+    });
+  }
+
   Future<void> _loadAiLimit() async {
-    final prefs = await SharedPreferences.getInstance();
-    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final savedDate = prefs.getString('last_ai_date') ?? "";
-
-    if (savedDate != today) {
-      // يوم جديد، تصفير العداد
-      await prefs.setInt('ai_messages_count', 0);
-      await prefs.setString('last_ai_date', today);
-      setState(() {
-        _aiMessagesCount = 0;
-        _lastAiDate = today;
-      });
-    } else {
-      setState(() {
-        _aiMessagesCount = prefs.getInt('ai_messages_count') ?? 0;
-        _lastAiDate = savedDate;
-      });
+    try {
+      final response = await Supabase.instance.client.functions.invoke(
+        'sanad-ai',
+        body: {'action': 'usage'},
+      );
+      if (response.status == 200 && response.data is Map) {
+        _applyAiUsage(response.data['usage']);
+      }
+    } catch (_) {
+      if (mounted) setState(() => _aiQuotaLoaded = false);
     }
-  }
-
-  Future<void> _incrementAiCount() async {
-    final prefs = await SharedPreferences.getInstance();
-    final newCount = _aiMessagesCount + 1;
-    await prefs.setInt('ai_messages_count', newCount);
-    setState(() => _aiMessagesCount = newCount);
-  }
-
-  void _showBetaInfoSheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(30),
-            topRight: Radius.circular(30),
-          ),
-        ),
-        padding: const EdgeInsets.all(25),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            const SizedBox(height: 20),
-            const Icon(
-              Icons.auto_awesome_rounded,
-              size: 50,
-              color: Colors.blueAccent,
-            ),
-            const SizedBox(height: 15),
-            const Text(
-              "نسخة تجريبية (Beta)",
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              "أهلاً بك في المساعد الذكي! هذه النسخة لا تزال تحت التطوير (Beta). يمكنك إرسال 50 رسالة يومياً حالياً لمساعدتنا في تحسين الخدمة.",
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.black87, height: 1.5),
-            ),
-            const SizedBox(height: 25),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              style: ElevatedButton.styleFrom(
-                minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                "فهمت ذلك",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
   }
 
   Future<void> _initAi() async {
     try {
-      final settingsResponse = await Supabase.instance.client
-          .from('app_settings')
-          .select('key, value')
-          .eq('key', 'groq_api_key')
-          .maybeSingle();
-
-      if (settingsResponse != null) {
-        _groqApiKey = settingsResponse['value']?.toString().trim();
-      }
-
-      if (_groqApiKey != null && _groqApiKey!.isNotEmpty) {
-        _isAiInitialized = true;
-        await _loadChatMessages();
-        debugPrint("Groq AI Initialization: Success!");
-      } else {
-        throw Exception("Groq API Key not found in database");
-      }
-
-      setState(() {});
-    } catch (e) {
-      debugPrint("AI Init Error: $e");
+      if (Supabase.instance.client.auth.currentUser == null) return;
+      await _loadConversations();
+      if (mounted) setState(() => _isAiInitialized = true);
+    } catch (_) {
+      if (mounted) setState(() => _isAiInitialized = false);
     }
   }
 
@@ -685,139 +708,476 @@ class _HomePageScreenState extends State<HomePageScreen> with SingleTickerProvid
       return;
     }
 
-    if (_aiMessagesCount >= 50) {
-      _showLimitReachedSheet();
-      return;
-    }
-
-    final message = _chatController.text.trim();
-    if (message.isEmpty) return;
+    final typedMessage = _chatController.text.trim();
+    final selectedImage = _pendingChatImage;
+    if (typedMessage.isEmpty && selectedImage == null) return;
+    final message = typedMessage.isEmpty
+        ? 'اشرح محتوى هذه الصورة.'
+        : typedMessage;
 
     // إخفاء لوحة المفاتيح عند الإرسال
     FocusScope.of(context).unfocus();
 
     setState(() {
-      _chatMessages.add({'text': message, 'isMe': true});
+      _chatMessages.add({
+        'text': message,
+        'isMe': true,
+        if (selectedImage != null) 'localImagePath': selectedImage.path,
+      });
       _chatController.clear();
+      _pendingChatImage = null;
       _isTyping = true;
     });
 
     _scrollToBottom();
 
-    await _incrementAiCount();
-    await _saveMessageToDB(message, true);
+    String? uploadedImagePath;
+    String? imageMimeType;
+    if (selectedImage != null) {
+      try {
+        final uploaded = await _uploadChatImage(selectedImage);
+        uploadedImagePath = uploaded['path'];
+        imageMimeType = uploaded['mimeType'];
+        if (mounted) {
+          setState(() {
+            _chatMessages.last['imagePath'] = uploadedImagePath;
+            _chatMessages.last['imageMimeType'] = imageMimeType;
+          });
+        }
+      } catch (e) {
+        if (!mounted) return;
+        setState(() {
+          _chatMessages.removeLast();
+          _chatController.text = typedMessage;
+          _pendingChatImage = selectedImage;
+          _isTyping = false;
+        });
+        final error = e is FormatException ? e.message : null;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              error ?? 'تعذر رفع الصورة. تحقق من الاتصال وحاول مجدداً.',
+            ),
+          ),
+        );
+        return;
+      }
+    }
 
+    final messageSaved = await _saveMessageToDB(
+      message,
+      true,
+      imagePath: uploadedImagePath,
+      imageMimeType: imageMimeType,
+    );
+    if (!messageSaved) {
+      if (!mounted) return;
+      setState(() {
+        _chatMessages.removeLast();
+        _chatController.text = typedMessage;
+        _pendingChatImage = selectedImage;
+        _isTyping = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('تعذر حفظ المحادثة. تحقق من الاتصال ثم حاول مجدداً.'),
+        ),
+      );
+      return;
+    }
+
+    Map<String, dynamic>? liveReply;
     try {
-      String? responseText = await _getGroqResponse(message);
+      String? responseText = await _getGroqResponse(
+        message,
+        imagePath: uploadedImagePath,
+        onToken: (text) {
+          if (!mounted) return;
+          setState(() {
+            if (liveReply == null) {
+              liveReply = {'text': text, 'isMe': false};
+              _chatMessages.add(liveReply!);
+            } else {
+              liveReply!['text'] = text;
+            }
+          });
+        },
+      );
 
-      if (responseText == null || responseText.isEmpty) {
-        responseText =
-            'عذراً، المساعد الذكي غير متاح حالياً.';
+      if (responseText == null || responseText.trim().isEmpty) {
+        throw const FormatException('empty_response');
       }
 
-      setState(() => _chatMessages.add({'text': responseText, 'isMe': false}));
-      _scrollToBottom();
+      if (!mounted) return;
+      setState(() {
+        if (liveReply == null) {
+          _chatMessages.add({'text': responseText, 'isMe': false});
+        } else {
+          liveReply!['text'] = responseText;
+        }
+      });
       await _saveMessageToDB(responseText!, false);
     } catch (e) {
-      debugPrint("Groq Error: $e");
-      _showErrorMessage('خطأ: ${e.toString()}');
+      if (!mounted) return;
+      if (liveReply != null) {
+        setState(() => _chatMessages.remove(liveReply));
+      }
+      if (e is FunctionException &&
+          e.details is Map &&
+          e.details['error'] == 'daily_limit') {
+        _showLimitReachedSheet();
+      } else {
+        final timedOut = e is TimeoutException;
+        final error = e is FunctionException && e.details is Map
+            ? e.details['error']?.toString()
+            : null;
+        final message = timedOut
+            ? 'استغرق الرد وقتاً طويلاً. تحقق من الاتصال ثم أعد المحاولة.'
+            : switch (error) {
+                'requests_busy' =>
+                  'هناك طلب آخر قيد المعالجة. انتظر قليلاً ثم أعد المحاولة.',
+                'provider_unavailable' || 'service_unavailable' =>
+                  'المساعد مشغول حالياً. حاول مرة أخرى بعد قليل.',
+                'authentication_failed' || 'unauthorized' =>
+                  'انتهت جلسة الدخول. سجّل الدخول مجدداً ثم أعد المحاولة.',
+                _ => 'تعذر الاتصال بالمساعد. تحقق من الإنترنت ثم أعد المحاولة.',
+              };
+        _showErrorMessage(
+          message,
+          retryText: message,
+          retryImagePath: uploadedImagePath,
+        );
+      }
     } finally {
-      if (mounted) setState(() => _isTyping = false);
+      if (mounted) {
+        setState(() => _isTyping = false);
+        await _loadAiLimit();
+      }
     }
   }
 
-  Future<String?> _getGroqResponse(String userMessage) async {
+  Future<Map<String, String>> _uploadChatImage(XFile image) async {
+    final bytes = await image.readAsBytes();
+    if (bytes.isEmpty || bytes.length > 5 * 1024 * 1024) {
+      throw const FormatException('حجم الصورة يجب ألا يتجاوز 5 ميغابايت.');
+    }
+    final path = image.path.toLowerCase();
+    final mimeType =
+        image.mimeType ??
+        (path.endsWith('.png')
+            ? 'image/png'
+            : path.endsWith('.webp')
+            ? 'image/webp'
+            : path.endsWith('.jpg') || path.endsWith('.jpeg')
+            ? 'image/jpeg'
+            : null);
+    const allowedTypes = {'image/jpeg', 'image/png', 'image/webp'};
+    if (mimeType == null || !allowedTypes.contains(mimeType)) {
+      throw const FormatException('اختر صورة بصيغة JPG أو PNG أو WebP.');
+    }
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) throw const FormatException('سجّل الدخول لإرسال صورة.');
+    final extension = switch (mimeType) {
+      'image/png' => 'png',
+      'image/webp' => 'webp',
+      _ => 'jpg',
+    };
+    final storagePath =
+        '${user.id}/${DateTime.now().microsecondsSinceEpoch}.$extension';
+    await Supabase.instance.client.storage
+        .from('sanad-ai-chat-images')
+        .uploadBinary(
+          storagePath,
+          bytes,
+          fileOptions: FileOptions(contentType: mimeType, upsert: false),
+        );
+    return {'path': storagePath, 'mimeType': mimeType};
+  }
+
+  Future<String?> _signedChatImageUrl(String? path) async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null || path == null || !path.startsWith('${user.id}/'))
+      return null;
     try {
-      final url = Uri.parse('https://api.groq.com/openai/v1/chat/completions');
-
-      // نجهز الرسائل السابقة للسياق (آخر 10 رسائل)
-      List<Map<String, String>> messages = [
-        {
-          "role": "system",
-          "content":
-              "أنت مساعد ذكي لتطبيق سند التعليمي، تساعد الطلاب في دراستهم بأسلوب ودود وباللغة العربية.",
-        },
-      ];
-
-      // إضافة التاريخ للرسائل لضمان تذكر السياق
-      for (var msg in _chatMessages.reversed.take(10).toList().reversed) {
-        messages.add({
-          "role": msg['isMe'] ? "user" : "assistant",
-          "content": msg['text'] ?? "",
-        });
-      }
-
-      // إضافة الرسالة الحالية إذا لم تكن موجودة بالفعل في القائمة
-      if (messages.isEmpty || messages.last['content'] != userMessage) {
-        messages.add({"role": "user", "content": userMessage});
-      }
-
-      final body = jsonEncode({
-        "model": "openai/gpt-oss-120b",
-        "messages": messages,
-        "temperature": 0.7,
-        "max_tokens": 1024,
-      });
-
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_groqApiKey',
-        },
-        body: body,
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(utf8.decode(response.bodyBytes));
-        final responseText = data['choices'][0]['message']['content']?.toString().trim();
-        return responseText;
-      } else {
-        debugPrint("Groq API Error: ${response.statusCode} - ${response.body}");
-        return null;
-      }
+      return await Supabase.instance.client.storage
+          .from('sanad-ai-chat-images')
+          .createSignedUrl(path, 3600);
     } catch (e) {
-      debugPrint("Groq Catch Error: $e");
+      debugPrint('Could not create signed chat image URL: $e');
       return null;
     }
   }
 
-  void _showErrorMessage(String msg) {
+  Future<Map<String, dynamic>> _mapChatMessage(dynamic msg) async {
+    final imagePath = msg['image_path']?.toString();
+    return {
+      'id': msg['id'],
+      'text': msg['text'] ?? '',
+      'isMe': msg['is_me'] ?? false,
+      'createdAt': msg['created_at'],
+      if (imagePath != null) 'imagePath': imagePath,
+      if (msg['image_mime_type'] != null)
+        'imageMimeType': msg['image_mime_type'],
+      if (imagePath != null) 'imageUrl': await _signedChatImageUrl(imagePath),
+    };
+  }
+
+  Future<String?> _getGroqResponse(
+    String userMessage, {
+    String? imagePath,
+    required ValueChanged<String> onToken,
+  }) async {
+    final messages = <Map<String, dynamic>>[];
+    for (final message
+        in _chatMessages
+            .where(_isUsableAiContextMessage)
+            .toList()
+            .reversed
+            .take(10)
+            .toList()
+            .reversed) {
+      final content = message['text']?.toString() ?? '';
+      if (content.trim().isEmpty) continue;
+      final requestMessage = <String, dynamic>{
+        'role': message['isMe'] == true ? 'user' : 'assistant',
+        'content': content,
+      };
+      final previousImagePath = message['imagePath']?.toString();
+      if (previousImagePath != null && previousImagePath.isNotEmpty) {
+        requestMessage['image_path'] = previousImagePath;
+      }
+      messages.add(requestMessage);
+    }
+    final imageMessageIndices = messages
+        .asMap()
+        .entries
+        .where((entry) => entry.value['image_path'] != null)
+        .map((entry) => entry.key)
+        .toList();
+    final olderImageCount = imageMessageIndices.length - 3;
+    if (olderImageCount > 0) {
+      for (final index in imageMessageIndices.take(olderImageCount)) {
+        messages[index].remove('image_path');
+      }
+    }
+    if (messages.isEmpty ||
+        messages.last['role'] != 'user' ||
+        messages.last['content'] != userMessage) {
+      messages.add({
+        'role': 'user',
+        'content': userMessage,
+        if (imagePath != null) 'image_path': imagePath,
+      });
+    }
+
+    final supabase = Supabase.instance.client;
+    final session = supabase.auth.currentSession;
+    if (session == null) {
+      throw const FunctionException(
+        status: 401,
+        details: {'error': 'unauthorized'},
+      );
+    }
+    final endpoint = Uri.parse(
+      supabase.rest.url.replaceFirst('/rest/v1', '/functions/v1/sanad-ai'),
+    );
+    final request = http.Request('POST', endpoint)
+      ..headers.addAll(supabase.functions.headers)
+      ..headers['Authorization'] = 'Bearer ${session.accessToken}'
+      ..headers['Content-Type'] = 'application/json'
+      ..body = jsonEncode({'messages': messages});
+
+    final client = http.Client();
+    try {
+      final response = await client
+          .send(request)
+          .timeout(const Duration(seconds: 70));
+      if (response.statusCode != 200) {
+        final body = await response.stream.bytesToString();
+        dynamic details;
+        try {
+          details = jsonDecode(body);
+          if (details is Map) _applyAiUsage(details['usage']);
+        } catch (_) {
+          details = body;
+        }
+        throw FunctionException(
+          status: response.statusCode,
+          details: details,
+          reasonPhrase: response.reasonPhrase,
+        );
+      }
+
+      final answer = StringBuffer();
+      var receivedUsage = false;
+      await for (final line
+          in response.stream
+              .transform(utf8.decoder)
+              .transform(const LineSplitter())) {
+        if (!line.startsWith('data:')) continue;
+        final payload = line.substring(5).trim();
+        if (payload.isEmpty) continue;
+        final event = jsonDecode(payload);
+        if (event is! Map) continue;
+        if (event['delta'] is String) {
+          answer.write(event['delta']);
+          onToken(answer.toString());
+          await Future<void>.delayed(const Duration(milliseconds: 20));
+        } else if (event['usage'] != null) {
+          _applyAiUsage(event['usage']);
+          receivedUsage = true;
+        } else if (event['error'] != null) {
+          throw FunctionException(
+            status: 503,
+            details: {'error': event['error']},
+          );
+        }
+      }
+      if (answer.isEmpty || !receivedUsage) {
+        throw const FunctionException(
+          status: 503,
+          details: {'error': 'incomplete_stream'},
+        );
+      }
+      return answer.toString().trim();
+    } finally {
+      client.close();
+    }
+  }
+
+  bool _isUsableAiContextMessage(Map<String, dynamic> message) {
+    if (message['isError'] == true || message['retryText'] != null)
+      return false;
+
+    final text = message['text']?.toString().trim() ?? '';
+    if (text.isEmpty) return false;
+
+    // Ignore fallback failures saved by older versions as assistant replies.
+    const legacyFailureReplies = {
+      'عذراً، المساعد الذكي غير متاح حالياً.',
+      'عذراً، لم يتم تهيئة المساعد الذكي بعد. يرجى المحاولة لاحقاً.',
+    };
+    if (message['isMe'] != true && legacyFailureReplies.contains(text)) {
+      return false;
+    }
+
+    return message['isMe'] is bool;
+  }
+
+  void _showErrorMessage(
+    String msg, {
+    String? retryText,
+    String? retryImagePath,
+  }) {
     if (mounted) {
       setState(() {
-        _chatMessages.add({'text': msg, 'isMe': false});
+        _chatMessages.add({
+          'text': msg,
+          'isMe': false,
+          'isError': true,
+          'retryText': retryText,
+          'retryImagePath': retryImagePath,
+        });
       });
+    }
+  }
+
+  Future<void> _retryAiMessage(String message, {String? imagePath}) async {
+    if (_isTyping || message.trim().isEmpty) return;
+    setState(() {
+      _chatMessages.removeWhere((item) => item['isError'] == true);
+      _isTyping = true;
+    });
+    _scrollToBottom();
+    Map<String, dynamic>? liveReply;
+    try {
+      final response = await _getGroqResponse(
+        message,
+        imagePath: imagePath,
+        onToken: (text) {
+          if (!mounted) return;
+          setState(() {
+            if (liveReply == null) {
+              liveReply = {'text': text, 'isMe': false};
+              _chatMessages.add(liveReply!);
+            } else {
+              liveReply!['text'] = text;
+            }
+          });
+        },
+      );
+      if (response == null || response.isEmpty) {
+        throw const FormatException('empty_response');
+      }
+      if (!mounted) return;
+      setState(() {
+        if (liveReply == null) {
+          _chatMessages.add({'text': response, 'isMe': false});
+        } else {
+          liveReply!['text'] = response;
+        }
+      });
+      await _saveMessageToDB(response, false);
+    } catch (_) {
+      if (!mounted) return;
+      if (liveReply != null) {
+        setState(() => _chatMessages.remove(liveReply));
+      }
+      _showErrorMessage(
+        'تعذر الاتصال بالمساعد. تحقق من الإنترنت ثم أعد المحاولة.',
+        retryText: message,
+        retryImagePath: imagePath,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isTyping = false);
+        await _loadAiLimit();
+      }
     }
   }
 
   Future<void> _loadChatMessages() async {
     final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
+    final conversationId = _currentConversationId;
+    final generation = ++_chatLoadGeneration;
+    if (user == null || conversationId == null) {
+      if (mounted) {
+        setState(() {
+          _chatMessages.clear();
+          _oldestChatMessageCursor = null;
+          _hasMoreChatMessages = false;
+          _isLoadingOlderMessages = false;
+        });
+      }
+      return;
+    }
 
     try {
       final List<dynamic> data = await Supabase.instance.client
           .from('chat_messages')
-          .select('text, is_me')
+          .select('id, text, is_me, created_at, image_path, image_mime_type')
           .eq('user_id', user.id)
-          .order('created_at', ascending: true);
+          .eq('conversation_id', conversationId)
+          .order('created_at', ascending: false)
+          .order('id', ascending: false)
+          .range(0, _chatPageSize - 1);
 
-      if (mounted) {
+      if (mounted && generation == _chatLoadGeneration) {
+        final messages = await Future.wait(data.reversed.map(_mapChatMessage));
+        if (!mounted || generation != _chatLoadGeneration) return;
         setState(() {
           _chatMessages.clear();
-          if (data.isNotEmpty) {
-            for (var msg in data) {
-              _chatMessages.add({
-                'text': msg['text'] ?? "",
-                'isMe': msg['is_me'] ?? false,
-              });
-            }
-          } else {
-            _addWelcomeMessage();
-          }
+          _chatMessages.addAll(messages);
+          _oldestChatMessageCursor = data.isEmpty
+              ? null
+              : Map<String, dynamic>.from(data.last as Map);
+          _hasMoreChatMessages = data.length == _chatPageSize;
+          _isLoadingOlderMessages = false;
         });
-        // الانتقال للأسفل بعد تحميل الرسائل
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          _scrollToBottom(isInstant: true);
+          if (mounted && generation == _chatLoadGeneration) {
+            _scrollToBottom(isInstant: true);
+          }
         });
       }
     } catch (e) {
@@ -825,21 +1185,701 @@ class _HomePageScreenState extends State<HomePageScreen> with SingleTickerProvid
     }
   }
 
-  void _addWelcomeMessage() {
-    setState(() {
-      _chatMessages.add({
-        'text':
-            'مرحباً بك في سند! أنا مساعدك الذكي نسخة 2026، كيف يمكنني مساعدتك في دراستك اليوم؟',
-        'isMe': false,
+  Future<void> _loadOlderChatMessages() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    final conversationId = _currentConversationId;
+    final generation = _chatLoadGeneration;
+    if (user == null ||
+        conversationId == null ||
+        !_hasMoreChatMessages ||
+        _isLoadingOlderMessages)
+      return;
+    final cursor = _oldestChatMessageCursor;
+    if (cursor == null) return;
+
+    final oldPixels = _chatScrollController.hasClients
+        ? _chatScrollController.position.pixels
+        : 0.0;
+    final oldExtent = _chatScrollController.hasClients
+        ? _chatScrollController.position.maxScrollExtent
+        : 0.0;
+    setState(() => _isLoadingOlderMessages = true);
+    try {
+      final List<dynamic> data = await Supabase.instance.client
+          .from('chat_messages')
+          .select('id, text, is_me, created_at, image_path, image_mime_type')
+          .eq('user_id', user.id)
+          .eq('conversation_id', conversationId)
+          .or(
+            'created_at.lt.${cursor['created_at']},and(created_at.eq.${cursor['created_at']},id.lt.${cursor['id']})',
+          )
+          .order('created_at', ascending: false)
+          .order('id', ascending: false)
+          .range(0, _chatPageSize - 1);
+
+      if (!mounted || generation != _chatLoadGeneration) return;
+      final knownIds = _chatMessages
+          .map((message) => message['id']?.toString())
+          .whereType<String>()
+          .toSet();
+      final olderMessages = await Future.wait(
+        data
+            .where((message) => !knownIds.contains(message['id']?.toString()))
+            .map(_mapChatMessage),
+      );
+      if (!mounted || generation != _chatLoadGeneration) return;
+      setState(() {
+        _chatMessages.insertAll(0, olderMessages.reversed.toList());
+        if (data.isNotEmpty) {
+          _oldestChatMessageCursor = Map<String, dynamic>.from(
+            data.last as Map,
+          );
+        }
+        _hasMoreChatMessages = data.length == _chatPageSize;
       });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted ||
+            generation != _chatLoadGeneration ||
+            !_chatScrollController.hasClients)
+          return;
+        final position = _chatScrollController.position;
+        final newPixels = oldPixels + (position.maxScrollExtent - oldExtent);
+        position.jumpTo(newPixels.clamp(0.0, position.maxScrollExtent));
+      });
+    } catch (e) {
+      debugPrint('Error loading older chat messages: $e');
+    } finally {
+      if (mounted && generation == _chatLoadGeneration) {
+        setState(() => _isLoadingOlderMessages = false);
+      }
+    }
+  }
+
+  Future<void> _loadConversations() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+    final data = await Supabase.instance.client
+        .from('ai_conversations')
+        .select('id, title, created_at, updated_at')
+        .eq('user_id', user.id)
+        .order('updated_at', ascending: false);
+    if (!mounted) return;
+    final conversations = data.cast<Map<String, dynamic>>();
+    setState(() {
+      _aiConversations
+        ..clear()
+        ..addAll(conversations);
+      _currentConversationId = conversations.isEmpty
+          ? null
+          : conversations.first['id']?.toString();
+      _chatMessages.clear();
     });
-    _scrollToBottom(isInstant: true);
+    if (_currentConversationId != null) await _loadChatMessages();
+  }
+
+  Future<void> _selectConversation(Map<String, dynamic> conversation) async {
+    Navigator.of(context).pop();
+    if (_chatScrollController.hasClients) {
+      _chatScrollController.jumpTo(
+        _chatScrollController.position.maxScrollExtent,
+      );
+    }
+    setState(() {
+      _chatLoadGeneration++;
+      _currentConversationId = conversation['id']?.toString();
+      _chatMessages.clear();
+    });
+    await _loadChatMessages();
+  }
+
+  void _startNewConversation() {
+    if (_isTyping) return;
+    if (_chatScrollController.hasClients) {
+      _chatScrollController.jumpTo(
+        _chatScrollController.position.maxScrollExtent,
+      );
+    }
+    setState(() {
+      _chatLoadGeneration++;
+      _currentConversationId = null;
+      _chatMessages.clear();
+      _oldestChatMessageCursor = null;
+      _hasMoreChatMessages = false;
+      _isLoadingOlderMessages = false;
+      _chatController.clear();
+    });
+  }
+
+  Future<void> _renameConversation(
+    Map<String, dynamic> conversation, {
+    void Function()? onDialogRefresh,
+  }) async {
+    if (_isTyping) return;
+    final id = conversation['id']?.toString();
+    if (id == null) return;
+    final controller = TextEditingController(
+      text: conversation['title']?.toString() ?? '',
+    );
+    final newTitle = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('إعادة تسمية المحادثة'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          maxLength: 48,
+          textDirection: widgets.TextDirection.rtl,
+          textInputAction: TextInputAction.done,
+          onSubmitted: (value) => Navigator.of(dialogContext).pop(value),
+          decoration: const InputDecoration(
+            hintText: 'اكتب اسماً للمحادثة',
+            counterText: '',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(controller.text),
+            child: const Text('حفظ'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    final title = newTitle?.trim();
+    if (title == null || title.isEmpty || !mounted) return;
+
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+    try {
+      final updatedAt = DateTime.now().toUtc().toIso8601String();
+      await Supabase.instance.client
+          .from('ai_conversations')
+          .update({'title': title, 'updated_at': updatedAt})
+          .eq('id', id)
+          .eq('user_id', user.id)
+          .select('id');
+      if (!mounted) return;
+      setState(() {
+        final index = _aiConversations.indexWhere(
+          (item) => item['id']?.toString() == id,
+        );
+        if (index >= 0) {
+          _aiConversations[index]['title'] = title;
+          _aiConversations[index]['updated_at'] = updatedAt;
+          final renamed = _aiConversations.removeAt(index);
+          _aiConversations.insert(0, renamed);
+        }
+      });
+      onDialogRefresh?.call();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تمت إعادة تسمية المحادثة.')),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تعذرت إعادة تسمية المحادثة.')),
+      );
+    }
+  }
+
+  Future<void> _deleteConversation(
+    Map<String, dynamic> conversation, {
+    void Function()? onDialogRefresh,
+  }) async {
+    if (_isTyping) return;
+    final id = conversation['id']?.toString();
+    if (id == null) return;
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('حذف المحادثة؟'),
+        content: const Text(
+          'سيتم حذف المحادثة وجميع رسائلها نهائياً.',
+          textDirection: widgets.TextDirection.rtl,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: const Color(0xFFB42318),
+            ),
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('حذف الكل'),
+          ),
+        ],
+      ),
+    );
+    if (shouldDelete != true || !mounted) return;
+
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+    final client = Supabase.instance.client;
+    try {
+      await client
+          .from('chat_messages')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('conversation_id', id);
+      final deleted = await client
+          .from('ai_conversations')
+          .delete()
+          .eq('id', id)
+          .eq('user_id', user.id)
+          .select('id');
+      if (deleted.isEmpty) {
+        throw StateError('Conversation was not deleted');
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _aiConversations.removeWhere((item) => item['id']?.toString() == id);
+        if (_currentConversationId == id) {
+          _currentConversationId = null;
+          _chatLoadGeneration++;
+          _chatMessages.clear();
+          _oldestChatMessageCursor = null;
+          _hasMoreChatMessages = false;
+          _isLoadingOlderMessages = false;
+        }
+      });
+      onDialogRefresh?.call();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تم حذف المحادثة ورسائلها.')),
+      );
+    } catch (error) {
+      debugPrint('Error deleting AI conversation and messages: $error');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تعذر حذف المحادثة ورسائلها.')),
+      );
+    }
+  }
+
+  void _showConversationPicker() {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 20,
+            vertical: 24,
+          ),
+          child: SafeArea(
+            child: Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(26),
+                  child: SizedBox(
+                    height: MediaQuery.of(dialogContext).size.height * 0.74,
+                    child: DecoratedBox(
+                      decoration: const BoxDecoration(color: Color(0xFFF7F8FC)),
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 18, 16, 16),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        'محادثاتي',
+                                        style: TextStyle(
+                                          fontSize: 21,
+                                          fontWeight: FontWeight.w800,
+                                          color: Color(0xFF1D2433),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${_aiConversations.length} محادثة محفوظة',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Color(0xFF778198),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 14, 20, 10),
+                            child: Row(
+                              children: [
+                                const Expanded(
+                                  child: Text(
+                                    'سجل المحادثات',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFF35415A),
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  'الأحدث أولاً',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: primaryColor.withAlpha(180),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Expanded(
+                            child: _aiConversations.isEmpty
+                                ? Center(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Container(
+                                          width: 62,
+                                          height: 62,
+                                          decoration: BoxDecoration(
+                                            color: primaryColor.withAlpha(14),
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Icon(
+                                            Icons.forum_outlined,
+                                            size: 27,
+                                            color: primaryColor.withAlpha(170),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 12),
+                                        const Text(
+                                          'لا توجد محادثات بعد',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w700,
+                                            fontSize: 15,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        const Text(
+                                          'ابدأ محادثة جديدة وسيظهر سجلّك هنا',
+                                          style: TextStyle(
+                                            color: Color(0xFF8992A4),
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    padding: const EdgeInsets.fromLTRB(
+                                      16,
+                                      2,
+                                      16,
+                                      20,
+                                    ),
+                                    itemCount: _aiConversations.length,
+                                    itemBuilder: (context, index) {
+                                      final conversation =
+                                          _aiConversations[index];
+                                      final id = conversation['id']?.toString();
+                                      final isSelected =
+                                          id == _currentConversationId;
+                                      final updatedAt =
+                                          DateTime.tryParse(
+                                            conversation['updated_at']
+                                                    ?.toString() ??
+                                                '',
+                                          )?.toLocal() ??
+                                          DateTime.now();
+                                      return Padding(
+                                        padding: const EdgeInsets.only(
+                                          bottom: 9,
+                                        ),
+                                        child: Material(
+                                          color: isSelected
+                                              ? primaryColor.withAlpha(13)
+                                              : Colors.white,
+                                          borderRadius: BorderRadius.circular(
+                                            17,
+                                          ),
+                                          child: InkWell(
+                                            borderRadius: BorderRadius.circular(
+                                              17,
+                                            ),
+                                            onTap: () => _selectConversation(
+                                              conversation,
+                                            ),
+                                            child: Container(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    horizontal: 13,
+                                                    vertical: 12,
+                                                  ),
+                                              decoration: BoxDecoration(
+                                                borderRadius:
+                                                    BorderRadius.circular(17),
+                                                border: Border.all(
+                                                  color: isSelected
+                                                      ? primaryColor.withAlpha(
+                                                          70,
+                                                        )
+                                                      : const Color(0xFFE9ECF2),
+                                                ),
+                                              ),
+                                              child: Row(
+                                                children: [
+                                                  Container(
+                                                    width: 40,
+                                                    height: 40,
+                                                    decoration: BoxDecoration(
+                                                      color: isSelected
+                                                          ? primaryColor
+                                                          : const Color(
+                                                              0xFFF0F2F7,
+                                                            ),
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                            13,
+                                                          ),
+                                                    ),
+                                                    child: Icon(
+                                                      Icons.forum_outlined,
+                                                      size: 18,
+                                                      color: isSelected
+                                                          ? Colors.white
+                                                          : const Color(
+                                                              0xFF657087,
+                                                            ),
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  Expanded(
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(
+                                                          conversation['title']
+                                                                  ?.toString() ??
+                                                              'محادثة جديدة',
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                          style:
+                                                              const TextStyle(
+                                                                fontSize: 14,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w700,
+                                                              ),
+                                                        ),
+                                                        const SizedBox(
+                                                          height: 4,
+                                                        ),
+                                                        Text(
+                                                          _getRelativeTime(
+                                                            updatedAt,
+                                                          ),
+                                                          style:
+                                                              const TextStyle(
+                                                                fontSize: 11,
+                                                                color: Color(
+                                                                  0xFF8992A4,
+                                                                ),
+                                                              ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  PopupMenuButton<String>(
+                                                    tooltip: 'خيارات المحادثة',
+                                                    enabled: !_isTyping,
+                                                    icon: Icon(
+                                                      Icons.more_vert_rounded,
+                                                      size: 20,
+                                                      color: isSelected
+                                                          ? primaryColor
+                                                          : const Color(
+                                                              0xFFABB2C0,
+                                                            ),
+                                                    ),
+                                                    onSelected: (action) {
+                                                      if (action == 'rename') {
+                                                        _renameConversation(
+                                                          conversation,
+                                                          onDialogRefresh: () =>
+                                                              setDialogState(
+                                                                () {},
+                                                              ),
+                                                        );
+                                                      } else if (action ==
+                                                          'delete') {
+                                                        _deleteConversation(
+                                                          conversation,
+                                                          onDialogRefresh: () =>
+                                                              setDialogState(
+                                                                () {},
+                                                              ),
+                                                        );
+                                                      }
+                                                    },
+                                                    itemBuilder: (_) => [
+                                                      const PopupMenuItem(
+                                                        value: 'rename',
+                                                        child: Row(
+                                                          children: [
+                                                            Icon(
+                                                              Icons
+                                                                  .edit_outlined,
+                                                              size: 18,
+                                                            ),
+                                                            SizedBox(width: 10),
+                                                            Text(
+                                                              'إعادة التسمية',
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      const PopupMenuItem(
+                                                        value: 'delete',
+                                                        child: Row(
+                                                          children: [
+                                                            Icon(
+                                                              Icons
+                                                                  .delete_outline,
+                                                              size: 18,
+                                                              color: Color(
+                                                                0xFFB42318,
+                                                              ),
+                                                            ),
+                                                            SizedBox(width: 10),
+                                                            Text(
+                                                              'حذف المحادثة',
+                                                              style: TextStyle(
+                                                                color: Color(
+                                                                  0xFFB42318,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                          ),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                            decoration: const BoxDecoration(
+                              border: Border(
+                                top: BorderSide(color: Color(0xFFE9ECF2)),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: TextButton(
+                                    onPressed: () =>
+                                        Navigator.of(dialogContext).pop(),
+                                    child: const Text(
+                                      'إلغاء',
+                                      style: TextStyle(
+                                        color: Color(0xFF657087),
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: FilledButton.icon(
+                                    onPressed: () {
+                                      Navigator.of(dialogContext).pop();
+                                      _startNewConversation();
+                                    },
+                                    icon: const Icon(
+                                      Icons.add_rounded,
+                                      size: 18,
+                                    ),
+                                    label: const Text('محادثة جديدة'),
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: primaryColor,
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: CustomPaint(
+                      painter: _AiUsageBorderPainter(
+                        progress: _aiQuotaLoaded
+                            ? (_aiMessagesCount / 50).clamp(0.0, 1.0).toDouble()
+                            : 0,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<String?> _createConversation(String firstMessage) async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return null;
+    final title = firstMessage.replaceAll('\n', ' ').trim();
+    final row = await Supabase.instance.client
+        .from('ai_conversations')
+        .insert({
+          'user_id': user.id,
+          'title': title.length > 48 ? '${title.substring(0, 48)}…' : title,
+        })
+        .select('id, title, created_at, updated_at')
+        .single();
+    final conversationId = row['id'].toString();
+    if (!mounted) return null;
+    setState(() {
+      _currentConversationId = conversationId;
+      _aiConversations.insert(0, Map<String, dynamic>.from(row));
+    });
+    return conversationId;
   }
 
   void _scrollToBottom({bool isInstant = false}) {
     if (_chatScrollController.hasClients) {
       if (isInstant) {
-        _chatScrollController.jumpTo(_chatScrollController.position.maxScrollExtent);
+        _chatScrollController.jumpTo(
+          _chatScrollController.position.maxScrollExtent,
+        );
       } else {
         _chatScrollController.animateTo(
           _chatScrollController.position.maxScrollExtent,
@@ -849,22 +1889,61 @@ class _HomePageScreenState extends State<HomePageScreen> with SingleTickerProvid
       }
     } else {
       // إذا لم يكن جاهزاً بعد، ننتظر الإطار القادم
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom(isInstant: isInstant));
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _scrollToBottom(isInstant: isInstant),
+      );
     }
   }
 
-  Future<void> _saveMessageToDB(String text, bool isMe) async {
+  Future<bool> _saveMessageToDB(
+    String text,
+    bool isMe, {
+    String? imagePath,
+    String? imageMimeType,
+  }) async {
     final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
+    if (user == null) return false;
 
     try {
+      var conversationId = _currentConversationId;
+      if (conversationId == null && isMe) {
+        conversationId = await _createConversation(text);
+      }
+      if (conversationId == null) return false;
       await Supabase.instance.client.from('chat_messages').insert({
         'user_id': user.id,
+        'conversation_id': conversationId,
         'text': text,
         'is_me': isMe,
+        if (imagePath != null) 'image_path': imagePath,
+        if (imageMimeType != null) 'image_mime_type': imageMimeType,
       });
+      final updatedAt = DateTime.now().toUtc().toIso8601String();
+      try {
+        await Supabase.instance.client
+            .from('ai_conversations')
+            .update({'updated_at': updatedAt})
+            .eq('id', conversationId)
+            .eq('user_id', user.id);
+      } catch (e) {
+        debugPrint('Error updating conversation time: $e');
+      }
+      if (mounted) {
+        setState(() {
+          final index = _aiConversations.indexWhere(
+            (item) => item['id'].toString() == conversationId,
+          );
+          if (index >= 0) {
+            _aiConversations[index]['updated_at'] = updatedAt;
+            final updated = _aiConversations.removeAt(index);
+            _aiConversations.insert(0, updated);
+          }
+        });
+      }
+      return true;
     } catch (e) {
       debugPrint("Error saving message to DB: $e");
+      return false;
     }
   }
 
@@ -1220,8 +2299,10 @@ class _HomePageScreenState extends State<HomePageScreen> with SingleTickerProvid
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
-            const Text(
-              "لقد استهلكت 50 رسالة اليوم. يرجى العودة غداً للمتابعة مع المساعد الذكي. تذكر أننا في المرحلة التجريبية!",
+            Text(
+              _aiResetAt == null
+                  ? 'وصلت للحد اليومي. يتجدد عند منتصف الليل بتوقيت بغداد.'
+                  : 'وصلت للحد اليومي. يتجدد في ${DateFormat('d/M HH:mm').format(_aiResetAt!.toLocal())} بتوقيت جهازك.',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.black87, height: 1.5),
             ),
@@ -1254,161 +2335,122 @@ class _HomePageScreenState extends State<HomePageScreen> with SingleTickerProvid
       child: Directionality(
         textDirection: widgets.TextDirection.rtl,
         child: Scaffold(
-                backgroundColor: Colors.white,
-                resizeToAvoidBottomInset: false,
-                // الحل الاحترافي: منع الشاشة من الانضغاط
-                drawer: _buildDrawer(context, primaryColor, secondaryColor),
-                appBar: AppBar(
-                  toolbarHeight: 80,
-                  backgroundColor: primaryColor,
-                  elevation: 4,
-                  shadowColor: Colors.black,
-                  surfaceTintColor: Colors.transparent,
-                  centerTitle: false,
-                  titleSpacing: 0,
-                  // إزالة المسافة التلقائية ليكون النص قريباً من الأيقونة
-                  systemOverlayStyle: SystemUiOverlayStyle.light,
-                  leading: Builder(
-                    builder: (context) => IconButton(
-                      icon: const Icon(
-                        Icons.menu_rounded,
-                        color: Colors.white,
-                        size: 32,
-                      ),
-                      onPressed: () => Scaffold.of(context).openDrawer(),
-                    ),
+          backgroundColor: Colors.white,
+          resizeToAvoidBottomInset: false,
+          // الحل الاحترافي: منع الشاشة من الانضغاط
+          drawer: _buildDrawer(context, primaryColor, secondaryColor),
+          appBar: AppBar(
+            toolbarHeight: 80,
+            backgroundColor: primaryColor,
+            elevation: 4,
+            shadowColor: Colors.black,
+            surfaceTintColor: Colors.transparent,
+            centerTitle: false,
+            titleSpacing: 0,
+            // إزالة المسافة التلقائية ليكون النص قريباً من الأيقونة
+            systemOverlayStyle: SystemUiOverlayStyle.light,
+            leading: Builder(
+              builder: (context) => IconButton(
+                icon: const Icon(
+                  Icons.menu_rounded,
+                  color: Colors.white,
+                  size: 32,
+                ),
+                onPressed: () => Scaffold.of(context).openDrawer(),
+              ),
+            ),
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(30),
+                bottomRight: Radius.circular(30),
+              ),
+            ),
+            title: _buildGreetingText(secondaryColor),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(left: 15),
+                child: _buildUserAvatar(),
+              ),
+            ],
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(70),
+              child: Container(
+                margin: const EdgeInsets.fromLTRB(15, 0, 15, 15),
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(30),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Colors.white.withAlpha(50),
+                    width: 1.5,
+                  ), // حواف بيضاء خفيفة وواضحة
+                ),
+                child: TabBar(
+                  controller: _tabController,
+                  dividerColor: Colors.transparent,
+                  indicatorColor: secondaryColor,
+                  indicatorSize: TabBarIndicatorSize.label,
+                  indicatorWeight: 4,
+                  labelColor: secondaryColor,
+                  unselectedLabelColor: Colors.white70,
+                  indicator: UnderlineTabIndicator(
+                    borderSide: BorderSide(width: 4.0, color: secondaryColor),
+                    insets: const EdgeInsets.symmetric(horizontal: 16.0),
                   ),
-                  shape: const RoundedRectangleBorder(
-                    borderRadius: BorderRadius.only(
-                      bottomLeft: Radius.circular(30),
-                      bottomRight: Radius.circular(30),
-                    ),
-                  ),
-                  title: _buildGreetingText(secondaryColor),
-                  actions: [
-                    Padding(
-                      padding: const EdgeInsets.only(left: 15),
-                      child: _buildUserAvatar(),
-                    ),
-                  ],
-                  bottom: PreferredSize(
-                    preferredSize: const Size.fromHeight(70),
-                    child: Container(
-                      margin: const EdgeInsets.fromLTRB(15, 0, 15, 15),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withAlpha(30),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.white.withAlpha(50),
-                          width: 1.5,
-                        ), // حواف بيضاء خفيفة وواضحة
-                      ),
-                      child: TabBar(
-                        controller: _tabController,
-                        dividerColor: Colors.transparent,
-                        indicatorColor: secondaryColor,
-                        indicatorSize: TabBarIndicatorSize.label,
-                        indicatorWeight: 4,
-                        labelColor: secondaryColor,
-                        unselectedLabelColor: Colors.white70,
-                        indicator: UnderlineTabIndicator(
-                          borderSide: BorderSide(
-                            width: 4.0,
-                            color: secondaryColor,
+                  tabs: [
+                    const Tab(icon: Icon(Icons.home_rounded, size: 26)),
+                    const Tab(icon: Icon(Icons.auto_awesome_rounded, size: 26)),
+                    const Tab(icon: Icon(Icons.handyman_rounded, size: 26)),
+                    Tab(
+                      icon: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          const Icon(
+                            Icons.notifications_none_rounded,
+                            size: 26,
                           ),
-                          insets: const EdgeInsets.symmetric(horizontal: 16.0),
-                        ),
-                        tabs: [
-                          const Tab(icon: Icon(Icons.home_rounded, size: 26)),
-                          Tab(
-                            icon: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                const Icon(
-                                  Icons.auto_awesome_rounded,
-                                  size: 26,
+                          if (_unreadCount > 0)
+                            Positioned(
+                              right: -2,
+                              top: -2,
+                              child: Container(
+                                padding: const EdgeInsets.all(4),
+                                decoration: const BoxDecoration(
+                                  color: Colors.redAccent,
+                                  shape: BoxShape.circle,
                                 ),
-                                Positioned(
-                                  top: -8,
-                                  right: -12,
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 4,
-                                      vertical: 2,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: secondaryColor,
-                                      borderRadius: BorderRadius.circular(6),
-                                    ),
-                                    child: const Text(
-                                      "Beta",
-                                      style: TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 8,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                  ),
+                                constraints: const BoxConstraints(
+                                  minWidth: 10,
+                                  minHeight: 10,
                                 ),
-                              ],
+                              ),
                             ),
-                          ),
-                          const Tab(
-                            icon: Icon(Icons.handyman_rounded, size: 26),
-                          ),
-                          Tab(
-                            icon: Stack(
-                              clipBehavior: Clip.none,
-                              children: [
-                                const Icon(
-                                  Icons.notifications_none_rounded,
-                                  size: 26,
-                                ),
-                                if (_unreadCount > 0)
-                                  Positioned(
-                                    right: -2,
-                                    top: -2,
-                                    child: Container(
-                                      padding: const EdgeInsets.all(4),
-                                      decoration: const BoxDecoration(
-                                        color: Colors.redAccent,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      constraints: const BoxConstraints(
-                                        minWidth: 10,
-                                        minHeight: 10,
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                          const Tab(
-                            icon: Icon(Icons.emoji_events_rounded, size: 26),
-                          ),
                         ],
                       ),
                     ),
-                  ),
-                ),
-                body: SafeArea(
-                  bottom: true,
-                  // يضمن عدم تداخل المحتوى مع أزرار النظام في الأسفل
-                  child: TabBarView(
-                    controller: _tabController,
-                    // تم ترك خاصية physics افتراضية للسماح بالسحب بين التبويبات
-                    children: [
-                      _buildHomeView(primaryColor, secondaryColor),
-                      _buildAiChatView(primaryColor),
-                      _buildToolsView(primaryColor, secondaryColor),
-                      _buildNotificationsView(primaryColor, secondaryColor),
-                      _buildLeaderboardView(primaryColor, secondaryColor),
-                    ],
-                  ),
+                    const Tab(icon: Icon(Icons.emoji_events_rounded, size: 26)),
+                  ],
                 ),
               ),
             ),
-          );
+          ),
+          body: SafeArea(
+            bottom: true,
+            // يضمن عدم تداخل المحتوى مع أزرار النظام في الأسفل
+            child: TabBarView(
+              controller: _tabController,
+              // تم ترك خاصية physics افتراضية للسماح بالسحب بين التبويبات
+              children: [
+                _buildHomeView(primaryColor, secondaryColor),
+                _buildAiChatView(primaryColor),
+                _buildToolsView(primaryColor, secondaryColor),
+                _buildNotificationsView(primaryColor, secondaryColor),
+                _buildLeaderboardView(primaryColor, secondaryColor),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   void _showSubscriptionSheet() {
@@ -2515,84 +3557,776 @@ class _HomePageScreenState extends State<HomePageScreen> with SingleTickerProvid
   }
 
   Widget _buildAiChatView(Color primaryColor) {
+    final currentConversation = _aiConversations
+        .cast<Map<String, dynamic>?>()
+        .firstWhere(
+          (item) => item?['id']?.toString() == _currentConversationId,
+          orElse: () => null,
+        );
     return Column(
       children: [
         Expanded(
-          child: ListView.builder(
-            controller: _chatScrollController,
-            padding: const EdgeInsets.all(20),
-            itemCount: _chatMessages.length + (_isTyping ? 1 : 0),
-            itemBuilder: (context, index) {
-              if (index == _chatMessages.length) {
-                return _buildChatBubble("جاري الكتابة...", false, primaryColor);
-              }
-              final msg = _chatMessages[index];
-              return _buildChatBubble(msg['text'], msg['isMe'], primaryColor);
-            },
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: _chatMessages.isEmpty && !_isTyping
+                    ? _buildAiWelcome(primaryColor)
+                    : Stack(
+                        children: [
+                          NotificationListener<ScrollNotification>(
+                            onNotification: (notification) {
+                              if (notification.metrics.axis == Axis.vertical &&
+                                  notification.metrics.maxScrollExtent > 0 &&
+                                  notification.metrics.pixels -
+                                          notification
+                                              .metrics
+                                              .minScrollExtent <=
+                                      80 &&
+                                  _hasMoreChatMessages &&
+                                  !_isLoadingOlderMessages) {
+                                _loadOlderChatMessages();
+                              }
+                              return false;
+                            },
+                            child: ListView.builder(
+                              controller: _chatScrollController,
+                              padding: const EdgeInsets.fromLTRB(
+                                16,
+                                14,
+                                16,
+                                145,
+                              ),
+                              itemCount:
+                                  _chatMessages.length +
+                                  (_isTyping &&
+                                          (_chatMessages.isEmpty ||
+                                              _chatMessages.last['isMe'] ==
+                                                  true)
+                                      ? 1
+                                      : 0),
+                              itemBuilder: (context, index) {
+                                final showTypingIndicator =
+                                    _isTyping &&
+                                    (_chatMessages.isEmpty ||
+                                        _chatMessages.last['isMe'] == true);
+                                if (showTypingIndicator &&
+                                    index == _chatMessages.length) {
+                                  return _buildTypingIndicator(primaryColor);
+                                }
+                                final msg = _chatMessages[index];
+                                return KeyedSubtree(
+                                  key: ValueKey(msg['id'] ?? 'local-$index'),
+                                  child: _buildChatBubble(
+                                    msg['text'],
+                                    msg['isMe'],
+                                    primaryColor,
+                                    retryText: msg['retryText'] as String?,
+                                    retryImagePath:
+                                        msg['retryImagePath'] as String?,
+                                    localImagePath:
+                                        msg['localImagePath'] as String?,
+                                    imageUrl: msg['imageUrl'] as String?,
+                                    hasStoredImage: msg['imagePath'] != null,
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          if (_isLoadingOlderMessages)
+                            const Positioned(
+                              top: 0,
+                              left: 20,
+                              right: 20,
+                              child: LinearProgressIndicator(minHeight: 2),
+                            ),
+                        ],
+                      ),
+              ),
+              Align(
+                alignment: Alignment.bottomCenter,
+                child: Padding(
+                  padding: EdgeInsets.only(
+                    bottom: MediaQuery.of(context).viewInsets.bottom,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [_buildChatInput(primaryColor)],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-        _buildChatInput(primaryColor),
+      ],
+    );
+  }
+
+  Widget _buildTypingIndicator(Color primaryColor) => Align(
+    alignment: AlignmentDirectional.centerStart,
+    child: Container(
+      margin: const EdgeInsets.only(bottom: 18),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFE9ECF2)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.auto_awesome_rounded, size: 14, color: primaryColor),
+          const SizedBox(width: 8),
+          Text(
+            'سند يكتب الآن',
+            style: TextStyle(
+              fontSize: 12,
+              color: primaryColor,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(width: 9),
+          ...List.generate(
+            3,
+            (index) => Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              child: Container(
+                width: 5,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: primaryColor.withAlpha(110 + index * 35),
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Widget _buildAiWelcome(Color primaryColor) {
+    const suggestions = [
+      'ساعدني على تعويض الدروس المتراكمة',
+      'ضع لي خطة مراجعة سريعة قبل الامتحان',
+      'ضع لي خطة مذاكرة لليوم',
+      'حل مشكلة النسيان',
+      'الوقت لا يكفي ماذا افعل',
+    ];
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(22, 22, 22, 160),
+      children: [
+        const Row(
+          children: [
+            Text(
+              'ابدأ من هنا',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
+            ),
+            SizedBox(width: 7),
+            Icon(Icons.bolt_rounded, size: 17, color: Color(0xFFE9A72D)),
+          ],
+        ),
+        const SizedBox(height: 12),
+        ...List.generate(suggestions.length, (index) {
+          final suggestion = suggestions[index];
+          const icons = [
+            Icons.menu_book_rounded,
+            Icons.event_note_rounded,
+            Icons.today_rounded,
+            Icons.psychology_alt_rounded,
+            Icons.hourglass_bottom_rounded,
+          ];
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Material(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(17),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(17),
+                onTap: _isTyping
+                    ? null
+                    : () {
+                        _chatController.text = suggestion;
+                        _sendMessage();
+                      },
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 13,
+                  ),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(17),
+                    border: Border.all(color: const Color(0xFFE9ECF2)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 37,
+                        height: 37,
+                        decoration: BoxDecoration(
+                          color: primaryColor.withAlpha(15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          icons[index],
+                          size: 18,
+                          color: primaryColor,
+                        ),
+                      ),
+                      const SizedBox(width: 11),
+                      Expanded(
+                        child: Text(
+                          suggestion,
+                          textAlign: TextAlign.right,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.north_west_rounded,
+                        size: 16,
+                        color: Color(0xFF9AA3B3),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          );
+        }),
       ],
     );
   }
 
   Widget _buildChatInput(Color primaryColor) {
+    final canSend =
+        !_isTyping &&
+        (_chatController.text.trim().isNotEmpty || _pendingChatImage != null);
+    final isChatFocused = _chatFocusNode.hasFocus;
     return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-      ), // يرتفع يدوياً مع الكيبورد
-      child: Container(
-        padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(20),
-              blurRadius: 10,
-              offset: const Offset(0, -5),
+      padding: const EdgeInsets.only(top: 8, bottom: 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (_pendingChatImage != null)
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.fromLTRB(9, 0, 9, 10),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFFE7EAF0)),
+              ),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(9),
+                    child: Image.file(
+                      File(_pendingChatImage!.path),
+                      width: 58,
+                      height: 58,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Text(
+                      'الصورة جاهزة للإرسال',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'إزالة الصورة',
+                    onPressed: () => setState(() => _pendingChatImage = null),
+                    icon: const Icon(Icons.close_rounded),
+                  ),
+                ],
+              ),
             ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 15),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(25),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: Row(
+              textDirection: widgets.TextDirection.rtl,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Tooltip(
+                  message: 'المحادثات السابقة',
+                  child: AnimatedScale(
+                    scale: _isHistoryButtonPressed ? 0.94 : 1,
+                    duration: const Duration(milliseconds: 120),
+                    child: ScaleTransition(
+                      scale: _chatHistoryPulseScale,
+                      child: Container(
+                        width: 56,
+                        height: 56,
+                        margin: const EdgeInsets.only(left: 9),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF9E9),
+                          shape: BoxShape.circle,
+                          border: Border.all(color: const Color(0xFFE7EAF0)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF17233F).withAlpha(18),
+                              blurRadius: 16,
+                              offset: const Offset(0, 5),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          shape: const CircleBorder(),
+                          child: InkWell(
+                            customBorder: const CircleBorder(),
+                            onTap: _isTyping ? null : _showConversationPicker,
+                            onTapDown: (_) =>
+                                setState(() => _isHistoryButtonPressed = true),
+                            onTapUp: (_) =>
+                                setState(() => _isHistoryButtonPressed = false),
+                            onTapCancel: () =>
+                                setState(() => _isHistoryButtonPressed = false),
+                            child: Icon(
+                              _currentConversationId == null
+                                  ? Icons.forum_outlined
+                                  : Icons.chat_rounded,
+                              color: Color(0xFF465064),
+                              size: 23,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 ),
-                child: TextField(
-                  controller: _chatController,
-                  onSubmitted: (_) => _sendMessage(),
-                  decoration: const InputDecoration(
-                    hintText: "اكتب رسالتك هنا...",
-                    border: InputBorder.none,
-                    hintStyle: TextStyle(fontSize: 14),
+                Expanded(
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 220),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 7,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(30),
+                      border: Border.all(
+                        color: isChatFocused
+                            ? const Color(0xFFD8B45B).withAlpha(150)
+                            : const Color(0xFFE7EAF0),
+                      ),
+                      boxShadow: [
+                        if (isChatFocused)
+                          BoxShadow(
+                            color: const Color(0xFFE9B642).withAlpha(24),
+                            blurRadius: 20,
+                            spreadRadius: 1,
+                          ),
+                        BoxShadow(
+                          color: const Color(0xFF17233F).withAlpha(22),
+                          blurRadius: 22,
+                          offset: const Offset(0, 7),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      textDirection: widgets.TextDirection.ltr,
+                      children: [
+                        AnimatedContainer(
+                          duration: const Duration(milliseconds: 180),
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: (_isTyping || canSend)
+                                ? const Color(0xFF1D2433)
+                                : const Color(0xFFD7DAE1),
+                            shape: BoxShape.circle,
+                            boxShadow: canSend
+                                ? [
+                                    BoxShadow(
+                                      color: const Color(
+                                        0xFF1D2433,
+                                      ).withAlpha(35),
+                                      blurRadius: 9,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                          child: Material(
+                            color: Colors.transparent,
+                            shape: const CircleBorder(),
+                            child: InkWell(
+                              customBorder: const CircleBorder(),
+                              onTap: canSend ? _sendMessage : null,
+                              child: Center(
+                                child: _isTyping
+                                    ? _buildSendingDots()
+                                    : const Icon(
+                                        Icons.arrow_upward_rounded,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: TextField(
+                            controller: _chatController,
+                            focusNode: _chatFocusNode,
+                            minLines: 1,
+                            maxLines: 4,
+                            keyboardType: TextInputType.multiline,
+                            textInputAction: _chatController.text.trim().isEmpty
+                                ? TextInputAction.done
+                                : TextInputAction.newline,
+                            textDirection: widgets.TextDirection.rtl,
+                            onChanged: (_) => setState(() {}),
+                            onSubmitted: (_) {
+                              if (_chatController.text.trim().isEmpty) {
+                                _chatFocusNode.unfocus();
+                              }
+                            },
+                            decoration: const InputDecoration(
+                              hintText: 'اسأل سند...',
+                              border: InputBorder.none,
+                              contentPadding: EdgeInsets.symmetric(
+                                vertical: 10,
+                              ),
+                              hintStyle: TextStyle(
+                                fontSize: 14,
+                                color: Color(0xFF929BAD),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Tooltip(
+                          message: 'إرفاق صورة',
+                          child: Material(
+                            color: Colors.transparent,
+                            shape: const CircleBorder(),
+                            child: InkWell(
+                              customBorder: const CircleBorder(),
+                              onTap: _isTyping ? null : _pickChatImage,
+                              child: const SizedBox(
+                                width: 42,
+                                height: 42,
+                                child: Icon(
+                                  Icons.add_rounded,
+                                  color: Color(0xFF465064),
+                                  size: 25,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSendingDots() => AnimatedBuilder(
+    animation: _sendDotsController,
+    builder: (context, _) => Row(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(3, (index) {
+        final phase = (_sendDotsController.value + index / 3) % 1;
+        final lift = phase < 0.5 ? phase * 8 : (1 - phase) * 8;
+        return Transform.translate(
+          offset: Offset(0, -lift),
+          child: Container(
+            width: 4,
+            height: 4,
+            margin: const EdgeInsets.symmetric(horizontal: 1.5),
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+          ),
+        );
+      }),
+    ),
+  );
+
+  Future<void> _pickChatImage() async {
+    try {
+      final image = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 82,
+        maxWidth: 1800,
+        maxHeight: 1800,
+      );
+      if (image != null && mounted) {
+        setState(() => _pendingChatImage = image);
+      }
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تعذر اختيار الصورة. حاول مجدداً.')),
+      );
+    }
+  }
+
+  void _showChatImageFullScreen({String? localPath, String? imageUrl}) {
+    if (localPath == null && imageUrl == null) return;
+    final screenSize = MediaQuery.of(context).size;
+    showDialog<void>(
+      context: context,
+      barrierColor: Colors.black.withAlpha(242),
+      builder: (dialogContext) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(12),
+        child: SizedBox(
+          width: screenSize.width,
+          height: screenSize.height * 0.86,
+          child: Stack(
+            children: [
+              Positioned.fill(
+                child: Center(
+                  child: InteractiveViewer(
+                    minScale: 0.7,
+                    maxScale: 4,
+                    child: localPath != null
+                        ? Image.file(
+                            File(localPath),
+                            fit: BoxFit.contain,
+                            errorBuilder: (_, __, ___) => const Icon(
+                              Icons.broken_image_outlined,
+                              color: Colors.white,
+                              size: 42,
+                            ),
+                          )
+                        : Image.network(
+                            imageUrl!,
+                            fit: BoxFit.contain,
+                            loadingBuilder: (context, child, progress) =>
+                                progress == null
+                                ? child
+                                : const Center(
+                                    child: CircularProgressIndicator(
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                            errorBuilder: (_, __, ___) => const Icon(
+                              Icons.broken_image_outlined,
+                              color: Colors.white,
+                              size: 42,
+                            ),
+                          ),
                   ),
                 ),
               ),
-            ),
-            const SizedBox(width: 10),
-            GestureDetector(
-              onTap: _sendMessage,
-              child: CircleAvatar(
-                backgroundColor: primaryColor,
-                child: _isTyping
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Icon(
-                        Icons.send_rounded,
-                        color: Colors.white,
-                        size: 20,
-                      ),
+              Positioned(
+                top: 4,
+                right: 4,
+                child: IconButton.filledTonal(
+                  tooltip: 'إغلاق الصورة',
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.white.withAlpha(220),
+                    foregroundColor: const Color(0xFF1D2433),
+                  ),
+                  icon: const Icon(Icons.close_rounded),
+                ),
               ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChatBubble(
+    String message,
+    bool isMe,
+    Color primaryColor, {
+    String? retryText,
+    String? retryImagePath,
+    String? localImagePath,
+    String? imageUrl,
+    bool hasStoredImage = false,
+  }) {
+    final hasImage =
+        localImagePath != null || imageUrl != null || hasStoredImage;
+    final image = hasImage
+        ? GestureDetector(
+            onTap: localImagePath != null || imageUrl != null
+                ? () => _showChatImageFullScreen(
+                    localPath: localImagePath,
+                    imageUrl: imageUrl,
+                  )
+                : null,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: localImagePath != null
+                  ? Image.file(
+                      File(localImagePath),
+                      width: 220,
+                      height: 180,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const SizedBox(
+                        width: 220,
+                        height: 120,
+                        child: Center(child: Icon(Icons.broken_image_outlined)),
+                      ),
+                    )
+                  : imageUrl != null
+                  ? Image.network(
+                      imageUrl!,
+                      width: 220,
+                      height: 180,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const SizedBox(
+                        width: 220,
+                        height: 120,
+                        child: Center(child: Icon(Icons.broken_image_outlined)),
+                      ),
+                    )
+                  : const SizedBox(
+                      width: 220,
+                      height: 120,
+                      child: Center(child: Text('تعذر تحميل الصورة')),
+                    ),
+            ),
+          )
+        : const SizedBox.shrink();
+    return Align(
+      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 18),
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.of(context).size.width * (isMe ? 0.80 : 0.88),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+              decoration: BoxDecoration(
+                color: isMe ? primaryColor : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                border: isMe
+                    ? null
+                    : Border.all(color: primaryColor.withAlpha(24)),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF17233F).withAlpha(isMe ? 8 : 10),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: isMe
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (hasImage) image,
+                        if (hasImage && message.isNotEmpty)
+                          const SizedBox(height: 8),
+                        if (message.isNotEmpty)
+                          Text(
+                            message,
+                            textAlign: TextAlign.right,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              height: 1.55,
+                            ),
+                          ),
+                      ],
+                    )
+                  : Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SelectionArea(child: _buildAssistantContent(message)),
+                        if (retryText == null && message.trim().isNotEmpty)
+                          Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: Padding(
+                              padding: const EdgeInsets.only(top: 5),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(10),
+                                onTap: () async {
+                                  await Clipboard.setData(
+                                    ClipboardData(text: message),
+                                  );
+                                  if (!mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('تم نسخ الإجابة'),
+                                    ),
+                                  );
+                                },
+                                child: const Padding(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 7,
+                                    vertical: 5,
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.copy_rounded,
+                                        size: 14,
+                                        color: Color(0xFF7E8799),
+                                      ),
+                                      SizedBox(width: 5),
+                                      Text(
+                                        'نسخ',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: Color(0xFF7E8799),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        if (retryText != null) ...[
+                          const SizedBox(height: 6),
+                          Align(
+                            alignment: AlignmentDirectional.centerStart,
+                            child: TextButton.icon(
+                              onPressed: _isTyping
+                                  ? null
+                                  : () => _retryAiMessage(
+                                      retryText,
+                                      imagePath: retryImagePath,
+                                    ),
+                              icon: const Icon(Icons.refresh_rounded, size: 16),
+                              label: const Text(
+                                'إعادة المحاولة',
+                                style: TextStyle(fontSize: 12),
+                              ),
+                              style: TextButton.styleFrom(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                ),
+                                visualDensity: VisualDensity.compact,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
             ),
           ],
         ),
@@ -2600,53 +4334,63 @@ class _HomePageScreenState extends State<HomePageScreen> with SingleTickerProvid
     );
   }
 
-  Widget _buildChatBubble(String message, bool isMe, Color primaryColor) {
-    return Align(
-      alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 15),
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 10),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.75,
-        ),
-        decoration: BoxDecoration(
-          color: isMe ? primaryColor : Colors.grey[200],
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(15),
-            topRight: const Radius.circular(15),
-            bottomLeft: Radius.circular(isMe ? 15 : 0),
-            bottomRight: Radius.circular(isMe ? 0 : 15),
+  Widget _buildAssistantContent(String message) {
+    final mathPattern = RegExp(
+      r'\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\]|\\\(([\s\S]+?)\\\)|\$([^$\n]+)\$',
+    );
+    final children = <Widget>[];
+    var cursor = 0;
+    for (final match in mathPattern.allMatches(message)) {
+      if (match.start > cursor) {
+        children.add(
+          _buildAssistantMarkdown(message.substring(cursor, match.start)),
+        );
+      }
+      final displayMath = match.group(1) ?? match.group(2);
+      final expression = displayMath ?? match.group(3) ?? match.group(4) ?? '';
+      final isDisplay = displayMath != null;
+      children.add(
+        Padding(
+          padding: EdgeInsets.symmetric(vertical: isDisplay ? 8 : 3),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SelectableMath.tex(
+              expression.trim(),
+              mathStyle: isDisplay ? MathStyle.display : MathStyle.text,
+              textStyle: const TextStyle(color: Colors.black87, fontSize: 16),
+              onErrorFallback: (_) => SelectableText(expression),
+            ),
           ),
         ),
-        child: isMe
-            ? Text(
-                message,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                ),
-              )
-            : MarkdownBody(
-                data: message,
-                styleSheet: MarkdownStyleSheet(
-                  p: const TextStyle(
-                    color: Colors.black87,
-                    fontSize: 14,
-                    fontFamily: 'Tajawal',
-                  ),
-                  strong: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'Tajawal',
-                  ),
-                  listBullet: const TextStyle(
-                    color: Colors.black87,
-                    fontSize: 14,
-                  ),
-                ),
-              ),
-      ),
+      );
+      cursor = match.end;
+    }
+    if (cursor < message.length || children.isEmpty) {
+      children.add(_buildAssistantMarkdown(message.substring(cursor)));
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: children,
     );
   }
+
+  Widget _buildAssistantMarkdown(String text) => MarkdownBody(
+    data: text,
+    selectable: true,
+    styleSheet: MarkdownStyleSheet(
+      p: const TextStyle(
+        color: Colors.black87,
+        fontSize: 14,
+        fontFamily: 'Tajawal',
+      ),
+      strong: const TextStyle(
+        fontWeight: FontWeight.bold,
+        fontFamily: 'Tajawal',
+      ),
+      listBullet: const TextStyle(color: Colors.black87, fontSize: 14),
+    ),
+  );
 
   Widget _buildToolsView(Color primaryColor, Color secondaryColor) {
     return SingleChildScrollView(
@@ -3639,7 +5383,11 @@ class _HomePageScreenState extends State<HomePageScreen> with SingleTickerProvid
                 );
               }),
               // زر الاختبارات (مخفي لمواد معينة)
-              if (!['الفيزياء', 'الكيمياء', 'الفرنسية'].contains(subject['label']))
+              if (![
+                'الفيزياء',
+                'الكيمياء',
+                'الفرنسية',
+              ].contains(subject['label']))
                 _buildBottomSheetItem(
                   "الاختبارات",
                   Icons.assignment_turned_in_rounded,
@@ -3659,7 +5407,11 @@ class _HomePageScreenState extends State<HomePageScreen> with SingleTickerProvid
                   },
                 ),
               // زر الوزاريات (مخفي لمواد معينة)
-              if (!['الفيزياء', 'الكيمياء', 'الفرنسية'].contains(subject['label']))
+              if (![
+                'الفيزياء',
+                'الكيمياء',
+                'الفرنسية',
+              ].contains(subject['label']))
                 _buildBottomSheetItem(
                   "الوزاريات",
                   Icons.account_balance_rounded,
@@ -4073,7 +5825,7 @@ class _HomePageScreenState extends State<HomePageScreen> with SingleTickerProvid
     // 2. الاختبارات والوزاريات (موجودة لبعض المواد فقط حالياً)
     final List<String> excludedSubjects = ['الفيزياء', 'الكيمياء', 'الفرنسية'];
     String category = _getCategoryForSubject(label);
-    
+
     if (!excludedSubjects.contains(label)) {
       count += 2; // الاختبارات + الوزاريات
     }
