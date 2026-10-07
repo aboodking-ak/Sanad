@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart' as widgets;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -97,6 +98,7 @@ class _HomePageScreenState extends State<HomePageScreen>
   String userEmail = "user@email.com";
   String? _profileImagePath;
   String? selectedStage;
+  bool _isDrawerOpen = false;
   bool isAdsRemoved = false;
   int _aiMessagesCount = 0;
   int _aiRemaining = 50;
@@ -2361,6 +2363,11 @@ class _HomePageScreenState extends State<HomePageScreen>
         child: Scaffold(
           backgroundColor: Colors.white,
           resizeToAvoidBottomInset: false,
+          onDrawerChanged: (isOpened) {
+            if (_isDrawerOpen != isOpened) {
+              setState(() => _isDrawerOpen = isOpened);
+            }
+          },
           // الحل الاحترافي: منع الشاشة من الانضغاط
           drawer: _buildDrawer(context, primaryColor, secondaryColor),
           appBar: AppBar(
@@ -2372,7 +2379,13 @@ class _HomePageScreenState extends State<HomePageScreen>
             centerTitle: false,
             titleSpacing: 0,
             // إزالة المسافة التلقائية ليكون النص قريباً من الأيقونة
-            systemOverlayStyle: SystemUiOverlayStyle.light,
+            systemOverlayStyle: _isDrawerOpen
+                ? SystemUiOverlayStyle.dark.copyWith(
+                    statusBarColor: const Color(0xFFF7F8FA),
+                  )
+                : SystemUiOverlayStyle.light.copyWith(
+                    statusBarColor: primaryColor,
+                  ),
             leading: Builder(
               builder: (context) => IconButton(
                 icon: const Icon(
@@ -2781,332 +2794,581 @@ class _HomePageScreenState extends State<HomePageScreen>
     Color primaryColor,
     Color secondaryColor,
   ) {
+    const navy = Color(0xFF1A2238);
+    const gold = Color(0xFFF2B833);
     return Drawer(
-      backgroundColor: Colors.white,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          return SingleChildScrollView(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(minHeight: constraints.maxHeight),
-              child: IntrinsicHeight(
-                child: Column(
+      width: 330,
+      backgroundColor: const Color(0xFFF7F8FA),
+      child: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(18, 14, 18, 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 18,
+                  vertical: 21,
+                ),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topRight,
+                    end: Alignment.bottomLeft,
+                    colors: [Color(0xFFFFFFFF), Color(0xFFFFFCF3)],
+                  ),
+                  borderRadius: BorderRadius.circular(26),
+                  border: Border.all(color: const Color(0xFFE8E2D3)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: navy.withValues(alpha: .06),
+                      blurRadius: 22,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Row(
                   children: [
-                    // رأس الدراور ملون وجذاب
                     Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.fromLTRB(20, 60, 20, 40),
+                      width: 62,
+                      height: 62,
+                      padding: const EdgeInsets.all(5),
                       decoration: BoxDecoration(
-                        color: primaryColor,
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(19),
                         boxShadow: [
                           BoxShadow(
-                            color: primaryColor.withAlpha(40),
-                            blurRadius: 10,
+                            color: navy.withValues(alpha: .09),
+                            blurRadius: 14,
                             offset: const Offset(0, 5),
                           ),
                         ],
                       ),
-                      child: Column(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(15),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Image.asset(AppAssets.logo, height: 70),
-                          ),
-                          const SizedBox(height: 20),
-                          const Text(
-                            "سـنـد",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 28,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1.2,
-                            ),
-                          ),
-                          Text(
-                            "رفيقك في طريق النجاح",
-                            style: TextStyle(
-                              color: Colors.white.withAlpha(200),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(15),
+                        child: Image.asset(AppAssets.logo, fit: BoxFit.cover),
                       ),
                     ),
-
-                    const Expanded(flex: 1, child: SizedBox(height: 20)),
-
-                    // زر الترقية الذهبي
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(18),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFFFA500).withAlpha(60),
-                              blurRadius: 12,
-                              offset: const Offset(0, 6),
+                    const SizedBox(width: 13),
+                    const Expanded(
+                      child: Align(
+                        alignment: Alignment.centerRight,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              'سند',
+                              textAlign: TextAlign.right,
+                              textDirection: widgets.TextDirection.rtl,
+                              style: TextStyle(
+                                color: navy,
+                                fontSize: 23,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'رفيقك في طريق النجاح',
+                              textAlign: TextAlign.right,
+                              textDirection: widgets.TextDirection.rtl,
+                              style: TextStyle(
+                                color: Color(0xFF747D8E),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ],
                         ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () {
-                              Navigator.pop(context);
-                              _showSubscriptionSheet();
-                            },
-                            borderRadius: BorderRadius.circular(18),
-                            child: const Padding(
-                              padding: EdgeInsets.symmetric(
-                                vertical: 15,
-                                horizontal: 20,
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    Icons.workspace_premium_rounded,
-                                    color: Colors.white,
-                                    size: 28,
-                                  ),
-                                  SizedBox(width: 15),
-                                  Text(
-                                    "سند بلس (الاشتراكات)",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                    ),
-                                  ),
-                                  Spacer(),
-                                  Icon(
-                                    Icons.arrow_forward_ios_rounded,
-                                    color: Colors.white,
-                                    size: 14,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
                       ),
                     ),
-
-                    const Expanded(flex: 1, child: SizedBox(height: 10)),
-
-                    _buildDrawerItem(
-                      icon: Icons.share_rounded,
-                      title: "مشاركة التطبيق",
-                      color: primaryColor,
-                      onTap: () async {
-                        try {
-                          await Share.share(
-                            'حمل تطبيق سند الآن، رفيقك في طريق النجاح للدراسة والتميز! 🎓✨\nhttps://play.google.com/store/apps/details?id=com.purecompany.sanad',
-                            subject: 'تطبيق سند التعليمي',
-                          );
-                        } catch (e) {
-                          debugPrint("Share Error: $e");
-                        }
-                      },
-                    ),
-                    _buildDrawerItem(
-                      icon: Icons.star_rate_rounded,
-                      title: "تقييم التطبيق",
-                      color: primaryColor,
-                      onTap: () async {
-                        final url = Uri.parse(
-                          'https://play.google.com/store/apps/details?id=com.purecompany.sanad',
-                        );
-                        if (await canLaunchUrl(url)) {
-                          await launchUrl(
-                            url,
-                            mode: LaunchMode.externalApplication,
-                          );
-                        }
-                      },
-                    ),
-                    _buildDrawerItem(
-                      icon: Icons.report_problem_rounded,
-                      title: "إبلاغ عن مشكلة",
-                      color: primaryColor,
-                      onTap: () async {
-                        try {
-                          final PackageInfo packageInfo =
-                              await PackageInfo.fromPlatform();
-                          final DeviceInfoPlugin deviceInfo =
-                              DeviceInfoPlugin();
-                          String deviceData = "";
-
-                          if (Platform.isAndroid) {
-                            AndroidDeviceInfo androidInfo =
-                                await deviceInfo.androidInfo;
-                            deviceData =
-                                "Device: ${androidInfo.model}, OS: Android ${androidInfo.version.release}";
-                          } else if (Platform.isIOS) {
-                            IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
-                            deviceData =
-                                "Device: ${iosInfo.utsname.machine}, OS: iOS ${iosInfo.systemVersion}";
-                          }
-
-                          final String email = 'admin@co-pure.com';
-                          final String subject =
-                              'Report Problem - Sanad v${packageInfo.version}';
-                          final String body =
-                              '\n\n\n--- System Info ---\n$deviceData\nApp Version: ${packageInfo.version}';
-
-                          final Uri emailLaunchUri = Uri(
-                            scheme: 'mailto',
-                            path: email,
-                            query:
-                                'subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}',
-                          );
-
-                          if (await canLaunchUrl(emailLaunchUri)) {
-                            await launchUrl(emailLaunchUri);
-                          } else {
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    "لم نجد تطبيق بريد إلكتروني مثبت",
-                                  ),
-                                ),
-                              );
-                            }
-                          }
-                        } catch (e) {
-                          debugPrint("Email Launch Error: $e");
-                        }
-                      },
-                    ),
-                    const Divider(indent: 25, endIndent: 25, height: 30),
-                    _buildDrawerItem(
-                      icon: Icons.info_rounded,
-                      title: "عن التطبيق",
-                      color: primaryColor,
-                      onTap: () {
-                        showDialog(
-                          context: context,
-                          builder: (context) => Dialog(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24),
-                            ),
-                            backgroundColor: Colors.white,
-                            child: Padding(
-                              padding: const EdgeInsets.all(24.0),
-                              child: Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(15),
-                                    decoration: BoxDecoration(
-                                      color: primaryColor.withAlpha(20),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(50),
-                                      child: Image.asset(
-                                        AppAssets.logo,
-                                        height: 60,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 20),
-                                  Text(
-                                    "سـنـد",
-                                    style: TextStyle(
-                                      color: primaryColor,
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  Text(
-                                    "الإصدار $_appVersion",
-                                    style: TextStyle(
-                                      color: Colors.grey[500],
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 20),
-                                  const Text(
-                                    "سند هو تطبيق تعليمي شامل مصمم لمساعدة الطلاب العراقيين في رحلتهم الدراسية من خلال توفير الكتب، الاختبارات، المساعد الذكي، وأدوات تنظيم الوقت.",
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(height: 1.6, fontSize: 14),
-                                  ),
-                                  const SizedBox(height: 24),
-                                  SizedBox(
-                                    width: double.infinity,
-                                    child: ElevatedButton(
-                                      onPressed: () => Navigator.pop(context),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: primaryColor,
-                                        foregroundColor: Colors.white,
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 12,
-                                        ),
-                                        elevation: 0,
-                                      ),
-                                      child: const Text(
-                                        "تم",
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    "© 2026 PureCompany",
-                                    style: TextStyle(
-                                      color: Colors.grey[400],
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-
-                    const Expanded(flex: 4, child: SizedBox(height: 40)),
-
-                    Padding(
-                      padding: const EdgeInsets.all(25.0),
-                      child: Text(
-                        "الإصدار $_appVersion",
-                        style: TextStyle(
-                          color: Colors.grey[400],
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                        ),
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: gold.withValues(alpha: .13),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.auto_awesome_rounded,
+                        color: Color(0xFFD49A1B),
+                        size: 18,
                       ),
                     ),
                   ],
                 ),
               ),
-            ),
-          );
-        },
+              const SizedBox(height: 16),
+              Material(
+                color: navy,
+                borderRadius: BorderRadius.circular(20),
+                child: InkWell(
+                  onTap: () {
+                    Navigator.pop(context);
+                    _showSubscriptionSheet();
+                  },
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 15,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(20),
+                      gradient: LinearGradient(
+                        begin: Alignment.topRight,
+                        end: Alignment.bottomLeft,
+                        colors: [
+                          navy,
+                          navy.withValues(alpha: .93),
+                          const Color(0xFF293653),
+                        ],
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 42,
+                          height: 42,
+                          decoration: BoxDecoration(
+                            color: gold.withValues(alpha: .17),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Icon(
+                            Icons.workspace_premium_rounded,
+                            color: gold,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'سند بلس',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                              SizedBox(height: 3),
+                              Text(
+                                'اكتشف مزايا الاشتراك',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(
+                          Icons.arrow_back_ios_new_rounded,
+                          textDirection: widgets.TextDirection.ltr,
+                          color: Colors.white70,
+                          size: 15,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              _drawerSectionTitle('تابع سند'),
+              const SizedBox(height: 9),
+              Row(
+                children: [
+                  _drawerSocialButton(
+                    'فيسبوك',
+                    SvgPicture.asset(
+                      'assets/icons/social/facebook.svg',
+                      width: 24,
+                      height: 24,
+                    ),
+                    'https://www.facebook.com/share/1GhQf5Pxgw/',
+                  ),
+                  const SizedBox(width: 8),
+                  _drawerSocialButton(
+                    'تكتوك',
+                    SvgPicture.asset(
+                      'assets/icons/social/tiktok.svg',
+                      width: 24,
+                      height: 24,
+                    ),
+                    'https://tiktok.com/@purecompanystudio',
+                  ),
+                  const SizedBox(width: 8),
+                  _drawerSocialButton(
+                    'إنستغرام',
+                    SvgPicture.asset(
+                      'assets/icons/social/instagram.svg',
+                      width: 24,
+                      height: 24,
+                    ),
+                    'https://www.instagram.com/purecompanystudio?stkn=MTVvaGpkdDhsZ2M2YQ==',
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              _drawerSectionTitle('الدعم والمساعدة'),
+              const SizedBox(height: 8),
+              _drawerContactTile(
+                icon: const Icon(Icons.email_outlined, size: 20),
+                title: 'البريد الإلكتروني',
+                subtitle: 'admin@co-pure.com',
+                color: const Color(0xFF53627D),
+                onTap: () => _openDrawerLink('mailto:admin@co-pure.com'),
+              ),
+              const SizedBox(height: 7),
+              _drawerContactTile(
+                icon: SvgPicture.asset(
+                  'assets/icons/social/whatsapp.svg',
+                  width: 20,
+                  height: 20,
+                ),
+                title: 'واتساب للدعم',
+                subtitle: 'تواصل معنا مباشرة',
+                color: const Color(0xFF25D366),
+                onTap: () => _openDrawerLink('https://wa.me/9647874371446'),
+              ),
+              const SizedBox(height: 7),
+              _drawerContactTile(
+                icon: SvgPicture.asset(
+                  'assets/icons/social/telegram.svg',
+                  width: 20,
+                  height: 20,
+                ),
+                title: 'تلكرام للدعم',
+                subtitle: 'راسل فريق سند',
+                color: const Color(0xFF229ED9),
+                onTap: () => _openDrawerLink('https://t.me/+9647874371446'),
+              ),
+              const SizedBox(height: 19),
+              _drawerSectionTitle('المزيد'),
+              const SizedBox(height: 7),
+              _buildDrawerItem(
+                icon: Icons.share_rounded,
+                title: 'مشاركة التطبيق',
+                color: navy,
+                onTap: () async {
+                  try {
+                    await Share.share(
+                      'حمل تطبيق سند الآن، رفيقك في طريق النجاح للدراسة والتميز! 🎓✨\nhttps://play.google.com/store/apps/details?id=com.purecompany.sanad',
+                      subject: 'تطبيق سند التعليمي',
+                    );
+                  } catch (e) {
+                    debugPrint('Share Error: $e');
+                  }
+                },
+              ),
+              _buildDrawerItem(
+                icon: Icons.star_rate_rounded,
+                title: 'تقييم التطبيق',
+                color: navy,
+                onTap: () => _openDrawerLink(
+                  'https://play.google.com/store/apps/details?id=com.purecompany.sanad',
+                ),
+              ),
+              _buildDrawerItem(
+                icon: Icons.report_problem_outlined,
+                title: 'إبلاغ عن مشكلة',
+                color: navy,
+                onTap: () async {
+                  try {
+                    final PackageInfo packageInfo =
+                        await PackageInfo.fromPlatform();
+                    final DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
+                    String deviceData = "";
+
+                    if (Platform.isAndroid) {
+                      AndroidDeviceInfo androidInfo =
+                          await deviceInfo.androidInfo;
+                      deviceData =
+                          "Device: ${androidInfo.model}, OS: Android ${androidInfo.version.release}";
+                    } else if (Platform.isIOS) {
+                      IosDeviceInfo iosInfo = await deviceInfo.iosInfo;
+                      deviceData =
+                          "Device: ${iosInfo.utsname.machine}, OS: iOS ${iosInfo.systemVersion}";
+                    }
+
+                    final String email = 'admin@co-pure.com';
+                    final String subject =
+                        'Report Problem - Sanad v${packageInfo.version}';
+                    final String body =
+                        '\n\n\n--- System Info ---\n$deviceData\nApp Version: ${packageInfo.version}';
+
+                    final Uri emailLaunchUri = Uri(
+                      scheme: 'mailto',
+                      path: email,
+                      query:
+                          'subject=${Uri.encodeComponent(subject)}&body=${Uri.encodeComponent(body)}',
+                    );
+
+                    await _openDrawerLink(emailLaunchUri.toString());
+                  } catch (e) {
+                    debugPrint("Email Launch Error: $e");
+                  }
+                },
+              ),
+              _buildDrawerItem(
+                icon: Icons.info_outline_rounded,
+                title: 'عن التطبيق',
+                color: navy,
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (context) => Dialog(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      backgroundColor: Colors.white,
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(15),
+                              decoration: BoxDecoration(
+                                color: primaryColor.withAlpha(20),
+                                shape: BoxShape.circle,
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(50),
+                                child: Image.asset(AppAssets.logo, height: 60),
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            Text(
+                              "سـنـد",
+                              style: TextStyle(
+                                color: primaryColor,
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              "الإصدار $_appVersion",
+                              style: TextStyle(
+                                color: Colors.grey[500],
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            const SizedBox(height: 20),
+                            const Text(
+                              "سند هو تطبيق تعليمي شامل مصمم لمساعدة الطلاب العراقيين في رحلتهم الدراسية من خلال توفير الكتب، الاختبارات، المساعد الذكي، وأدوات تنظيم الوقت.",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(height: 1.6, fontSize: 14),
+                            ),
+                            const SizedBox(height: 24),
+                            SizedBox(
+                              width: double.infinity,
+                              child: ElevatedButton(
+                                onPressed: () => Navigator.pop(context),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: primaryColor,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                  elevation: 0,
+                                ),
+                                child: const Text(
+                                  "تم",
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            Text(
+                              "© 2026 PureCompany",
+                              style: TextStyle(
+                                color: Colors.grey[400],
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 13),
+              Center(
+                child: Text(
+                  'الإصدار $_appVersion',
+                  style: const TextStyle(
+                    color: Color(0xFF9AA1AF),
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 5),
+              const Center(
+                child: Text(
+                  '© PureCompany 2026',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: Color(0xFF9AA1AF), fontSize: 10),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
+  }
+
+  Widget _drawerSectionTitle(String title) => Row(
+    children: [
+      Container(
+        width: 4,
+        height: 17,
+        decoration: BoxDecoration(
+          color: const Color(0xFFF2B833),
+          borderRadius: BorderRadius.circular(4),
+        ),
+      ),
+      const SizedBox(width: 8),
+      Text(
+        title,
+        style: const TextStyle(
+          color: Color(0xFF1A2238),
+          fontSize: 15,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    ],
+  );
+
+  Widget _drawerSocialButton(String label, Widget icon, String url) => Expanded(
+    child: Material(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: () => _openDrawerLink(url),
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 3),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE8EAF0)),
+          ),
+          child: Column(
+            children: [
+              icon,
+              const SizedBox(height: 6),
+              Text(
+                label,
+                maxLines: 1,
+                style: const TextStyle(
+                  color: Color(0xFF4B5568),
+                  fontSize: 10,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+
+  Widget _drawerContactTile({
+    required Widget icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) => Material(
+    color: Colors.white,
+    borderRadius: BorderRadius.circular(16),
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0xFFE8EAF0)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: .1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: SizedBox(width: 20, height: 20, child: icon),
+            ),
+            const SizedBox(width: 11),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Color(0xFF1A2238),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      color: Color(0xFF858D9D),
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              textDirection: widgets.TextDirection.ltr,
+              color: Color(0xFFA1A8B5),
+              size: 13,
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+
+  Future<void> _openDrawerLink(String value) async {
+    final uri = Uri.tryParse(value);
+    if (uri == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تعذر فتح الرابط على هذا الجهاز.')),
+        );
+      }
+      return;
+    }
+    try {
+      final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!opened && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تعذر فتح الرابط على هذا الجهاز.')),
+        );
+      }
+    } catch (error) {
+      debugPrint('Could not open drawer link: $error');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تعذر فتح الرابط على هذا الجهاز.')),
+        );
+      }
+    }
   }
 
   Widget _buildDrawerItem({

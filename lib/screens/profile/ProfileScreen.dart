@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -645,13 +646,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
     children: [
       Padding(
         padding: const EdgeInsets.fromLTRB(6, 4, 6, 12),
-        child: Text(
-          title,
-          style: const TextStyle(
-            color: _navy,
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-          ),
+        child: Row(
+          children: [
+            Container(
+              width: 4,
+              height: 18,
+              decoration: BoxDecoration(
+                color: _gold,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: const TextStyle(
+                color: _navy,
+                fontSize: 16,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+          ],
         ),
       ),
       Container(
@@ -688,6 +702,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       appBar: AppBar(
         backgroundColor: const Color(0xFFF4F5F8),
         foregroundColor: _navy,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: _navy,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
+        ),
         elevation: 0,
         scrolledUnderElevation: 0,
         title: const Text(
