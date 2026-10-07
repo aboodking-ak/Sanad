@@ -1023,7 +1023,6 @@ class _HomePageScreenState extends State<HomePageScreen>
         if (event['delta'] is String) {
           answer.write(event['delta']);
           onToken(answer.toString());
-          await Future<void>.delayed(const Duration(milliseconds: 20));
         } else if (event['usage'] != null) {
           _applyAiUsage(event['usage']);
           receivedUsage = true;
@@ -4394,8 +4393,31 @@ class _HomePageScreenState extends State<HomePageScreen>
     return output.join('\n');
   }
 
+  String _isolatePlainEquationLines(String text) {
+    final mathOnlyLine = RegExp(
+      r'^[\s0-9٠-٩۰-۹A-Za-z=+\-−*/^().,×÷<>≤≥≠√π%→:]+$',
+    );
+    return text
+        .split('\n')
+        .map((line) {
+          final trimmed = line.trim();
+          final hasEquation =
+              trimmed.contains('=') ||
+              trimmed.contains('≤') ||
+              trimmed.contains('≥') ||
+              trimmed.contains('≠');
+          if (hasEquation && mathOnlyLine.hasMatch(trimmed)) {
+            return '\$\$$trimmed\$\$';
+          }
+          return line;
+        })
+        .join('\n');
+  }
+
   Widget _buildAssistantContent(String message) {
-    final displayMessage = _replaceMarkdownTablesWithLists(message);
+    final displayMessage = _isolatePlainEquationLines(
+      _replaceMarkdownTablesWithLists(message),
+    );
     final mathPattern = RegExp(
       r'\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\]|\\\(([\s\S]+?)\\\)|\$([^$\n]+)\$',
     );
