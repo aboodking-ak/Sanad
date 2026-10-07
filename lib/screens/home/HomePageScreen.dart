@@ -4415,13 +4415,22 @@ class _HomePageScreenState extends State<HomePageScreen>
       children.add(
         Padding(
           padding: EdgeInsets.symmetric(vertical: isDisplay ? 8 : 3),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: SelectableMath.tex(
-              expression.trim(),
-              mathStyle: isDisplay ? MathStyle.display : MathStyle.text,
-              textStyle: const TextStyle(color: Colors.black87, fontSize: 16),
-              onErrorFallback: (_) => SelectableText(expression),
+          child: Directionality(
+            textDirection: widgets.TextDirection.ltr,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: SelectableMath.tex(
+                  expression.trim(),
+                  mathStyle: isDisplay ? MathStyle.display : MathStyle.text,
+                  textStyle: const TextStyle(
+                    color: Colors.black87,
+                    fontSize: 16,
+                  ),
+                  onErrorFallback: (_) => SelectableText(expression),
+                ),
+              ),
             ),
           ),
         ),
