@@ -4335,16 +4335,78 @@ class _HomePageScreenState extends State<HomePageScreen>
     );
   }
 
+  String _replaceMarkdownTablesWithLists(String text) {
+    final lines = text.split('\n');
+    final output = <String>[];
+
+    List<String> cells(String line) {
+      var row = line.trim();
+      if (row.startsWith('|')) row = row.substring(1);
+      if (row.endsWith('|')) row = row.substring(0, row.length - 1);
+      return row
+          .split('|')
+          .map((cell) => cell.trim().replaceAll(r'\|', '|'))
+          .toList();
+    }
+
+    bool isSeparator(String line) {
+      final columns = cells(line);
+      return columns.length > 1 &&
+          columns.every((cell) => RegExp(r'^:?-{3,}:?$').hasMatch(cell));
+    }
+
+    var index = 0;
+    while (index < lines.length) {
+      if (index + 1 < lines.length &&
+          lines[index].contains('|') &&
+          isSeparator(lines[index + 1])) {
+        final headers = cells(lines[index]);
+        index += 2;
+        var rowCount = 0;
+        while (index < lines.length &&
+            lines[index].contains('|') &&
+            lines[index].trim().isNotEmpty) {
+          final values = cells(lines[index]);
+          final fields = <String>[];
+          for (var column = 0; column < headers.length; column++) {
+            if (column >= values.length || values[column].isEmpty) continue;
+            final label = headers[column].isEmpty
+                ? 'معلومة ${column + 1}'
+                : headers[column];
+            fields.add('**$label:** ${values[column]}');
+          }
+          if (fields.isNotEmpty) output.add('- ${fields.join(' · ')}');
+          rowCount++;
+          index++;
+        }
+        if (rowCount == 0) {
+          output.addAll(
+            headers
+                .where((header) => header.isNotEmpty)
+                .map((header) => '- **$header**'),
+          );
+        }
+        continue;
+      }
+      output.add(lines[index]);
+      index++;
+    }
+    return output.join('\n');
+  }
+
   Widget _buildAssistantContent(String message) {
+    final displayMessage = _replaceMarkdownTablesWithLists(message);
     final mathPattern = RegExp(
       r'\$\$([\s\S]+?)\$\$|\\\[([\s\S]+?)\\\]|\\\(([\s\S]+?)\\\)|\$([^$\n]+)\$',
     );
     final children = <Widget>[];
     var cursor = 0;
-    for (final match in mathPattern.allMatches(message)) {
+    for (final match in mathPattern.allMatches(displayMessage)) {
       if (match.start > cursor) {
         children.add(
-          _buildAssistantMarkdown(message.substring(cursor, match.start)),
+          _buildAssistantMarkdown(
+            displayMessage.substring(cursor, match.start),
+          ),
         );
       }
       final displayMath = match.group(1) ?? match.group(2);
@@ -4366,8 +4428,8 @@ class _HomePageScreenState extends State<HomePageScreen>
       );
       cursor = match.end;
     }
-    if (cursor < message.length || children.isEmpty) {
-      children.add(_buildAssistantMarkdown(message.substring(cursor)));
+    if (cursor < displayMessage.length || children.isEmpty) {
+      children.add(_buildAssistantMarkdown(displayMessage.substring(cursor)));
     }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

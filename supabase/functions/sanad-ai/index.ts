@@ -110,12 +110,17 @@ Deno.serve(async (request: Request) => {
     const reserved = await quota('reserve');
     if (!reserved.accepted) return reply(429, { error: reserved.used >= 50 ? 'daily_limit' : 'requests_busy', usage: reserved });
     requestId = reserved.request_id;
+    const systemPrompt = [
+      'أنت مساعد ذكي لتطبيق سند التعليمي، تساعد الطلاب بأسلوب ودود وباللغة العربية.',
+      'يُمنع منعاً باتاً استخدام الجداول أو تنسيق Markdown للجداول في أي إجابة، مهما كان السؤال.',
+      'عند عرض مقارنة أو بيانات متعددة، استخدم عناوين قصيرة وقوائم نقطية أو مرقمة بدلاً من الجدول.',
+    ].join(' ');
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${groqKey}` },
       body: JSON.stringify({
         model: imageCount > 0 ? 'qwen/qwen3.8-27b' : 'openai/gpt-oss-120b',
-        messages: [{ role: 'system', content: 'أنت مساعد ذكي لتطبيق سند التعليمي، تساعد الطلاب في دراستهم بأسلوب ودود وباللغة العربية.' }, ...modelMessages],
+        messages: [{ role: 'system', content: systemPrompt }, ...modelMessages],
         temperature: 0.7,
         max_tokens: 1024,
         stream: true,
