@@ -153,6 +153,8 @@ class _HomePageScreenState extends State<HomePageScreen>
   String _searchQuery = "";
   bool _isTipVisible = false;
   final List<Map<String, dynamic>> _chatMessages = [];
+  final ValueNotifier<String> _liveAssistantText = ValueNotifier('');
+  Map<String, dynamic>? _liveAssistantMessage;
   final List<Map<String, dynamic>> _aiConversations = [];
   static const int _chatPageSize = 30;
   Map<String, dynamic>? _oldestChatMessageCursor;
@@ -243,6 +245,7 @@ class _HomePageScreenState extends State<HomePageScreen>
     _timer.cancel();
     _searchController.dispose();
     _chatController.dispose();
+    _liveAssistantText.dispose();
     _chatFocusNode.dispose();
     _sendDotsController.dispose();
     _chatHistoryPulseController.dispose();
@@ -794,14 +797,16 @@ class _HomePageScreenState extends State<HomePageScreen>
         imagePath: uploadedImagePath,
         onToken: (text) {
           if (!mounted) return;
-          setState(() {
-            if (liveReply == null) {
-              liveReply = {'text': text, 'isMe': false};
-              _chatMessages.add(liveReply!);
-            } else {
-              liveReply!['text'] = text;
-            }
-          });
+          if (liveReply == null) {
+            liveReply = {'text': text, 'isMe': false};
+            _chatMessages.add(liveReply!);
+            _liveAssistantMessage = liveReply;
+            _liveAssistantText.value = text;
+            setState(() {});
+          } else {
+            liveReply!['text'] = text;
+            _liveAssistantText.value = text;
+          }
         },
       );
 
@@ -816,12 +821,17 @@ class _HomePageScreenState extends State<HomePageScreen>
         } else {
           liveReply!['text'] = responseText;
         }
+        _liveAssistantMessage = null;
       });
       await _saveMessageToDB(responseText!, false);
     } catch (e) {
       if (!mounted) return;
       if (liveReply != null) {
-        setState(() => _chatMessages.remove(liveReply));
+        setState(() {
+          _chatMessages.remove(liveReply);
+          _liveAssistantMessage = null;
+          _liveAssistantText.value = '';
+        });
       }
       if (e is FunctionException &&
           e.details is Map &&
@@ -1011,6 +1021,8 @@ class _HomePageScreenState extends State<HomePageScreen>
 
       final answer = StringBuffer();
       var receivedUsage = false;
+      var publishedLength = 0;
+      final uiUpdateClock = Stopwatch()..start();
       await for (final line
           in response.stream
               .transform(utf8.decoder)
@@ -1022,7 +1034,11 @@ class _HomePageScreenState extends State<HomePageScreen>
         if (event is! Map) continue;
         if (event['delta'] is String) {
           answer.write(event['delta']);
-          onToken(answer.toString());
+          if (publishedLength == 0 || uiUpdateClock.elapsedMilliseconds >= 50) {
+            onToken(answer.toString());
+            publishedLength = answer.length;
+            uiUpdateClock.reset();
+          }
         } else if (event['usage'] != null) {
           _applyAiUsage(event['usage']);
           receivedUsage = true;
@@ -1033,6 +1049,7 @@ class _HomePageScreenState extends State<HomePageScreen>
           );
         }
       }
+      if (answer.length != publishedLength) onToken(answer.toString());
       if (answer.isEmpty || !receivedUsage) {
         throw const FunctionException(
           status: 503,
@@ -1096,14 +1113,16 @@ class _HomePageScreenState extends State<HomePageScreen>
         imagePath: imagePath,
         onToken: (text) {
           if (!mounted) return;
-          setState(() {
-            if (liveReply == null) {
-              liveReply = {'text': text, 'isMe': false};
-              _chatMessages.add(liveReply!);
-            } else {
-              liveReply!['text'] = text;
-            }
-          });
+          if (liveReply == null) {
+            liveReply = {'text': text, 'isMe': false};
+            _chatMessages.add(liveReply!);
+            _liveAssistantMessage = liveReply;
+            _liveAssistantText.value = text;
+            setState(() {});
+          } else {
+            liveReply!['text'] = text;
+            _liveAssistantText.value = text;
+          }
         },
       );
       if (response == null || response.isEmpty) {
@@ -1116,12 +1135,17 @@ class _HomePageScreenState extends State<HomePageScreen>
         } else {
           liveReply!['text'] = response;
         }
+        _liveAssistantMessage = null;
       });
       await _saveMessageToDB(response, false);
     } catch (_) {
       if (!mounted) return;
       if (liveReply != null) {
-        setState(() => _chatMessages.remove(liveReply));
+        setState(() {
+          _chatMessages.remove(liveReply);
+          _liveAssistantMessage = null;
+          _liveAssistantText.value = '';
+        });
       }
       _showErrorMessage(
         'تعذر الاتصال بالمساعد. تحقق من الإنترنت ثم أعد المحاولة.',
@@ -3616,17 +3640,9 @@ class _HomePageScreenState extends State<HomePageScreen>
                                 final msg = _chatMessages[index];
                                 return KeyedSubtree(
                                   key: ValueKey(msg['id'] ?? 'local-$index'),
-                                  child: _buildChatBubble(
-                                    msg['text'],
-                                    msg['isMe'],
+                                  child: _buildChatBubbleForMessage(
+                                    msg,
                                     primaryColor,
-                                    retryText: msg['retryText'] as String?,
-                                    retryImagePath:
-                                        msg['retryImagePath'] as String?,
-                                    localImagePath:
-                                        msg['localImagePath'] as String?,
-                                    imageUrl: msg['imageUrl'] as String?,
-                                    hasStoredImage: msg['imagePath'] != null,
                                   ),
                                 );
                               },
@@ -3658,6 +3674,30 @@ class _HomePageScreenState extends State<HomePageScreen>
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildChatBubbleForMessage(
+    Map<String, dynamic> message,
+    Color primaryColor,
+  ) {
+    Widget buildBubble(String text) => _buildChatBubble(
+      text,
+      message['isMe'] as bool? ?? false,
+      primaryColor,
+      retryText: message['retryText'] as String?,
+      retryImagePath: message['retryImagePath'] as String?,
+      localImagePath: message['localImagePath'] as String?,
+      imageUrl: message['imageUrl'] as String?,
+      hasStoredImage: message['imagePath'] != null,
+    );
+
+    if (!identical(message, _liveAssistantMessage)) {
+      return buildBubble(message['text']?.toString() ?? '');
+    }
+    return ValueListenableBuilder<String>(
+      valueListenable: _liveAssistantText,
+      builder: (context, text, child) => buildBubble(text),
     );
   }
 
