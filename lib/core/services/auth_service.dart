@@ -5,14 +5,19 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 
 class AuthService {
+  static const explicitSignOutKey = 'explicit_sign_out';
+
   final SupabaseClient _supabase = Supabase.instance.client;
 
   // تسجيل الدخول الصامت باستخدام جوجل
   Future<AuthResponse?> signInGoogleSilently() async {
     try {
-      const webClientId = '218216743464-4o6489e2bde76j4f8cvqm2n8gunib55d.apps.googleusercontent.com';
-      final GoogleSignIn googleSignIn = GoogleSignIn(serverClientId: webClientId);
-      
+      const webClientId =
+          '218216743464-4o6489e2bde76j4f8cvqm2n8gunib55d.apps.googleusercontent.com';
+      final GoogleSignIn googleSignIn = GoogleSignIn(
+        serverClientId: webClientId,
+      );
+
       final googleUser = await googleSignIn.signInSilently();
       if (googleUser == null) return null;
 
@@ -29,7 +34,8 @@ class AuthService {
       );
 
       if (response.user != null) {
-        // لا نقوم بتخزين بيانات المستخدم محلياً - نعتمد فقط على Supabase
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove(explicitSignOutKey);
       }
 
       return response;
@@ -44,13 +50,14 @@ class AuthService {
     try {
       // 1. إعداد GoogleSignIn
       // ملاحظة: لـ Android يجب استخدام webClientId من Google Cloud Console (Web application)
-      const webClientId = '218216743464-4o6489e2bde76j4f8cvqm2n8gunib55d.apps.googleusercontent.com';
-      
+      const webClientId =
+          '218216743464-4o6489e2bde76j4f8cvqm2n8gunib55d.apps.googleusercontent.com';
+
       // في Supabase، لـ Native Android نحتاج لـ idToken
       final GoogleSignIn googleSignIn = GoogleSignIn(
         serverClientId: webClientId,
       );
-      
+
       final googleUser = await googleSignIn.signIn();
       if (googleUser == null) throw 'تم إلغاء عملية تسجيل الدخول';
 
@@ -69,7 +76,8 @@ class AuthService {
       );
 
       if (response.user != null) {
-        // لا نقوم بتخزين بيانات المستخدم محلياً - نعتمد فقط على Supabase
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.remove(explicitSignOutKey);
       }
 
       return response;
@@ -86,7 +94,11 @@ class AuthService {
   Stream<AuthState> get authStateChanges => _supabase.auth.onAuthStateChange;
 
   // حفظ بيانات المستخدم محلياً (تم إلغاؤه والاعتماد الكامل على Supabase)
-  Future<void> _saveLocalData(User user, {String? fullName, String? stage}) async {
+  Future<void> _saveLocalData(
+    User user, {
+    String? fullName,
+    String? stage,
+  }) async {
     // تم إلغاء التخزين المحلي لبيانات المستخدم
   }
 
@@ -98,9 +110,7 @@ class AuthService {
 
       // تحديث في Supabase فقط
       await _supabase.auth.updateUser(
-        UserAttributes(
-          data: {'user_stage': stage},
-        ),
+        UserAttributes(data: {'user_stage': stage}),
       );
     } catch (e) {
       print('Error updating stage: $e');
@@ -115,9 +125,7 @@ class AuthService {
       if (user == null) return;
 
       await _supabase.auth.updateUser(
-        UserAttributes(
-          data: {'full_name': fullName},
-        ),
+        UserAttributes(data: {'full_name': fullName}),
       );
     } catch (e) {
       print('Error updating name: $e');
@@ -130,13 +138,13 @@ class AuthService {
     try {
       final user = _supabase.auth.currentUser;
       if (user == null) return;
-      
+
       // 1. حذف الصور من Storage
       await deleteProfileImage();
 
       // 2. استدعاء الدالة البرمجية لحذف الحساب نهائياً من Supabase
       await _supabase.rpc('delete_user_account');
-      
+
       // 3. تسجيل الخروج ومسح البيانات المحلية
       await _clearLocalData();
     } catch (e) {
@@ -165,13 +173,14 @@ class AuthService {
     final response = await _supabase.auth.signUp(
       email: email,
       password: password,
-      data: {
-        'full_name': fullName,
-        'user_stage': stage,
-      },
+      data: {'full_name': fullName, 'user_stage': stage},
       emailRedirectTo: 'com.purecompany.sanad://login-callback',
     );
-    
+    if (response.session != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(explicitSignOutKey);
+    }
+
     return response;
   }
 
@@ -192,11 +201,11 @@ class AuthService {
       email: email,
       password: password,
     );
-    
     if (response.user != null && response.user!.emailConfirmedAt != null) {
-      // تم تسجيل الدخول بنجاح الجلسة تحفظ تلقائيا عبر SDK Supabase
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(explicitSignOutKey);
     }
-    
+
     return response;
   }
 
@@ -215,7 +224,7 @@ class AuthService {
         final List<FileObject> existingFiles = await _supabase.storage
             .from('profiles')
             .list(path: 'avatars');
-        
+
         final List<String> filesToDelete = existingFiles
             .where((file) => file.name.startsWith(user.id))
             .map((file) => 'avatars/${file.name}')
@@ -229,26 +238,29 @@ class AuthService {
       }
 
       // 2. رفع الملف الجديد
-      await _supabase.storage.from('profiles').upload(
+      await _supabase.storage
+          .from('profiles')
+          .upload(
             filePath,
             imageFile,
             fileOptions: const FileOptions(upsert: true),
           );
 
       // 3. الحصول على رابط الصورة العام
-      final String publicUrl = _supabase.storage.from('profiles').getPublicUrl(filePath);
-      
+      final String publicUrl = _supabase.storage
+          .from('profiles')
+          .getPublicUrl(filePath);
+
       // إضافة طابع زمني لتجنب التخزين المؤقت
-      final String finalUrl = "$publicUrl?t=${DateTime.now().millisecondsSinceEpoch}";
-      
+      final String finalUrl =
+          "$publicUrl?t=${DateTime.now().millisecondsSinceEpoch}";
+
       print('Uploading to path: $filePath');
       print('New Public URL: $finalUrl');
 
       // 4. تحديث بيانات المستخدم في Supabase Auth metadata
       final response = await _supabase.auth.updateUser(
-        UserAttributes(
-          data: {'profile_image': finalUrl},
-        ),
+        UserAttributes(data: {'profile_image': finalUrl}),
       );
 
       if (response.user != null) {
@@ -273,7 +285,7 @@ class AuthService {
         final List<FileObject> existingFiles = await _supabase.storage
             .from('profiles')
             .list(path: 'avatars');
-        
+
         final List<String> filesToDelete = existingFiles
             .where((file) => file.name.startsWith(user.id))
             .map((file) => 'avatars/${file.name}')
@@ -288,15 +300,13 @@ class AuthService {
 
       // 2. تحديث بيانات المستخدم في Supabase (جعل الرابط null)
       final response = await _supabase.auth.updateUser(
-        UserAttributes(
-          data: {'profile_image': null},
-        ),
+        UserAttributes(data: {'profile_image': null}),
       );
 
       // 3. تحديث البيانات المحلية
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('profile_image_path');
-      
+
       if (response.user != null) {
         // لا نقوم بتخزين بيانات المستخدم محلياً - نعتمد فقط على Supabase
       }
@@ -310,6 +320,8 @@ class AuthService {
   Future<void> signOut() async {
     await _supabase.auth.signOut();
     await _clearLocalData();
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(explicitSignOutKey, true);
   }
 
   // إرسال رابط استعادة كلمة المرور

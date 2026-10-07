@@ -18,6 +18,7 @@ import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:http/http.dart' as http;
 import '../../core/constants/app_assets.dart';
 import '../../core/models/subject_model.dart';
+import '../../core/services/auth_service.dart';
 import '../../core/utils/ad_helper.dart';
 
 class HomePageScreen extends StatefulWidget {
@@ -529,9 +530,9 @@ class _HomePageScreenState extends State<HomePageScreen>
                 ),
                 const SizedBox(height: 30),
                 ElevatedButton(
-                  onPressed: () {
+                  onPressed: () async {
                     // تسجيل الخروج والعودة لشاشة البداية
-                    Supabase.instance.client.auth.signOut();
+                    await AuthService().signOut();
                     Navigator.pushNamedAndRemoveUntil(
                       context,
                       '/signin',

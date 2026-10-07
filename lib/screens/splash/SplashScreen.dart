@@ -118,10 +118,19 @@ class _SplashScreenState extends State<SplashScreen> {
     try {
       final supabase = Supabase.instance.client;
       final authService = AuthService();
+      final prefs = await SharedPreferences.getInstance();
+      final explicitlySignedOut =
+          prefs.getBool(AuthService.explicitSignOutKey) ?? false;
 
       // 1. التحقق من الجلسة الحالية من Supabase مباشرة
       var session = supabase.auth.currentSession;
       var user = supabase.auth.currentUser;
+
+      // لا تعِد تسجيل المستخدم تلقائياً بعد أن اختار تسجيل الخروج.
+      if (explicitlySignedOut) {
+        if (session != null) await supabase.auth.signOut();
+        return null;
+      }
 
       // 2. إذا لم تكن هناك جلسة، محاولة تسجيل الدخول الصامت عبر جوجل
       if (session == null || user == null) {
@@ -348,6 +357,7 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _forceLogout(SharedPreferences prefs) async {
     await prefs.clear();
+    await prefs.setBool(AuthService.explicitSignOutKey, true);
     await Supabase.instance.client.auth.signOut();
     if (mounted) {
       Navigator.pushReplacementNamed(context, "/signin");
