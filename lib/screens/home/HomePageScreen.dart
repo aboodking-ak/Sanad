@@ -177,7 +177,7 @@ class _HomePageScreenState extends State<HomePageScreen>
     _sendDotsController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 850),
-    )..repeat(reverse: true);
+    );
     _chatHistoryPulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 650),
@@ -265,6 +265,15 @@ class _HomePageScreenState extends State<HomePageScreen>
     if (user != null) {
       // نحن نعتمد الآن على الـ Global Wrapper ولكن للريفريش نحتاج التأكد من الحفظ
       // سنقوم بعمل تحديث بسيط لتحفيز السيرفر
+    }
+  }
+
+  void _setTypingState(bool isTyping) {
+    _isTyping = isTyping;
+    if (isTyping) {
+      _sendDotsController.repeat(reverse: true);
+    } else {
+      _sendDotsController.stop();
     }
   }
 
@@ -732,7 +741,7 @@ class _HomePageScreenState extends State<HomePageScreen>
       });
       _chatController.clear();
       _pendingChatImage = null;
-      _isTyping = true;
+      _setTypingState(true);
     });
 
     _scrollToBottom();
@@ -756,7 +765,7 @@ class _HomePageScreenState extends State<HomePageScreen>
           _chatMessages.removeLast();
           _chatController.text = typedMessage;
           _pendingChatImage = selectedImage;
-          _isTyping = false;
+          _setTypingState(false);
         });
         final error = e is FormatException ? e.message : null;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -782,7 +791,7 @@ class _HomePageScreenState extends State<HomePageScreen>
         _chatMessages.removeLast();
         _chatController.text = typedMessage;
         _pendingChatImage = selectedImage;
-        _isTyping = false;
+        _setTypingState(false);
       });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -865,7 +874,7 @@ class _HomePageScreenState extends State<HomePageScreen>
       }
     } finally {
       if (mounted) {
-        setState(() => _isTyping = false);
+        setState(() => _setTypingState(false));
         await _loadAiLimit();
       }
     }
@@ -1107,7 +1116,7 @@ class _HomePageScreenState extends State<HomePageScreen>
     if (_isTyping || message.trim().isEmpty) return;
     setState(() {
       _chatMessages.removeWhere((item) => item['isError'] == true);
-      _isTyping = true;
+      _setTypingState(true);
     });
     _scrollToBottom();
     Map<String, dynamic>? liveReply;
@@ -1158,7 +1167,7 @@ class _HomePageScreenState extends State<HomePageScreen>
       );
     } finally {
       if (mounted) {
-        setState(() => _isTyping = false);
+        setState(() => _setTypingState(false));
         await _loadAiLimit();
       }
     }
