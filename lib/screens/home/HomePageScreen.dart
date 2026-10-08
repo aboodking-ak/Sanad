@@ -1450,6 +1450,27 @@ class _HomePageScreenState extends State<HomePageScreen>
     if (user == null) return;
     final client = Supabase.instance.client;
     try {
+      final imageRows = await client
+          .from('chat_messages')
+          .select('image_path')
+          .eq('user_id', user.id)
+          .eq('conversation_id', id);
+      final imagePaths = imageRows
+          .map((row) => row['image_path']?.toString())
+          .whereType<String>()
+          .where((path) => path.startsWith('${user.id}/'))
+          .toSet()
+          .toList();
+
+      for (var start = 0; start < imagePaths.length; start += 100) {
+        final end = start + 100 < imagePaths.length
+            ? start + 100
+            : imagePaths.length;
+        await client.storage
+            .from('sanad-ai-chat-images')
+            .remove(imagePaths.sublist(start, end));
+      }
+
       await client
           .from('chat_messages')
           .delete()
@@ -1479,13 +1500,15 @@ class _HomePageScreenState extends State<HomePageScreen>
       });
       onDialogRefresh?.call();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم حذف المحادثة ورسائلها.')),
+        const SnackBar(content: Text('تم حذف المحادثة ورسائلها وصورها.')),
       );
     } catch (error) {
-      debugPrint('Error deleting AI conversation and messages: $error');
+      debugPrint('Error deleting AI conversation, messages, or images: $error');
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تعذر حذف المحادثة ورسائلها.')),
+        const SnackBar(
+          content: Text('تعذر حذف المحادثة أو صورها. تحقق من صلاحيات حذف الصور.'),
+        ),
       );
     }
   }
