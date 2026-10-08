@@ -124,7 +124,8 @@ Deno.serve(async (request: Request) => {
         model: imageCount > 0 ? 'qwen/qwen3.8-27b' : 'openai/gpt-oss-120b',
         messages: [{ role: 'system', content: systemPrompt }, ...modelMessages],
         temperature: 0.7,
-        max_tokens: 1024,
+        // Leave room for full explanations; 1024 tokens cut off longer answers.
+        max_completion_tokens: 8192,
         stream: true,
       }),
       signal: AbortSignal.timeout(60000),
@@ -142,6 +143,7 @@ Deno.serve(async (request: Request) => {
           let completedSuccessfully = false;
           let generatedText = '';
           let pending = '';
+          let finishReason: string | null = null;
           const emit = (event: unknown) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
           try {
             const reader = response.body!.getReader();
@@ -159,7 +161,11 @@ Deno.serve(async (request: Request) => {
                 if (data === '[DONE]') { providerDone = true; break; }
                 try {
                   const event = JSON.parse(data);
-                  const delta = event.choices?.[0]?.delta?.content;
+                  const choice = event.choices?.[0];
+                  if (typeof choice?.finish_reason === 'string') {
+                    finishReason = choice.finish_reason;
+                  }
+                  const delta = choice?.delta?.content;
                   if (typeof delta === 'string' && delta.length) {
                     generatedText += delta;
                     emit({ delta });
@@ -167,7 +173,9 @@ Deno.serve(async (request: Request) => {
                 } catch { /* Ignore malformed or non-content provider events. */ }
               }
             }
-            if (!generatedText.trim()) {
+            if (finishReason !== 'stop') {
+              emit({ error: 'incomplete_response' });
+            } else if (!generatedText.trim()) {
               emit({ error: 'empty_response' });
             } else {
               const usage = await quota('finish', true);

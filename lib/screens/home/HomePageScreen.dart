@@ -851,6 +851,8 @@ class _HomePageScreenState extends State<HomePageScreen>
                   'هناك طلب آخر قيد المعالجة. انتظر قليلاً ثم أعد المحاولة.',
                 'provider_unavailable' || 'service_unavailable' =>
                   'المساعد مشغول حالياً. حاول مرة أخرى بعد قليل.',
+                'incomplete_response' =>
+                  'لم يكتمل الرد بالكامل. أعد المحاولة للحصول على الإجابة كاملة.',
                 'authentication_failed' || 'unauthorized' =>
                   'انتهت جلسة الدخول. سجّل الدخول مجدداً ثم أعد المحاولة.',
                 _ => 'تعذر الاتصال بالمساعد. تحقق من الإنترنت ثم أعد المحاولة.',
@@ -2827,6 +2829,7 @@ class _HomePageScreenState extends State<HomePageScreen>
                   ],
                 ),
                 child: Row(
+                  textDirection: widgets.TextDirection.rtl,
                   children: [
                     Container(
                       width: 62,
@@ -2853,7 +2856,7 @@ class _HomePageScreenState extends State<HomePageScreen>
                       child: Align(
                         alignment: Alignment.centerRight,
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               'سند',
@@ -2880,6 +2883,7 @@ class _HomePageScreenState extends State<HomePageScreen>
                         ),
                       ),
                     ),
+                    const SizedBox(width: 13),
                     Container(
                       width: 34,
                       height: 34,
