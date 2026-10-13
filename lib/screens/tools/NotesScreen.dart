@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class NotesScreen extends StatefulWidget {
@@ -11,9 +12,15 @@ class NotesScreen extends StatefulWidget {
 }
 
 class _NotesScreenState extends State<NotesScreen> {
+  static const _navy = Color(0xFF1A2238);
+  static const _background = Color(0xFFF4F5F8);
+  static const _gold = Color(0xFFF2B833);
+
   final supabase = Supabase.instance.client;
+  final TextEditingController _searchController = TextEditingController();
   Stream<List<Map<String, dynamic>>>? _notesStream;
   String _searchQuery = "";
+  bool _sortOldestFirst = false;
 
   // قائمة ألوان الملاحظات
   final List<Color> _noteColors = [
@@ -44,6 +51,12 @@ class _NotesScreenState extends State<NotesScreen> {
     }
   }
 
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
   void _navigateToNoteEditor({Map<String, dynamic>? note}) {
     Navigator.push(
       context,
@@ -53,13 +66,80 @@ class _NotesScreenState extends State<NotesScreen> {
     );
   }
 
-  Future<void> _deleteNote(String id) async {
-    await supabase.from('notes').delete().eq('id', id);
+  Future<void> _togglePin(Map<String, dynamic> note) async {
+    final currentStatus = note['is_pinned'] == true;
+    try {
+      await supabase
+          .from('notes')
+          .update({'is_pinned': !currentStatus})
+          .eq('id', note['id']);
+      if (mounted) {
+        _showMessage(currentStatus ? 'أزيل التثبيت' : 'ثُبّتت الملاحظة');
+      }
+    } catch (error) {
+      debugPrint('Pin note failed: $error');
+      if (mounted) _showMessage('تعذر تحديث تثبيت الملاحظة. حاول مجدداً.');
+    }
   }
 
-  Future<void> _togglePin(Map<String, dynamic> note) async {
-    final bool currentStatus = note['is_pinned'] ?? false;
-    await supabase.from('notes').update({'is_pinned': !currentStatus}).eq('id', note['id']);
+  Future<bool> _confirmDelete(Map<String, dynamic> note) async {
+    final shouldDelete = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('حذف الملاحظة؟'),
+        content: const Text('سيتم حذف هذه الملاحظة نهائياً.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('إلغاء'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+            child: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
+    if (shouldDelete != true || !mounted) return false;
+    try {
+      final deleted = await supabase
+          .from('notes')
+          .delete()
+          .eq('id', note['id'])
+          .select('id');
+      if (deleted.isEmpty) throw StateError('No note was deleted');
+      if (mounted) _showMessage('تم حذف الملاحظة');
+      return true;
+    } catch (error) {
+      debugPrint('Delete note failed: $error');
+      if (mounted) {
+        setState(_initStream);
+        _showMessage('تعذر حذف الملاحظة. تحقق من الاتصال وحاول مجدداً.');
+      }
+      return false;
+    }
+  }
+
+  Future<void> _shareNote(Map<String, dynamic> note) async {
+    final title = (note['title'] ?? '').toString().trim();
+    final content = (note['content'] ?? '').toString().trim();
+    final text = [if (title.isNotEmpty) title, if (content.isNotEmpty) content]
+        .join('\n\n');
+    try {
+      await Share.share(text, subject: title.isEmpty ? 'ملاحظة من سند' : title);
+    } catch (error) {
+      debugPrint('Share note failed: $error');
+      if (mounted) _showMessage('تعذرت مشاركة الملاحظة.');
+    }
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+      );
   }
 
   @override
@@ -72,35 +152,47 @@ class _NotesScreenState extends State<NotesScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: _background,
       appBar: AppBar(
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: _background,
+        foregroundColor: _navy,
+        centerTitle: true,
         elevation: 0,
-        systemOverlayStyle: SystemUiOverlayStyle.light,
-        title: const Text("ملاحظاتي", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 22)),
+        scrolledUnderElevation: 0,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: _navy,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
+        ),
+        title: const Text(
+          'ملاحظاتي',
+          style: TextStyle(color: _navy, fontWeight: FontWeight.w800, fontSize: 19),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+          icon: const Icon(Icons.arrow_forward_ios_rounded, size: 20),
           onPressed: () => Navigator.pop(context),
         ),
       ),
       body: Column(
         children: [
           _buildSearchBar(primaryColor),
+          _buildSortControls(),
           Expanded(
             child: _notesStream == null 
               ? const Center(child: Text("يرجى التأكد من تسجيل الدخول"))
               : StreamBuilder<List<Map<String, dynamic>>>(
                   stream: _notesStream,
                   builder: (context, snapshot) {
-                if (snapshot.hasError) return Center(child: Text('حدث خطأ: ${snapshot.error}'));
+                if (snapshot.hasError) {
+                  return _buildLoadError();
+                }
                 
                 // التأكد من وجود بيانات قبل إخفاء مؤشر التحميل
                 if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const Center(child: CircularProgressIndicator(color: _gold));
                 }
                 
-                var notes = snapshot.data ?? [];
+                var notes = List<Map<String, dynamic>>.from(snapshot.data ?? const []);
                 
                 // ترتيب يدوي لضمان ظهور المثبت في الأعلى دائماً
                 notes.sort((a, b) {
@@ -112,7 +204,9 @@ class _NotesScreenState extends State<NotesScreen> {
                   // إذا كان كلاهما مثبت أو كلاهما غير مثبت، نرتب حسب التاريخ الأحدث
                   final DateTime aDate = DateTime.tryParse(a['created_at'] ?? "") ?? DateTime(2000);
                   final DateTime bDate = DateTime.tryParse(b['created_at'] ?? "") ?? DateTime(2000);
-                  return bDate.compareTo(aDate);
+                  return _sortOldestFirst
+                      ? aDate.compareTo(bDate)
+                      : bDate.compareTo(aDate);
                 });
                 
                 // فلترة البحث
@@ -126,7 +220,7 @@ class _NotesScreenState extends State<NotesScreen> {
                 }
 
                 if (notes.isEmpty) {
-                  return _buildEmptyState();
+                  return _buildEmptyState(isSearchResult: _searchQuery.isNotEmpty);
                 }
 
                 return _buildListView(notes, primaryColor);
@@ -137,30 +231,112 @@ class _NotesScreenState extends State<NotesScreen> {
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _navigateToNoteEditor(),
-        backgroundColor: primaryColor,
-        label: const Text("ملاحظة جديدة", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        icon: const Icon(Icons.add_rounded, color: Colors.white, size: 28),
+        backgroundColor: _navy,
+        foregroundColor: Colors.white,
+        label: const Text('ملاحظة جديدة', style: TextStyle(fontWeight: FontWeight.bold)),
+        icon: const Icon(Icons.add_rounded, size: 26),
       ),
     );
   }
 
   Widget _buildSearchBar(Color primaryColor) {
     return Padding(
-      padding: const EdgeInsets.all(15),
-      child: Container(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
+      child: DecoratedBox(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [BoxShadow(color: Colors.black.withAlpha(20), blurRadius: 5, offset: Offset.zero)],
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _navy.withAlpha(10)),
         ),
         child: TextField(
-          onChanged: (val) => setState(() => _searchQuery = val),
+          controller: _searchController,
+          onChanged: (value) => setState(() => _searchQuery = value),
+          textInputAction: TextInputAction.search,
           decoration: InputDecoration(
-            hintText: "ابحث في ملاحظاتك...",
+            hintText: 'ابحث في ملاحظاتك...',
             prefixIcon: Icon(Icons.search_rounded, color: primaryColor),
+            suffixIcon: _searchQuery.isEmpty
+                ? null
+                : IconButton(
+                    tooltip: 'مسح البحث',
+                    onPressed: () {
+                      _searchController.clear();
+                      setState(() => _searchQuery = '');
+                    },
+                    icon: const Icon(Icons.close_rounded),
+                  ),
             border: InputBorder.none,
-            contentPadding: const EdgeInsets.symmetric(vertical: 15),
+            contentPadding: const EdgeInsets.symmetric(vertical: 14),
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSortControls() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 2, 16, 8),
+      child: Row(
+        children: [
+          const Icon(Icons.sort_rounded, color: Color(0xFF7A8291), size: 18),
+          const SizedBox(width: 6),
+          const Text(
+            'ترتيب',
+            style: TextStyle(color: Color(0xFF7A8291), fontSize: 12),
+          ),
+          const Spacer(),
+          _sortChip('الأحدث', selected: !_sortOldestFirst, onTap: () {
+            setState(() => _sortOldestFirst = false);
+          }),
+          const SizedBox(width: 8),
+          _sortChip('الأقدم', selected: _sortOldestFirst, onTap: () {
+            setState(() => _sortOldestFirst = true);
+          }),
+        ],
+      ),
+    );
+  }
+
+  Widget _sortChip(
+    String label, {
+    required bool selected,
+    required VoidCallback onTap,
+  }) {
+    return ChoiceChip(
+      label: Text(label),
+      selected: selected,
+      onSelected: (_) => onTap(),
+      showCheckmark: false,
+      visualDensity: VisualDensity.compact,
+      labelStyle: TextStyle(
+        color: selected ? Colors.white : _navy,
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+      ),
+      selectedColor: _navy,
+      backgroundColor: Colors.white,
+      side: BorderSide(color: selected ? _navy : _navy.withAlpha(18)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+    );
+  }
+
+  Widget _buildLoadError() {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.cloud_off_rounded, color: Color(0xFF9AA2B1), size: 42),
+            const SizedBox(height: 10),
+            const Text('تعذر تحميل الملاحظات'),
+            const SizedBox(height: 8),
+            TextButton.icon(
+              onPressed: () => setState(_initStream),
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('إعادة المحاولة'),
+            ),
+          ],
         ),
       ),
     );
@@ -177,15 +353,8 @@ class _NotesScreenState extends State<NotesScreen> {
         return Dismissible(
           key: Key(id),
           direction: DismissDirection.startToEnd,
-          onDismissed: (direction) {
-            _deleteNote(id);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("تم حذف الملاحظة"),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
-          },
+          confirmDismiss: (_) => _confirmDelete(note),
+          onDismissed: (_) {},
           background: Container(
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(
@@ -206,122 +375,131 @@ class _NotesScreenState extends State<NotesScreen> {
   }
 
   Widget _buildNoteCard(Map<String, dynamic> note, Color primaryColor) {
-    final int colorIndex = note['color_index'] ?? 0;
-    final bool isPinned = note['is_pinned'] ?? false;
-    
-    // معالجة التاريخ بشكل آمن
-    String dateStr = "غير معروف";
-    String timeStr = "";
-    try {
-      if (note['created_at'] != null) {
-        final date = DateTime.parse(note['created_at']).toLocal();
-        dateStr = DateFormat('dd MMM yyyy').format(date);
-        timeStr = DateFormat('hh:mm a').format(date);
-      }
-    } catch (e) {
-      debugPrint("Error parsing date: $e");
-    }
+    final rawColorIndex = note['color_index'];
+    final colorIndex = (rawColorIndex is int
+            ? rawColorIndex
+            : int.tryParse(rawColorIndex?.toString() ?? '') ?? 0)
+        .clamp(0, _noteColors.length - 1)
+        .toInt();
+    final isPinned = note['is_pinned'] == true;
+    final title = (note['title'] ?? '').toString().trim();
+    final content = (note['content'] ?? '').toString().trim();
+    final createdAt = DateTime.tryParse(note['created_at']?.toString() ?? '')
+        ?.toLocal();
+    final dateLabel = createdAt == null
+        ? 'غير معروف'
+        : DateFormat('dd MMM yyyy').format(createdAt);
 
-    return GestureDetector(
-      onTap: () => _navigateToNoteEditor(note: note),
-      onLongPress: () => _showOptions(note),
-      child: Container(
-        padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(
-          color: _noteColors[colorIndex],
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.black.withAlpha(10)),
-          boxShadow: [BoxShadow(color: Colors.black.withAlpha(25), blurRadius: 4, offset: Offset.zero)],
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min, // يمنع تمدد الملاحظة بشكل لا نهائي
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    (note['title'] ?? "").isEmpty ? "بدون عنوان" : note['title'],
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => _navigateToNoteEditor(note: note),
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: _noteColors[colorIndex],
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: _navy.withAlpha(12)),
+            boxShadow: [
+              BoxShadow(
+                color: _navy.withAlpha(10),
+                blurRadius: 12,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      title.isEmpty ? 'بدون عنوان' : title,
+                      style: const TextStyle(
+                        color: _navy,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-                if (isPinned) Icon(Icons.push_pin_rounded, size: 16, color: primaryColor),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(
-              (note['content'] ?? "").isEmpty ? "لا يوجد نص" : note['content'],
-              style: TextStyle(color: Colors.black.withAlpha(150), fontSize: 13),
-              maxLines: 4,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withAlpha(10),
-                    borderRadius: BorderRadius.circular(8),
+                  if (isPinned) ...[
+                    const SizedBox(width: 8),
+                    Icon(Icons.push_pin_rounded, size: 17, color: primaryColor),
+                  ],
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                content.isEmpty ? 'لا يوجد نص' : content,
+                style: TextStyle(color: _navy.withAlpha(180), fontSize: 13, height: 1.45),
+                maxLines: 4,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Icon(Icons.schedule_rounded, size: 14, color: _navy.withAlpha(120)),
+                  const SizedBox(width: 4),
+                  Text(
+                    dateLabel,
+                    style: TextStyle(color: _navy.withAlpha(150), fontSize: 11),
                   ),
-                  child: Text(
-                    dateStr,
-                    style: const TextStyle(color: Colors.black54, fontSize: 10, fontWeight: FontWeight.bold),
+                  const Spacer(),
+                  _noteAction(
+                    tooltip: isPinned ? 'إلغاء التثبيت' : 'تثبيت',
+                    icon: isPinned ? Icons.push_pin_rounded : Icons.push_pin_outlined,
+                    onPressed: () => _togglePin(note),
+                    color: isPinned ? primaryColor : _navy.withAlpha(170),
                   ),
-                ),
-                Text(
-                  timeStr,
-                  style: const TextStyle(color: Colors.grey, fontSize: 10),
-                ),
-              ],
-            ),
-          ],
+                  _noteAction(
+                    tooltip: 'مشاركة',
+                    icon: Icons.ios_share_rounded,
+                    onPressed: () => _shareNote(note),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  void _showOptions(Map<String, dynamic> note) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(25))),
-      builder: (context) => Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const SizedBox(height: 10),
-          ListTile(
-            leading: Icon(note['is_pinned'] == true ? Icons.push_pin_outlined : Icons.push_pin_rounded),
-            title: Text(note['is_pinned'] == true ? "إلغاء التثبيت" : "تثبيت الملاحظة"),
-            onTap: () {
-              Navigator.pop(context);
-              _togglePin(note);
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent),
-            title: const Text("حذف الملاحظة", style: TextStyle(color: Colors.redAccent)),
-            onTap: () {
-              Navigator.pop(context);
-              _deleteNote(note['id']);
-            },
-          ),
-          const SizedBox(height: 20),
-        ],
-      ),
+  Widget _noteAction({
+    required String tooltip,
+    required IconData icon,
+    required VoidCallback onPressed,
+    Color color = _navy,
+  }) {
+    return IconButton(
+      tooltip: tooltip,
+      onPressed: onPressed,
+      visualDensity: VisualDensity.compact,
+      constraints: const BoxConstraints.tightFor(width: 34, height: 34),
+      padding: EdgeInsets.zero,
+      icon: Icon(icon, color: color, size: 18),
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState({bool isSearchResult = false}) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.note_alt_rounded, size: 80, color: Colors.grey[300]),
+          Icon(
+            isSearchResult ? Icons.search_off_rounded : Icons.note_alt_rounded,
+            size: 64,
+            color: Colors.grey[400],
+          ),
           const SizedBox(height: 16),
-          const Text("لا توجد ملاحضات حالياً", style: TextStyle(color: Colors.grey, fontSize: 16)),
+          Text(
+            isSearchResult ? 'لا توجد نتائج مطابقة' : 'لا توجد ملاحظات حالياً',
+            style: const TextStyle(color: Colors.grey, fontSize: 16),
+          ),
         ],
       ),
     );
@@ -338,18 +516,79 @@ class NoteEditorScreen extends StatefulWidget {
 }
 
 class _NoteEditorScreenState extends State<NoteEditorScreen> {
+  static const _navy = Color(0xFF1A2238);
+  static const _background = Color(0xFFF4F5F8);
+
   final supabase = Supabase.instance.client;
   late TextEditingController _titleController;
   late TextEditingController _contentController;
   int _selectedColorIndex = 0;
   bool _isSaving = false;
+  String _initialTitle = '';
+  String _initialContent = '';
+  int _initialColorIndex = 0;
 
   @override
   void initState() {
     super.initState();
-    _titleController = TextEditingController(text: widget.note?['title'] ?? "");
-    _contentController = TextEditingController(text: widget.note?['content'] ?? "");
-    _selectedColorIndex = widget.note?['color_index'] ?? 0;
+    _initialTitle = (widget.note?['title'] ?? '').toString();
+    _initialContent = (widget.note?['content'] ?? '').toString();
+    final rawIndex = widget.note?['color_index'];
+    _selectedColorIndex = (rawIndex is int
+            ? rawIndex
+            : int.tryParse(rawIndex?.toString() ?? '') ?? 0)
+        .clamp(0, widget.colors.length - 1)
+        .toInt();
+    _initialColorIndex = _selectedColorIndex;
+    _titleController = TextEditingController(text: _initialTitle);
+    _contentController = TextEditingController(text: _initialContent);
+    _titleController.addListener(_handleEditorChange);
+    _contentController.addListener(_handleEditorChange);
+  }
+
+  bool get _hasUnsavedChanges =>
+      _titleController.text != _initialTitle ||
+      _contentController.text != _initialContent ||
+      _selectedColorIndex != _initialColorIndex;
+
+  void _handleEditorChange() {
+    if (mounted) setState(() {});
+  }
+
+  Future<bool> _confirmLeave() async {
+    if (_isSaving) return false;
+    if (!_hasUnsavedChanges) return true;
+    return await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            title: const Text('تغييرات غير محفوظة'),
+            content: const Text('هل تريد الخروج دون حفظ التغييرات؟'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: const Text('متابعة التعديل'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                child: const Text('خروج دون حفظ'),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+  }
+
+  Future<void> _handleBackPressed() async {
+    if (await _confirmLeave() && mounted) Navigator.pop(context);
+  }
+
+  @override
+  void dispose() {
+    _titleController.removeListener(_handleEditorChange);
+    _contentController.removeListener(_handleEditorChange);
+    _titleController.dispose();
+    _contentController.dispose();
+    super.dispose();
   }
 
   Future<void> _saveNote() async {
@@ -357,14 +596,21 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
     final content = _contentController.text.trim();
 
     if (title.isEmpty && content.isEmpty) {
-      Navigator.pop(context);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('أضف عنواناً أو محتوى قبل الحفظ.')),
+      );
+      return;
+    }
+
+    final user = supabase.auth.currentUser;
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('انتهت الجلسة. سجّل الدخول ثم حاول مجدداً.')),
+      );
       return;
     }
 
     setState(() => _isSaving = true);
-    final user = supabase.auth.currentUser;
-    if (user == null) return;
-
     try {
       final data = {
         'user_id': user.id,
@@ -390,8 +636,6 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
-    
     String dateStr = "";
     try {
       final date = widget.note != null 
@@ -402,22 +646,47 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
       dateStr = DateFormat('dd MMMM yyyy  hh:mm a').format(DateTime.now());
     }
 
-    return Scaffold(
+    return WillPopScope(
+      onWillPop: _confirmLeave,
+      child: Scaffold(
       backgroundColor: widget.colors[_selectedColorIndex],
       appBar: AppBar(
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        backgroundColor: _background,
+        foregroundColor: _navy,
+        centerTitle: true,
         elevation: 0,
-        systemOverlayStyle: SystemUiOverlayStyle.light,
-        title: Text(widget.note == null ? "ملاحظة جديدة" : "تعديل الملاحظة", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+        scrolledUnderElevation: 0,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: _navy,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
+        ),
+        title: Text(
+          widget.note == null ? 'ملاحظة جديدة' : 'تعديل الملاحظة',
+          style: const TextStyle(color: _navy, fontWeight: FontWeight.w800, fontSize: 18),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_forward_ios_rounded, size: 20),
+          onPressed: _handleBackPressed,
         ),
         actions: [
-          _isSaving 
-            ? const Center(child: Padding(padding: EdgeInsets.all(15), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))))
-            : IconButton(icon: const Icon(Icons.check_rounded, size: 28), onPressed: _saveNote),
+          if (_isSaving)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: 18),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(color: _navy, strokeWidth: 2),
+                ),
+              ),
+            )
+          else
+            IconButton(
+              tooltip: 'حفظ الملاحظة',
+              icon: const Icon(Icons.check_rounded, size: 26, color: _navy),
+              onPressed: _saveNote,
+            ),
         ],
       ),
       body: Column(
@@ -452,36 +721,66 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
           _buildColorPicker(),
         ],
       ),
+      ),
     );
   }
 
   Widget _buildColorPicker() {
     return Container(
-      height: 70,
+      height: 78,
       padding: const EdgeInsets.symmetric(horizontal: 10),
       decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withAlpha(10), blurRadius: 10, offset: const Offset(0, -2))],
+        color: _background,
+        border: Border(top: BorderSide(color: _navy.withAlpha(12))),
       ),
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: widget.colors.length,
-        itemBuilder: (context, index) => GestureDetector(
-          onTap: () => setState(() => _selectedColorIndex = index),
-          child: Container(
-            width: 40,
-            height: 40,
-            margin: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: widget.colors[index],
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: _selectedColorIndex == index ? Colors.blue : Colors.grey[300]!,
-                width: _selectedColorIndex == index ? 3 : 1,
+      child: Row(
+        children: [
+          const Padding(
+            padding: EdgeInsetsDirectional.only(start: 8, end: 4),
+            child: Text(
+              'اللون',
+              style: TextStyle(color: _navy, fontSize: 12, fontWeight: FontWeight.w700),
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              scrollDirection: Axis.horizontal,
+              itemCount: widget.colors.length,
+              itemBuilder: (context, index) => Semantics(
+                button: true,
+                selected: _selectedColorIndex == index,
+                label: 'لون ${index + 1}',
+                child: GestureDetector(
+                  onTap: () => setState(() => _selectedColorIndex = index),
+                  child: Container(
+                    width: 38,
+                    height: 38,
+                    margin: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: widget.colors[index],
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: _selectedColorIndex == index ? _navy : Colors.grey[300]!,
+                        width: _selectedColorIndex == index ? 3 : 1,
+                      ),
+                      boxShadow: [
+                        if (_selectedColorIndex == index)
+                          BoxShadow(color: _navy.withAlpha(24), blurRadius: 6),
+                      ],
+                    ),
+                    child: _selectedColorIndex == index
+                        ? Icon(
+                            Icons.check_rounded,
+                            size: 18,
+                            color: index == 0 ? _navy : _navy,
+                          )
+                        : null,
+                  ),
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
