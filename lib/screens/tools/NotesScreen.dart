@@ -168,10 +168,6 @@ class _NotesScreenState extends State<NotesScreen> {
           'ملاحظاتي',
           style: TextStyle(color: _navy, fontWeight: FontWeight.w800, fontSize: 19),
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_forward_ios_rounded, size: 20),
-          onPressed: () => Navigator.pop(context),
-        ),
       ),
       body: Column(
         children: [
@@ -577,12 +573,7 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
         ) ??
         false;
   }
-
-  Future<void> _handleBackPressed() async {
-    if (await _confirmLeave() && mounted) Navigator.pop(context);
-  }
-
-  @override
+@override
   void dispose() {
     _titleController.removeListener(_handleEditorChange);
     _contentController.removeListener(_handleEditorChange);
@@ -664,10 +655,6 @@ class _NoteEditorScreenState extends State<NoteEditorScreen> {
         title: Text(
           widget.note == null ? 'ملاحظة جديدة' : 'تعديل الملاحظة',
           style: const TextStyle(color: _navy, fontWeight: FontWeight.w800, fontSize: 18),
-        ),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_forward_ios_rounded, size: 20),
-          onPressed: _handleBackPressed,
         ),
         actions: [
           if (_isSaving)
