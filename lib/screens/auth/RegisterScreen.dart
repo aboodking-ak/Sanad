@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_assets.dart';
 import '../../core/services/auth_service.dart';
 
@@ -15,6 +16,8 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
+  static const _supportEmail = 'admin@co-pure.com';
+
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -435,6 +438,26 @@ class _RegisterScreenState extends State<RegisterScreen> {
         child: const Text('سياسة الخصوصية'),
       ),
     ],
+  );
+
+  Widget _supportLink() => TextButton.icon(
+    onPressed: () async {
+      final uri = Uri(scheme: 'mailto', path: _supportEmail);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تعذر فتح تطبيق البريد الإلكتروني.')),
+        );
+      }
+    },
+    icon: const Icon(Icons.support_agent_rounded, size: 19),
+    label: const Text('دعم'),
+    style: TextButton.styleFrom(
+      foregroundColor: const Color(0xFF1A2238),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+    ),
   );
 
   Widget _stagePicker() => FormField<String>(
@@ -1086,6 +1109,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               if (!_completeProfile &&
                                   _verificationEmail == null)
                                 _legalLinks(),
+                              if (!_completeProfile &&
+                                  _verificationEmail == null)
+                                _supportLink(),
                             ],
                           ),
                         ),
