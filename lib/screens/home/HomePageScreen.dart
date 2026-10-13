@@ -79,6 +79,50 @@ class _AiUsageBorderPainter extends CustomPainter {
       oldDelegate.progress != progress;
 }
 
+class _RoundedTabIndicator extends Decoration {
+  const _RoundedTabIndicator({
+    required this.color,
+    this.height = 4,
+    this.horizontalInset = 8,
+  });
+
+  final Color color;
+  final double height;
+  final double horizontalInset;
+
+  @override
+  BoxPainter createBoxPainter([VoidCallback? onChanged]) =>
+      _RoundedTabIndicatorPainter(this, onChanged);
+}
+
+class _RoundedTabIndicatorPainter extends BoxPainter {
+  _RoundedTabIndicatorPainter(this._decoration, super.onChanged);
+
+  final _RoundedTabIndicator _decoration;
+
+  @override
+  void paint(Canvas canvas, Offset offset, ImageConfiguration configuration) {
+    final size = configuration.size;
+    if (size == null) return;
+
+    final indicatorWidth = size.width - (_decoration.horizontalInset * 2);
+    if (indicatorWidth <= 0) return;
+
+    final rect = Rect.fromLTWH(
+      offset.dx + _decoration.horizontalInset,
+      offset.dy + size.height - _decoration.height,
+      indicatorWidth,
+      _decoration.height,
+    );
+    final paint = Paint()..color = _decoration.color;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(rect, Radius.circular(_decoration.height / 2)),
+      paint,
+    );
+  }
+
+}
+
 class _HomePageScreenState extends State<HomePageScreen>
     with TickerProviderStateMixin {
   final AdHelper _adHelper = AdHelper();
@@ -2396,6 +2440,7 @@ class _HomePageScreenState extends State<HomePageScreen>
         textDirection: widgets.TextDirection.rtl,
         child: Scaffold(
           backgroundColor: Colors.white,
+          extendBody: true,
           resizeToAvoidBottomInset: false,
           onDrawerChanged: (isOpened) {
             if (_isDrawerOpen != isOpened) {
@@ -2443,69 +2488,80 @@ class _HomePageScreenState extends State<HomePageScreen>
                 child: _buildUserAvatar(),
               ),
             ],
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(70),
-              child: Container(
-                margin: const EdgeInsets.fromLTRB(15, 0, 15, 15),
-                decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(30),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Colors.white.withAlpha(50),
-                    width: 1.5,
-                  ), // حواف بيضاء خفيفة وواضحة
+          ),
+          bottomNavigationBar: SafeArea(
+            top: false,
+            child: Container(
+              margin: const EdgeInsets.fromLTRB(15, 8, 15, 10),
+              decoration: BoxDecoration(
+                color: primaryColor,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: Colors.white.withAlpha(50),
+                  width: 1.5,
                 ),
-                child: TabBar(
-                  controller: _tabController,
-                  dividerColor: Colors.transparent,
-                  indicatorColor: secondaryColor,
-                  indicatorSize: TabBarIndicatorSize.label,
-                  indicatorWeight: 4,
-                  labelColor: secondaryColor,
-                  unselectedLabelColor: Colors.white70,
-                  indicator: UnderlineTabIndicator(
-                    borderSide: BorderSide(width: 4.0, color: secondaryColor),
-                    insets: const EdgeInsets.symmetric(horizontal: 16.0),
+                boxShadow: [
+                  BoxShadow(
+                    color: primaryColor.withValues(alpha: 0.18),
+                    blurRadius: 18,
+                    offset: const Offset(0, 7),
                   ),
-                  tabs: [
-                    const Tab(icon: Icon(Icons.home_rounded, size: 26)),
-                    const Tab(icon: Icon(Icons.auto_awesome_rounded, size: 26)),
-                    const Tab(icon: Icon(Icons.handyman_rounded, size: 26)),
-                    Tab(
-                      icon: Stack(
-                        clipBehavior: Clip.none,
-                        children: [
-                          const Icon(
-                            Icons.notifications_none_rounded,
-                            size: 26,
-                          ),
-                          if (_unreadCount > 0)
-                            Positioned(
-                              right: -2,
-                              top: -2,
-                              child: Container(
-                                padding: const EdgeInsets.all(4),
-                                decoration: const BoxDecoration(
-                                  color: Colors.redAccent,
-                                  shape: BoxShape.circle,
-                                ),
-                                constraints: const BoxConstraints(
-                                  minWidth: 10,
-                                  minHeight: 10,
+                ],
+              ),
+              child: TabBar(
+                    controller: _tabController,
+                    dividerColor: Colors.transparent,
+                    indicatorSize: TabBarIndicatorSize.label,
+                    indicatorWeight: 4,
+                    labelColor: secondaryColor,
+                    unselectedLabelColor: Colors.white70,
+                    indicator: _RoundedTabIndicator(
+                      color: secondaryColor,
+                      height: 4,
+                      horizontalInset: 8,
+                    ),
+                    tabs: [
+                      const Tab(icon: Icon(Icons.home_rounded, size: 26)),
+                      const Tab(
+                        icon: Icon(Icons.auto_awesome_rounded, size: 26),
+                      ),
+                      const Tab(icon: Icon(Icons.handyman_rounded, size: 26)),
+                      Tab(
+                        icon: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            const Icon(
+                              Icons.notifications_none_rounded,
+                              size: 26,
+                            ),
+                            if (_unreadCount > 0)
+                              Positioned(
+                                right: -2,
+                                top: -2,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: const BoxDecoration(
+                                    color: Colors.redAccent,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  constraints: const BoxConstraints(
+                                    minWidth: 10,
+                                    minHeight: 10,
+                                  ),
                                 ),
                               ),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    const Tab(icon: Icon(Icons.emoji_events_rounded, size: 26)),
-                  ],
-                ),
+                      const Tab(
+                        icon: Icon(Icons.emoji_events_rounded, size: 26),
+                      ),
+                    ],
               ),
             ),
           ),
           body: SafeArea(
-            bottom: true,
+            bottom: false,
             // يضمن عدم تداخل المحتوى مع أزرار النظام في الأسفل
             child: TabBarView(
               controller: _tabController,
@@ -3533,7 +3589,7 @@ class _HomePageScreenState extends State<HomePageScreen>
         // فقاعة النصيحة - تظهر فوق الزر
         if (_isTipVisible)
           Positioned(
-            bottom: 90,
+            bottom: 170,
             left: 20,
             child: GestureDetector(
               onTap: () => setState(() => _isTipVisible = false),
@@ -3600,7 +3656,7 @@ class _HomePageScreenState extends State<HomePageScreen>
           ),
         // الزر العائم - موقعه ثابت تماماً
         Positioned(
-          bottom: 20,
+          bottom: 100,
           left: 20,
           child: FloatingActionButton(
             onPressed: () {
@@ -5270,13 +5326,13 @@ class _HomePageScreenState extends State<HomePageScreen>
                 ),
               const SizedBox(height: 40),
               _buildLeaderList(primaryColor),
-              const SizedBox(height: 120), // مساحة إضافية للبار العائم
+              const SizedBox(height: 240), // مساحة أسفل القائمة لشريط التنقل والتفاصيل الثابتة
             ],
           ),
         ),
         if (userData != null)
           Positioned(
-            bottom: 20,
+            bottom: 120,
             left: 20,
             right: 20,
             child: Container(
