@@ -1,7 +1,7 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+import 'pomodoro_timer_service.dart';
 
 class PomodoroScreen extends StatefulWidget {
   const PomodoroScreen({super.key});
@@ -10,394 +10,487 @@ class PomodoroScreen extends StatefulWidget {
   State<PomodoroScreen> createState() => _PomodoroScreenState();
 }
 
-enum PomodoroMode { study, shortBreak, longBreak }
-
 class _PomodoroScreenState extends State<PomodoroScreen> {
-  Timer? _timer;
-  int _remainingSeconds = 25 * 60;
-  bool _isRunning = false;
-  PomodoroMode _currentMode = PomodoroMode.study;
-  
-  int _totalRounds = 4;
-  int _currentRound = 1;
+  static const _navy = Color(0xFF1A2238);
+  static const _gold = Color(0xFFF2B833);
+  static const _background = Color(0xFFF6F7FA);
 
-  final Map<PomodoroMode, int> _modeDurations = {
-    PomodoroMode.study: 25 * 60,
-    PomodoroMode.shortBreak: 5 * 60,
-    PomodoroMode.longBreak: 15 * 60,
-  };
+  final _timer = PomodoroTimerService.instance;
+
+  final _studyController = TextEditingController();
+  final _shortController = TextEditingController();
+  final _longController = TextEditingController();
+  final _roundsController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _loadSettings().then((_) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showSetupDialog();
-      });
-    });
+    _syncSettingsFields();
   }
 
-  Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _modeDurations[PomodoroMode.study] = (prefs.getInt('pomodoro_study') ?? 25) * 60;
-      _modeDurations[PomodoroMode.shortBreak] = (prefs.getInt('pomodoro_short') ?? 5) * 60;
-      _modeDurations[PomodoroMode.longBreak] = (prefs.getInt('pomodoro_long') ?? 15) * 60;
-      _totalRounds = prefs.getInt('pomodoro_rounds') ?? 4;
-      _remainingSeconds = _modeDurations[_currentMode]!;
-    });
-  }
-
-  Future<void> _saveSettings(int study, int short, int rounds) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('pomodoro_study', study);
-    await prefs.setInt('pomodoro_short', short);
-    await prefs.setInt('pomodoro_rounds', rounds);
-    
-    setState(() {
-      _modeDurations[PomodoroMode.study] = study * 60;
-      _modeDurations[PomodoroMode.shortBreak] = short * 60;
-      _totalRounds = rounds;
-      _currentRound = 1;
-      _currentMode = PomodoroMode.study;
-      _remainingSeconds = _modeDurations[PomodoroMode.study]!;
-    });
-  }
-
-  void _startTimer() {
-    if (_isRunning) return;
-
-    setState(() {
-      _isRunning = true;
-    });
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_remainingSeconds > 0) {
-        setState(() {
-          _remainingSeconds--;
-        });
-      } else {
-        _pauseTimer();
-        _handleTimerEnd();
-      }
-    });
-  }
-
-  void _handleTimerEnd() {
-    SystemSound.play(SystemSoundType.alert);
-    HapticFeedback.heavyImpact();
-    
-    // تكرار التنبيه لضمان سماعه
-    Future.delayed(const Duration(milliseconds: 500), () {
-      SystemSound.play(SystemSoundType.alert);
-      HapticFeedback.vibrate();
-    });
-
-    if (_currentMode == PomodoroMode.study) {
-      if (_currentRound < _totalRounds) {
-        _switchMode(PomodoroMode.shortBreak);
-        _startTimer();
-      } else {
-        _resetSession();
-      }
-    } else {
-      _currentRound++;
-      _switchMode(PomodoroMode.study);
-      _startTimer();
-    }
-  }
-
-  void _pauseTimer() {
-    _timer?.cancel();
-    setState(() {
-      _isRunning = false;
-    });
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values);
-  }
-
-  void _resetTimer() {
-    _pauseTimer();
-    setState(() {
-      _remainingSeconds = _modeDurations[_currentMode]!;
-    });
-  }
-
-  void _resetSession() {
-    _pauseTimer();
-    setState(() {
-      _currentRound = 1;
-      _currentMode = PomodoroMode.study;
-      _remainingSeconds = _modeDurations[PomodoroMode.study]!;
-    });
-  }
-
-  void _switchMode(PomodoroMode mode) {
-    _pauseTimer();
-    setState(() {
-      _currentMode = mode;
-      _remainingSeconds = _modeDurations[mode]!;
-    });
-  }
-
-  void _showSetupDialog() {
-    final studyController = TextEditingController(text: (_modeDurations[PomodoroMode.study]! ~/ 60).toString());
-    final shortController = TextEditingController(text: (_modeDurations[PomodoroMode.shortBreak]! ~/ 60).toString());
-    final roundsController = TextEditingController(text: _totalRounds.toString());
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => Container(
-        padding: EdgeInsets.only(
-          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-          left: 20,
-          right: 20,
-          top: 20,
-        ),
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              const Text(
-                "إعداد جلسة الدراسة",
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 20),
-              _buildSettingField("وقت الدراسة (دقائق)", studyController, Icons.menu_book_rounded),
-              _buildSettingField("وقت الاستراحة (دقائق)", shortController, Icons.coffee_rounded),
-              _buildSettingField("عدد الدورات", roundsController, Icons.loop_rounded),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    int study = int.tryParse(studyController.text) ?? 25;
-                    int short = int.tryParse(shortController.text) ?? 5;
-                    int rounds = int.tryParse(roundsController.text) ?? 4;
-                    _saveSettings(study, short, rounds);
-                    Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    elevation: 0,
-                  ),
-                  child: const Text("ابدأ الجلسة الآن", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSettingField(String label, TextEditingController controller, IconData icon) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: TextField(
-        controller: controller,
-        keyboardType: TextInputType.number,
-        decoration: InputDecoration(
-          labelText: label,
-          prefixIcon: Icon(icon, size: 20),
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        ),
-      ),
-    );
-  }
-
-  void _showFinishedDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text("تنبيه", textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold)),
-        content: Text(message, textAlign: TextAlign.center),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("حسناً"),
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _formatTime(int seconds) {
-    int minutes = seconds ~/ 60;
-    int secs = seconds % 60;
-    return "${minutes.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}";
+  void _syncSettingsFields() {
+    _studyController.text = '${_timer.modeDurations[PomodoroMode.study]! ~/ 60}';
+    _shortController.text = '${_timer.modeDurations[PomodoroMode.shortBreak]! ~/ 60}';
+    _longController.text = '${_timer.modeDurations[PomodoroMode.longBreak]! ~/ 60}';
+    _roundsController.text = '${_timer.totalRounds}';
   }
 
   @override
   void dispose() {
-    _timer?.cancel();
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual, overlays: SystemUiOverlay.values);
+    _studyController.dispose();
+    _shortController.dispose();
+    _longController.dispose();
+    _roundsController.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final primaryColor = theme.colorScheme.primary;
+  Future<void> _showSetupDialog() async {
+    _syncSettingsFields();
 
-    double progress = 1 - (_remainingSeconds / _modeDurations[_currentMode]!);
-
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: _isRunning
-          ? null
-          : AppBar(
-              title: const Text("مؤقت بومودورو", style: TextStyle(fontWeight: FontWeight.bold)),
-              backgroundColor: primaryColor,
-              foregroundColor: Colors.white,
-              centerTitle: false,
-              actions: [
-                IconButton(
-                  onPressed: _showSetupDialog,
-                  icon: const Icon(Icons.settings_rounded),
+    final settings = await showModalBottomSheet<(int, int, int, int)>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) => Padding(
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+        ),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(20, 22, 20, 24),
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 42,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFE2E5EB),
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                ),
+                const Text(
+                  'إعداد جلسة الدراسة',
+                  style: TextStyle(
+                    color: _navy,
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 7),
+                const Text(
+                  'خصص وقت التركيز والاستراحات قبل البدء',
+                  style: TextStyle(color: Color(0xFF7D8594), fontSize: 13),
+                ),
+                const SizedBox(height: 18),
+                _settingField(
+                  'وقت الدراسة (دقائق)',
+                  _studyController,
+                  Icons.menu_book_rounded,
+                ),
+                _settingField(
+                  'الاستراحة القصيرة (دقائق)',
+                  _shortController,
+                  Icons.coffee_rounded,
+                ),
+                _settingField(
+                  'الاستراحة الطويلة (دقائق)',
+                  _longController,
+                  Icons.weekend_rounded,
+                ),
+                _settingField(
+                  'جلسات التركيز قبل الطويلة',
+                  _roundsController,
+                  Icons.loop_rounded,
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  height: 52,
+                  child: FilledButton(
+                    onPressed: () {
+                      final values = (
+                        _bounded(_studyController.text, 25, 1, 180),
+                        _bounded(_shortController.text, 5, 1, 60),
+                        _bounded(_longController.text, 15, 1, 90),
+                        _bounded(_roundsController.text, 4, 1, 12),
+                      );
+                      if (sheetContext.mounted) {
+                        Navigator.pop(sheetContext, values);
+                      }
+                    },
+                    style: FilledButton.styleFrom(
+                      backgroundColor: _navy,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(15),
+                      ),
+                    ),
+                    child: const Text(
+                      'حفظ الإعدادات',
+                      style: TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                  ),
                 ),
               ],
             ),
-      body: Stack(
-        children: [
-          if (_isRunning)
-            Positioned(
-              top: 40,
-              right: 20,
-              child: IconButton(
-                onPressed: _pauseTimer,
-                icon: const Icon(Icons.close_rounded, size: 32, color: Colors.grey),
-              ),
-            ),
-          Column(
-            children: [
-              const SizedBox(height: 60),
-              // عرض الدورات
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                decoration: BoxDecoration(
-                  color: primaryColor.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
+          ),
+        ),
+      ),
+    );
+    if (settings != null && mounted) {
+      await _timer.saveSettings(
+        study: settings.$1,
+        short: settings.$2,
+        long: settings.$3,
+        rounds: settings.$4,
+      );
+    }
+  }
+
+  int _bounded(String value, int fallback, int min, int max) =>
+      (int.tryParse(value) ?? fallback).clamp(min, max);
+
+  Widget _settingField(
+    String label,
+    TextEditingController controller,
+    IconData icon,
+  ) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: TextField(
+      controller: controller,
+      keyboardType: TextInputType.number,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Color(0xFF70798B)),
+        prefixIcon: Icon(icon, color: _navy, size: 20),
+        filled: true,
+        fillColor: _background,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 13,
+        ),
+      ),
+    ),
+  );
+
+  String _formatTime(int seconds) =>
+      '${(seconds ~/ 60).toString().padLeft(2, '0')}:'
+      '${(seconds % 60).toString().padLeft(2, '0')}';
+
+  String _modeTitle(PomodoroMode mode) => switch (mode) {
+    PomodoroMode.study => 'وقت التركيز',
+    PomodoroMode.shortBreak => 'استراحة قصيرة',
+    PomodoroMode.longBreak => 'استراحة طويلة',
+  };
+
+  @override
+  Widget build(BuildContext context) => AnimatedBuilder(
+    animation: _timer,
+    builder: (context, _) {
+      if (!_timer.isReady) {
+        return const Scaffold(
+          backgroundColor: _background,
+          body: Center(child: CircularProgressIndicator(color: _gold)),
+        );
+      }
+
+      final isStudy = _timer.currentMode == PomodoroMode.study;
+      final accent = isStudy ? _gold : const Color(0xFF55A979);
+      final duration = _timer.modeDurations[_timer.currentMode] ?? 1;
+      final progress =
+          (1 - (_timer.remainingSeconds / duration)).clamp(0.0, 1.0);
+      final completedRounds = isStudy
+          ? _timer.currentRound - 1
+          : _timer.currentRound;
+
+      return Scaffold(
+        backgroundColor: _background,
+        appBar: _timer.isRunning
+            ? null
+            : AppBar(
+                backgroundColor: Colors.white,
+                foregroundColor: _navy,
+                centerTitle: true,
+                elevation: 0,
+                scrolledUnderElevation: 0,
+                title: const Text(
+                  'مؤقت بومودورو',
+                  style: TextStyle(fontSize: 19, fontWeight: FontWeight.w800),
                 ),
-                child: Text(
-                  "الدورة: $_currentRound / $_totalRounds",
-                  style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 16),
+                actions: [
+                  IconButton(
+                    tooltip: 'إعدادات المؤقت',
+                    onPressed: _showSetupDialog,
+                    icon: const Icon(Icons.tune_rounded),
+                  ),
+                ],
+                systemOverlayStyle: const SystemUiOverlayStyle(
+                  statusBarColor: _navy,
+                  statusBarIconBrightness: Brightness.dark,
+                  statusBarBrightness: Brightness.light,
                 ),
               ),
-              const SizedBox(height: 20),
-              const Spacer(),
-              // الدائرة والمؤقت
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  SizedBox(
-                    width: 280,
-                    height: 280,
-                    child: CircularProgressIndicator(
-                      value: progress,
-                      strokeWidth: 12,
-                      backgroundColor: primaryColor.withOpacity(0.1),
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        _currentMode == PomodoroMode.study ? primaryColor : Colors.green,
+        body: SafeArea(
+          top: _timer.isRunning,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 20),
+            child: Column(
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        _timer.isRunning
+                            ? 'جلسة جارية'
+                            : 'خطّط لوقتك وأنجز بهدوء',
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(
+                          color: _navy,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
-                  ),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        _formatTime(_remainingSeconds),
-                        style: TextStyle(
-                          fontSize: 64,
-                          fontWeight: FontWeight.bold,
-                          color: primaryColor,
-                          fontFamily: 'monospace',
+                    if (_timer.isRunning) ...[
+                      IconButton(
+                        tooltip: 'تصغير المؤقّت ومتابعته',
+                        onPressed: () {
+                          _timer.enableFloating();
+                          Navigator.pop(context);
+                        },
+                        icon: const Icon(
+                          Icons.picture_in_picture_alt_rounded,
+                          color: _navy,
                         ),
                       ),
-                      Text(
-                        _currentMode == PomodoroMode.study ? "وقت التركيز" : "وقت الراحة",
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
-                        ),
+                      IconButton(
+                        onPressed: _timer.pause,
+                        icon: const Icon(Icons.close_rounded, color: _navy),
+                        tooltip: 'إيقاف المؤقت',
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 13),
+                _roundProgress(completedRounds),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _navy.withValues(alpha: .06),
+                        blurRadius: 18,
+                        offset: const Offset(0, 7),
                       ),
                     ],
                   ),
-                ],
-              ),
-              const Spacer(),
-              // أزرار التحكم
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 40),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: _isRunning ? _pauseTimer : _startTimer,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryColor,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 20),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
-                          elevation: 0,
+                  child: Column(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        decoration: BoxDecoration(
+                          color: accent.withValues(alpha: .12),
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Text(
+                          _modeTitle(_timer.currentMode),
+                          style: TextStyle(
+                            color: isStudy ? _navy : const Color(0xFF347650),
+                            fontWeight: FontWeight.w800,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 22),
+                      SizedBox(
+                        width: 254,
+                        height: 254,
+                        child: Stack(
+                          alignment: Alignment.center,
                           children: [
-                            Icon(_isRunning ? Icons.pause_rounded : Icons.play_arrow_rounded),
-                            const SizedBox(width: 8),
-                            Text(
-                              _isRunning ? "إيقاف مؤقت" : "ابدأ الآن",
-                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                            SizedBox.expand(
+                              child: CircularProgressIndicator(
+                                value: progress,
+                                strokeWidth: 10,
+                                strokeCap: StrokeCap.round,
+                                backgroundColor: const Color(0xFFE9ECF2),
+                                valueColor:
+                                    AlwaysStoppedAnimation<Color>(accent),
+                              ),
+                            ),
+                            Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  _formatTime(_timer.remainingSeconds),
+                                  style: const TextStyle(
+                                    color: _navy,
+                                    fontSize: 56,
+                                    fontWeight: FontWeight.w800,
+                                    fontFamily: 'monospace',
+                                    letterSpacing: -2,
+                                  ),
+                                ),
+                                const SizedBox(height: 5),
+                                Text(
+                                  _timer.isSessionComplete
+                                      ? 'اكتملت الجلسات المحددة'
+                                      : (_timer.isRunning
+                                            ? 'متبقي من ${_modeTitle(_timer.currentMode)}'
+                                            : 'جاهز للبدء'),
+                                  style: const TextStyle(
+                                    color: Color(0xFF7D8594),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 20),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.grey[100],
-                        borderRadius: BorderRadius.circular(15),
+                    ],
+                  ),
+                ),
+                const Spacer(),
+                Row(
+                  children: [
+                    Expanded(
+                      child: SizedBox(
+                        height: 58,
+                        child: FilledButton.icon(
+                          onPressed: _timer.isSessionComplete
+                              ? null
+                              : (_timer.isRunning
+                                    ? _timer.pause
+                                    : _timer.start),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: _navy,
+                            foregroundColor: Colors.white,
+                            disabledBackgroundColor: _navy.withValues(alpha: .6),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(17),
+                            ),
+                          ),
+                          icon: Icon(
+                            _timer.isRunning
+                                ? Icons.pause_rounded
+                                : (_timer.isSessionComplete
+                                      ? Icons.check_rounded
+                                      : Icons.play_arrow_rounded),
+                          ),
+                          label: Text(
+                            _timer.isRunning
+                                ? 'إيقاف مؤقت'
+                                : (_timer.isSessionComplete
+                                      ? 'اكتملت الجلسات'
+                                      : 'ابدأ الآن'),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 15,
+                            ),
+                          ),
+                        ),
                       ),
+                    ),
+                    const SizedBox(width: 11),
+                    Material(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(17),
                       child: IconButton(
-                        onPressed: _resetSession,
-                        icon: const Icon(Icons.refresh_rounded),
-                        color: primaryColor,
-                        iconSize: 32,
-                        padding: const EdgeInsets.all(15),
+                        tooltip: 'إعادة الجلسة',
+                        onPressed: _timer.reset,
+                        icon: const Icon(Icons.restart_alt_rounded),
+                        color: _navy,
+                        iconSize: 25,
+                        padding: const EdgeInsets.all(16),
                       ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: 20),
-            ],
+                const SizedBox(height: 10),
+              ],
+            ),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      );
+    },
+  );
 
+  Widget _roundProgress(int completedRounds) => Container(
+    width: double.infinity,
+    padding: const EdgeInsets.fromLTRB(16, 14, 16, 13),
+    decoration: BoxDecoration(
+      color: _navy,
+      borderRadius: BorderRadius.circular(19),
+    ),
+    child: Column(
+      children: [
+        Row(
+          children: [
+            Text(
+              '${_timer.currentRound} من ${_timer.totalRounds}',
+              style: const TextStyle(
+                color: _gold,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const Spacer(),
+            const Text(
+              'الدورات المكتملة',
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+            ),
+            const SizedBox(width: 7),
+            const Icon(Icons.flag_rounded, size: 17, color: _gold),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Row(
+          children: List.generate(_timer.totalRounds, (index) {
+            final complete = index < completedRounds;
+            final current = index + 1 == _timer.currentRound &&
+                _timer.currentMode == PomodoroMode.study;
+            return Expanded(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 220),
+                height: 7,
+                margin: EdgeInsets.only(left: index == 0 ? 0 : 5),
+                decoration: BoxDecoration(
+                  color: complete || current
+                      ? _gold
+                      : Colors.white.withValues(alpha: .18),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+            );
+          }),
+        ),
+        const SizedBox(height: 9),
+        Text(
+          'الاستراحة الطويلة بعد ${_timer.totalRounds} دورات تركيز',
+          textAlign: TextAlign.right,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: .72),
+            fontSize: 11,
+          ),
+        ),
+      ],
+    ),
+  );
 }

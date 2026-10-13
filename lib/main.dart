@@ -22,6 +22,7 @@ import 'screens/biology/BiologyDiagramsScreen.dart';
 import 'screens/tools/CountdownScreen.dart';
 import 'screens/tools/NotesScreen.dart';
 import 'screens/tools/PomodoroScreen.dart';
+import 'screens/tools/pomodoro_timer_service.dart';
 import 'screens/tools/TodosScreen.dart';
 import 'screens/profile/ProfileScreen.dart';
 import 'screens/auth/ChangePasswordScreen.dart';
@@ -58,6 +59,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    PomodoroTimerService.instance.initialize();
     _setupAuthListener();
   }
 
@@ -94,6 +96,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: _navigatorKey,
+      navigatorObservers: [_AppRouteObserver.instance],
       debugShowCheckedModeBanner: false,
       title: 'سند',
       theme: AppTheme.lightTheme,
@@ -101,7 +104,24 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         return TimeTrackingWrapper(
           child: Directionality(
             textDirection: TextDirection.rtl,
-            child: child!,
+            child: Stack(
+              children: [
+                child!,
+                _PomodoroMiniOverlay(
+                  routeObserver: _AppRouteObserver.instance,
+                  onOpen: () {
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      final navigator = _navigatorKey.currentState;
+                      if (navigator == null) return;
+
+                      navigator.pushNamed('/pomodoro');
+                      Future<void>.delayed(const Duration(milliseconds: 500),
+                          PomodoroTimerService.instance.disableFloating);
+                    });
+                  },
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -143,6 +163,175 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
         '/pomodoro': (context) => const PomodoroScreen(),
         '/todos': (context) => const TodosScreen(),
         '/profile': (context) => const ProfileScreen(),
+      },
+    );
+  }
+}
+
+class _AppRouteObserver extends NavigatorObserver {
+  _AppRouteObserver._();
+
+  static final instance = _AppRouteObserver._();
+  final ValueNotifier<String?> currentRoute = ValueNotifier<String?>(null);
+
+  @override
+  void didPush(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    currentRoute.value = route.settings.name;
+  }
+
+  @override
+  void didPop(Route<dynamic> route, Route<dynamic>? previousRoute) {
+    currentRoute.value = previousRoute?.settings.name;
+  }
+
+  @override
+  void didReplace({Route<dynamic>? newRoute, Route<dynamic>? oldRoute}) {
+    currentRoute.value = newRoute?.settings.name;
+  }
+}
+
+class _PomodoroMiniOverlay extends StatefulWidget {
+  const _PomodoroMiniOverlay({required this.routeObserver, required this.onOpen});
+
+  final _AppRouteObserver routeObserver;
+  final VoidCallback onOpen;
+
+  @override
+  State<_PomodoroMiniOverlay> createState() => _PomodoroMiniOverlayState();
+}
+
+class _PomodoroMiniOverlayState extends State<_PomodoroMiniOverlay> {
+  Offset? _position;
+
+  static const _navy = Color(0xFF1A2238);
+  static const _gold = Color(0xFFF2B833);
+  static const _green = Color(0xFF43A866);
+
+  @override
+  Widget build(BuildContext context) {
+    final timer = PomodoroTimerService.instance;
+    return AnimatedBuilder(
+      animation: Listenable.merge([timer, widget.routeObserver.currentRoute]),
+      builder: (context, _) {
+        if (!timer.isReady ||
+            !timer.isRunning ||
+            !timer.isFloatingEnabled) {
+          return const SizedBox.shrink();
+        }
+
+        final media = MediaQuery.of(context);
+        final size = media.size;
+        const diameter = 62.0;
+        const edgeInset = 10.0;
+        final minTop = media.padding.top + edgeInset;
+        final maxLeft = (size.width - diameter - edgeInset)
+            .clamp(edgeInset, double.infinity)
+            .toDouble();
+        final maxTop = (size.height - diameter - media.padding.bottom - edgeInset)
+            .clamp(minTop, double.infinity)
+            .toDouble();
+        final initialPosition = Offset(maxLeft, maxTop);
+        final position = _position ?? initialPosition;
+        final left = position.dx.clamp(edgeInset, maxLeft).toDouble();
+        final top = position.dy.clamp(minTop, maxTop).toDouble();
+        final isPomodoroRoute =
+            widget.routeObserver.currentRoute.value == '/pomodoro';
+        final progress = (1 -
+                timer.remainingSeconds /
+                    (timer.modeDurations[timer.currentMode] ?? 1))
+            .clamp(0.0, 1.0)
+            .toDouble();
+        final accentColor = timer.currentMode == PomodoroMode.study
+            ? _gold
+            : _green;
+
+        return Positioned(
+          left: left,
+          top: top,
+          child: AnimatedOpacity(
+            opacity: isPomodoroRoute ? 0.0 : 1.0,
+            duration: const Duration(milliseconds: 180),
+            child: IgnorePointer(
+              ignoring: isPomodoroRoute,
+              child: GestureDetector(
+                onTap: widget.onOpen,
+                onLongPress: timer.pause,
+                onPanUpdate: (details) {
+                  setState(() {
+                    _position = Offset(
+                      (left + details.delta.dx)
+                          .clamp(edgeInset, maxLeft)
+                          .toDouble(),
+                      (top + details.delta.dy)
+                          .clamp(minTop, maxTop)
+                          .toDouble(),
+                    );
+                  });
+                },
+                child: Semantics(
+                  label: 'مؤقت بومودورو، اضغط لفتحه واضغط مطولاً لإيقافه مؤقتاً',
+                  button: true,
+                  child: SizedBox(
+                    width: diameter,
+                    height: diameter,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        SizedBox.expand(
+                          child: CircularProgressIndicator(
+                            value: progress,
+                            strokeWidth: 3,
+                            backgroundColor: _navy.withOpacity(.14),
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(accentColor),
+                          ),
+                        ),
+                        Container(
+                          width: diameter - 8,
+                          height: diameter - 8,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: const LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [Color(0xFF303B59), _navy],
+                            ),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(.08),
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.timer_rounded,
+                                color: accentColor,
+                                size: 13,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${(timer.remainingSeconds ~/ 60).toString().padLeft(2, '0')}:${(timer.remainingSeconds % 60).toString().padLeft(2, '0')}',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                  fontFamily: 'monospace',
+                                  letterSpacing: .2,
+                                  decoration: TextDecoration.none,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
       },
     );
   }
