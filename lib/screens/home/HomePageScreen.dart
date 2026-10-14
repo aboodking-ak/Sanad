@@ -2451,46 +2451,51 @@ class _HomePageScreenState extends State<HomePageScreen>
           drawer: _buildDrawer(context, primaryColor, secondaryColor),
           bottomNavigationBar: SafeArea(
             top: false,
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(15, 8, 15, 10),
-              decoration: BoxDecoration(
-                color: primaryColor,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: Colors.white.withAlpha(50),
-                  width: 1.5,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: primaryColor.withValues(alpha: 0.18),
-                    blurRadius: 18,
-                    offset: const Offset(0, 7),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                const minNavigationWidth = 240.0;
+                final sideMargin =
+                    ((constraints.maxWidth - minNavigationWidth) / 2)
+                        .clamp(0.0, constraints.maxWidth / 2)
+                        .toDouble();
+                return Container(
+                  margin: EdgeInsets.fromLTRB(sideMargin, 8, sideMargin, 10),
+                  decoration: BoxDecoration(
+                    color: primaryColor,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Colors.white.withAlpha(50),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: primaryColor.withValues(alpha: 0.18),
+                        blurRadius: 18,
+                        offset: const Offset(0, 7),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              child: TabBar(
+                  child: TabBar(
                     controller: _tabController,
                     dividerColor: Colors.transparent,
-                    indicatorSize: TabBarIndicatorSize.label,
+                    indicatorSize: TabBarIndicatorSize.tab,
                     indicatorWeight: 4,
                     labelColor: secondaryColor,
                     unselectedLabelColor: Colors.white70,
                     indicator: _RoundedTabIndicator(
                       color: secondaryColor,
                       height: 4,
-                      horizontalInset: 8,
+                      horizontalInset: 17,
                     ),
                     tabs: [
-                      const Tab(icon: Icon(Icons.home_rounded, size: 26)),
-                      const Tab(
-                        icon: Icon(Icons.auto_awesome_rounded, size: 26),
-                      ),
-                      const Tab(icon: Icon(Icons.handyman_rounded, size: 26)),
-                      const Tab(
-                        icon: Icon(Icons.emoji_events_rounded, size: 26),
-                      ),
+                      _buildBottomNavigationTab(Icons.home_rounded, 0),
+                      _buildBottomNavigationTab(Icons.auto_awesome_rounded, 1),
+                      _buildBottomNavigationTab(Icons.handyman_rounded, 2),
+                      _buildBottomNavigationTab(Icons.emoji_events_rounded, 3),
                     ],
-              ),
+                  ),
+                );
+              },
             ),
           ),
           body: AnnotatedRegion<SystemUiOverlayStyle>(
@@ -2515,6 +2520,37 @@ class _HomePageScreenState extends State<HomePageScreen>
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildBottomNavigationTab(IconData icon, int index) {
+    return Tab(
+      child: AnimatedBuilder(
+        animation: _tabController,
+        builder: (context, _) {
+          final isSelected = _tabController.index == index;
+          final gold = Theme.of(context).colorScheme.secondary;
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOutCubic,
+            width: 44,
+            height: 40,
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? gold.withValues(alpha: 0.12)
+                  : Colors.transparent,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            alignment: Alignment.center,
+            child: AnimatedScale(
+              scale: isSelected ? 1.1 : 1,
+              duration: const Duration(milliseconds: 180),
+              curve: Curves.easeOutCubic,
+              child: Icon(icon, size: 26),
+            ),
+          );
+        },
       ),
     );
   }
