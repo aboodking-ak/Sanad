@@ -54,6 +54,7 @@ flutter:
     - assets/icons/social/
     - assets/pdfs/subjects/
     - assets/jsons/tips.json
+    - assets/jsons/study_quotes.json
     - assets/jsons/Content/Preparatory/Islamic/
     - assets/jsons/Content/Preparatory/Arabic/
     - assets/jsons/Content/Preparatory/English/

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/services.dart';
@@ -137,6 +138,15 @@ class _HomeShortcut {
   final VoidCallback onTap;
 }
 
+class _StudyQuote {
+  const _StudyQuote(this.text, this.source);
+
+  final String text;
+  final String source;
+
+  bool get isQuran => source.startsWith('سورة ');
+}
+
 class _HomePageScreenState extends State<HomePageScreen>
     with TickerProviderStateMixin {
   final AdHelper _adHelper = AdHelper();
@@ -153,6 +163,10 @@ class _HomePageScreenState extends State<HomePageScreen>
     viewportFraction: 0.62,
   );
   Timer? _quickShortcutsTimer;
+  Timer? _studyQuoteTimer;
+  final Random _studyQuoteRandom = Random();
+  List<_StudyQuote> _studyQuotes = [];
+  int _studyQuoteIndex = 0;
 
 
   String userName = "الطالب";
@@ -232,6 +246,7 @@ class _HomePageScreenState extends State<HomePageScreen>
   @override
   void initState() {
     super.initState();
+    _loadStudyQuotes();
     _sendDotsController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 850),
@@ -298,6 +313,17 @@ class _HomePageScreenState extends State<HomePageScreen>
         }
       }
     });
+    _studyQuoteTimer = Timer.periodic(const Duration(seconds: 8), (_) {
+      if (!mounted || _tabController.index != 0 || _studyQuotes.length < 2) {
+        return;
+      }
+      setState(() {
+        final previousIndex = _studyQuoteIndex;
+        var nextIndex = _studyQuoteRandom.nextInt(_studyQuotes.length - 1);
+        if (nextIndex >= previousIndex) nextIndex++;
+        _studyQuoteIndex = nextIndex;
+      });
+    });
     _initAi();
     _loadAiLimit();
     _fetchSupabaseData();
@@ -312,10 +338,38 @@ class _HomePageScreenState extends State<HomePageScreen>
     });
   }
 
+  Future<void> _loadStudyQuotes() async {
+    try {
+      final json = await rootBundle.loadString('assets/jsons/study_quotes.json');
+      final decoded = jsonDecode(json);
+      if (decoded is! List) return;
+
+      final quotes = decoded
+          .whereType<Map<String, dynamic>>()
+          .where((item) => item['text'] is String && item['source'] is String)
+          .map(
+            (item) => _StudyQuote(
+              item['text'] as String,
+              item['source'] as String,
+            ),
+          )
+          .toList();
+      if (!mounted || quotes.isEmpty) return;
+
+      setState(() {
+        _studyQuotes = quotes;
+        _studyQuoteIndex = _studyQuoteRandom.nextInt(quotes.length);
+      });
+    } catch (error) {
+      debugPrint('تعذر تحميل الاقتباسات: $error');
+    }
+  }
+
   @override
   void dispose() {
     _timer.cancel();
     _quickShortcutsTimer?.cancel();
+    _studyQuoteTimer?.cancel();
     _quickShortcutsController.dispose();
     _chatController.dispose();
     _liveAssistantText.dispose();
@@ -3681,6 +3735,7 @@ class _HomePageScreenState extends State<HomePageScreen>
         children: [
           _buildHomeHeader(primaryColor, secondaryColor),
           _buildQuickShortcuts(primaryColor, secondaryColor),
+          _buildStudyQuoteCard(primaryColor, secondaryColor),
           _buildSectionHeader(
             "المواد الدراسية",
             "${filteredSubjects.length} مواد",
@@ -3954,6 +4009,114 @@ class _HomePageScreenState extends State<HomePageScreen>
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildStudyQuoteCard(Color primaryColor, Color secondaryColor) {
+    if (_studyQuotes.isEmpty) return const SizedBox.shrink();
+    final quote = _studyQuotes[_studyQuoteIndex];
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 15),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF7F8FA),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: secondaryColor.withValues(alpha: 0.18)),
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: secondaryColor.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.format_quote_rounded,
+                color: primaryColor,
+                size: 23,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'إلهام يومي',
+                    style: TextStyle(
+                      color: primaryColor,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 380),
+                    curve: Curves.easeInOutCubic,
+                    alignment: Alignment.topCenter,
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 520),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      layoutBuilder: (currentChild, previousChildren) => Stack(
+                        alignment: AlignmentDirectional.topStart,
+                        clipBehavior: Clip.none,
+                        children: <Widget>[
+                          ...previousChildren,
+                          if (currentChild != null) currentChild,
+                        ],
+                      ),
+                      transitionBuilder: (child, animation) => FadeTransition(
+                        opacity: animation,
+                        child: SlideTransition(
+                          position: animation.drive(
+                            Tween<Offset>(
+                              begin: const Offset(0, 0.08),
+                              end: Offset.zero,
+                            ),
+                          ),
+                          child: child,
+                        ),
+                      ),
+                      child: Column(
+                        key: ValueKey(_studyQuoteIndex),
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '«${quote.text}»',
+                            textAlign: TextAlign.right,
+                            style: TextStyle(
+                              color: primaryColor,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              height: 1.6,
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            quote.isQuran
+                                ? 'القرآن الكريم • ${quote.source}'
+                                : quote.source,
+                            textAlign: TextAlign.right,
+                            style: TextStyle(
+                              color: Colors.blueGrey.shade500,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
