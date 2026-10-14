@@ -2449,46 +2449,6 @@ class _HomePageScreenState extends State<HomePageScreen>
           },
           // الحل الاحترافي: منع الشاشة من الانضغاط
           drawer: _buildDrawer(context, primaryColor, secondaryColor),
-          appBar: AppBar(
-            toolbarHeight: 80,
-            backgroundColor: primaryColor,
-            elevation: 4,
-            shadowColor: Colors.black,
-            surfaceTintColor: Colors.transparent,
-            centerTitle: false,
-            titleSpacing: 0,
-            // إزالة المسافة التلقائية ليكون النص قريباً من الأيقونة
-            systemOverlayStyle: _isDrawerOpen
-                ? SystemUiOverlayStyle.dark.copyWith(
-                    statusBarColor: const Color(0xFFF7F8FA),
-                  )
-                : SystemUiOverlayStyle.light.copyWith(
-                    statusBarColor: primaryColor,
-                  ),
-            leading: Builder(
-              builder: (context) => IconButton(
-                icon: const Icon(
-                  Icons.menu_rounded,
-                  color: Colors.white,
-                  size: 32,
-                ),
-                onPressed: () => Scaffold.of(context).openDrawer(),
-              ),
-            ),
-            shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(30),
-                bottomRight: Radius.circular(30),
-              ),
-            ),
-            title: _buildGreetingText(secondaryColor),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(left: 15),
-                child: _buildUserAvatar(),
-              ),
-            ],
-          ),
           bottomNavigationBar: SafeArea(
             top: false,
             child: Container(
@@ -2560,19 +2520,26 @@ class _HomePageScreenState extends State<HomePageScreen>
               ),
             ),
           ),
-          body: SafeArea(
-            bottom: false,
-            // يضمن عدم تداخل المحتوى مع أزرار النظام في الأسفل
-            child: TabBarView(
-              controller: _tabController,
-              // تم ترك خاصية physics افتراضية للسماح بالسحب بين التبويبات
-              children: [
-                _buildHomeView(primaryColor, secondaryColor),
-                _buildAiChatView(primaryColor),
-                _buildToolsView(primaryColor, secondaryColor),
-                _buildNotificationsView(primaryColor, secondaryColor),
-                _buildLeaderboardView(primaryColor, secondaryColor),
-              ],
+          body: AnnotatedRegion<SystemUiOverlayStyle>(
+            value: _isDrawerOpen
+                ? SystemUiOverlayStyle.dark.copyWith(
+                    statusBarColor: const Color(0xFFF7F8FA),
+                  )
+                : SystemUiOverlayStyle.dark.copyWith(
+                    statusBarColor: Colors.white,
+                  ),
+            child: SafeArea(
+              bottom: false,
+              child: TabBarView(
+                controller: _tabController,
+                children: [
+                  _buildHomeView(primaryColor, secondaryColor),
+                  _buildAiChatView(primaryColor),
+                  _buildToolsView(primaryColor, secondaryColor),
+                  _buildNotificationsView(primaryColor, secondaryColor),
+                  _buildLeaderboardView(primaryColor, secondaryColor),
+                ],
+              ),
             ),
           ),
         ),
@@ -2838,7 +2805,8 @@ class _HomePageScreenState extends State<HomePageScreen>
     }
   }
 
-  Widget _buildUserAvatar() {
+  Widget _buildUserAvatar({double radius = 23}) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
     return GestureDetector(
       onTap: () {
         Navigator.pushNamed(context, '/profile').then((_) => _loadUserData());
@@ -2846,19 +2814,21 @@ class _HomePageScreenState extends State<HomePageScreen>
       child: Container(
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.white.withOpacity(0.5), width: 2),
+          border: Border.all(
+            color: primaryColor.withValues(alpha: 0.12),
+            width: 2,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.25),
-              blurRadius: 10,
-              spreadRadius: 1,
-              offset: Offset.zero, // موزعة في كل الاتجاهات
+              color: primaryColor.withValues(alpha: 0.12),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
             ),
           ],
         ),
         child: CircleAvatar(
-          radius: 22,
-          backgroundColor: Colors.white.withAlpha(40),
+          radius: radius,
+          backgroundColor: const Color(0xFFF0F2F6),
           backgroundImage: _profileImagePath != null
               ? (_profileImagePath!.startsWith('http')
                     ? NetworkImage(_profileImagePath!) as ImageProvider
@@ -2867,9 +2837,9 @@ class _HomePageScreenState extends State<HomePageScreen>
           child: _profileImagePath == null
               ? Text(
                   _getInitials(userName),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
+                  style: TextStyle(
+                    color: primaryColor,
+                    fontSize: radius * 0.7,
                     fontWeight: FontWeight.bold,
                   ),
                 )
@@ -3530,6 +3500,93 @@ class _HomePageScreenState extends State<HomePageScreen>
     );
   }
 
+  Widget _buildHomeHeader(Color primaryColor, Color secondaryColor) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
+      child: Row(
+        children: [
+          Builder(
+            builder: (context) => IconButton(
+              tooltip: 'القائمة',
+              onPressed: () => Scaffold.of(context).openDrawer(),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints.tightFor(width: 48, height: 48),
+              icon: SizedBox(
+                width: 26,
+                height: 24,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _menuBar(23, primaryColor),
+                    const SizedBox(height: 4),
+                    _menuBar(17, primaryColor),
+                    const SizedBox(height: 4),
+                    _menuBar(11, primaryColor),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text.rich(
+                  TextSpan(
+                    children: [
+                    const TextSpan(text: 'مرحباً، '),
+                      TextSpan(
+                        text: userName,
+                        style: TextStyle(
+                          color: secondaryColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    color: primaryColor,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  selectedStage ?? 'لم يتم تحديد المرحلة',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF7B8292),
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 14),
+          _buildUserAvatar(),
+        ],
+      ),
+    );
+  }
+
+  Widget _menuBar(double width, Color color) => Align(
+    alignment: Alignment.centerRight,
+    child: Container(
+      width: width,
+      height: 3,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(3),
+      ),
+    ),
+  );
+
   Widget _buildAppBarLogo(Color secondaryColor) {
     return Text.rich(
       TextSpan(
@@ -3555,6 +3612,7 @@ class _HomePageScreenState extends State<HomePageScreen>
         SingleChildScrollView(
           child: Column(
             children: [
+              _buildHomeHeader(primaryColor, secondaryColor),
               _buildSearchBar(),
               if (_searchQuery.trim().isEmpty) ...[
                 _buildSectionHeader(
@@ -3877,7 +3935,7 @@ class _HomePageScreenState extends State<HomePageScreen>
                   item['type'],
                   style: TextStyle(
                     color: secondaryColor,
-                    fontSize: 12,
+                    fontSize: 11,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -4842,7 +4900,7 @@ class _HomePageScreenState extends State<HomePageScreen>
                   mathStyle: isDisplay ? MathStyle.display : MathStyle.text,
                   textStyle: const TextStyle(
                     color: Colors.black87,
-                    fontSize: 16,
+                      fontSize: 15,
                   ),
                   onErrorFallback: (_) => SelectableText(expression),
                 ),
@@ -5385,7 +5443,7 @@ class _HomePageScreenState extends State<HomePageScreen>
                           userData['stage'] ?? "طالب",
                           style: TextStyle(
                             color: Colors.white.withOpacity(0.8),
-                            fontSize: 11,
+                      fontSize: 10,
                           ),
                         ),
                       ],
