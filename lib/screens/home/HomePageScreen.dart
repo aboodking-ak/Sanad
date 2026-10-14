@@ -1,5 +1,5 @@
-import 'dart:convert';
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -135,8 +135,6 @@ class _HomePageScreenState extends State<HomePageScreen>
   late Timer _timer;
   Duration _timeLeft = const Duration(days: 45, hours: 12, minutes: 30);
 
-  int _currentTipIndex = 0;
-  List<Map<String, String>> _tips = [];
 
   String userName = "الطالب";
   String userEmail = "user@email.com";
@@ -186,7 +184,7 @@ class _HomePageScreenState extends State<HomePageScreen>
     return name.trim().substring(0, 1).toUpperCase();
   }
 
-  // Gemini AI & Search Variables
+  // Gemini AI Variables
   final TextEditingController _chatController = TextEditingController();
   final FocusNode _chatFocusNode = FocusNode();
   late final AnimationController _sendDotsController;
@@ -195,9 +193,6 @@ class _HomePageScreenState extends State<HomePageScreen>
   XFile? _pendingChatImage;
   final ScrollController _chatScrollController = ScrollController();
   late TabController _tabController;
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = "";
-  bool _isTipVisible = false;
   final List<Map<String, dynamic>> _chatMessages = [];
   final ValueNotifier<String> _liveAssistantText = ValueNotifier('');
   Map<String, dynamic>? _liveAssistantMessage;
@@ -254,7 +249,6 @@ class _HomePageScreenState extends State<HomePageScreen>
       overlays: SystemUiOverlay.values,
     );
     _loadUserData();
-    _loadTips();
     _startCountdown();
     _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(() {
@@ -289,7 +283,6 @@ class _HomePageScreenState extends State<HomePageScreen>
   @override
   void dispose() {
     _timer.cancel();
-    _searchController.dispose();
     _chatController.dispose();
     _liveAssistantText.dispose();
     _chatFocusNode.dispose();
@@ -449,33 +442,7 @@ class _HomePageScreenState extends State<HomePageScreen>
   }
 
   String _getGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return "صباح الخير";
-    return "مساء الخير";
-  }
-
-  Future<void> _loadTips() async {
-    try {
-      final String response = await rootBundle.loadString(
-        'assets/jsons/tips.json',
-      );
-      final List<dynamic> data = json.decode(response);
-      setState(() {
-        _tips = data.map((item) => Map<String, String>.from(item)).toList();
-      });
-    } catch (e) {
-      debugPrint("Error loading tips: $e");
-      // Fallback if file not found
-      setState(() {
-        _tips = [
-          {
-            'type': 'نصيحة',
-            'text':
-                'ابدأ يومك بنية صادقة، فالتوفيق يبدأ بصدق العمل والاجتهاد المستمر للوصول إلى هدفك.',
-          },
-        ];
-      });
-    }
+    return DateTime.now().hour < 12 ? 'صباح الخير' : 'مساء الخير';
   }
 
   Future<void> _fetchSupabaseData() async {
@@ -2530,18 +2497,11 @@ class _HomePageScreenState extends State<HomePageScreen>
         animation: _tabController,
         builder: (context, _) {
           final isSelected = _tabController.index == index;
-          final gold = Theme.of(context).colorScheme.secondary;
           return AnimatedContainer(
             duration: const Duration(milliseconds: 180),
             curve: Curves.easeOutCubic,
             width: 44,
             height: 40,
-            decoration: BoxDecoration(
-              color: isSelected
-                  ? gold.withValues(alpha: 0.12)
-                  : Colors.transparent,
-              borderRadius: BorderRadius.circular(14),
-            ),
             alignment: Alignment.center,
             child: AnimatedScale(
               scale: isSelected ? 1.1 : 1,
@@ -3682,391 +3642,35 @@ class _HomePageScreenState extends State<HomePageScreen>
   }
 
   Widget _buildHomeView(Color primaryColor, Color secondaryColor) {
-    if (_tips.isEmpty) return const Center(child: CircularProgressIndicator());
-    final currentTip = _tips[_currentTipIndex];
-    return Stack(
-      children: [
-        SingleChildScrollView(
-          child: Column(
-            children: [
-              _buildHomeHeader(primaryColor, secondaryColor),
-              _buildSearchBar(),
-              if (_searchQuery.trim().isEmpty) ...[
-                _buildSectionHeader(
-                  "المواد الدراسية",
-                  "${filteredSubjects.length} مواد",
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    clipBehavior: Clip.none,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 1.4,
-                          crossAxisSpacing: 15,
-                          mainAxisSpacing: 15,
-                        ),
-                    itemCount: filteredSubjects.length,
-                    itemBuilder: (context, index) {
-                      return _buildSubjectCard(filteredSubjects[index]);
-                    },
-                  ),
-                ),
-              ] else
-                _buildSearchResults(primaryColor, secondaryColor),
-              const SizedBox(height: 100),
-            ],
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          _buildHomeHeader(primaryColor, secondaryColor),
+          _buildSectionHeader(
+            "المواد الدراسية",
+            "${filteredSubjects.length} مواد",
           ),
-        ),
-        // فقاعة النصيحة - تظهر فوق الزر
-        if (_isTipVisible)
-          Positioned(
-            bottom: 170,
-            left: 20,
-            child: GestureDetector(
-              onTap: () => setState(() => _isTipVisible = false),
-              child: Container(
-                width: 280,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(25),
-                  boxShadow: [
-                    BoxShadow(
-                      color: primaryColor.withAlpha(40),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
-                  ],
-                  border: Border.all(
-                    color: primaryColor.withAlpha(30),
-                    width: 1,
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: secondaryColor.withAlpha(30),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            _getTipIcon(currentTip['type']!),
-                            color: secondaryColor,
-                            size: 16,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          "${currentTip['type']} اليوم",
-                          style: TextStyle(
-                            color: primaryColor,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      currentTip['text']!,
-                      style: const TextStyle(
-                        color: Colors.black87,
-                        fontSize: 14,
-                        height: 1.5,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              clipBehavior: Clip.none,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 1.4,
+                crossAxisSpacing: 15,
+                mainAxisSpacing: 15,
               ),
+              itemCount: filteredSubjects.length,
+              itemBuilder: (context, index) =>
+                  _buildSubjectCard(filteredSubjects[index]),
             ),
           ),
-        // الزر العائم - موقعه ثابت تماماً
-        Positioned(
-          bottom: 100,
-          left: 20,
-          child: FloatingActionButton(
-            onPressed: () {
-              setState(() {
-                if (!_isTipVisible) {
-                  _currentTipIndex = (_currentTipIndex + 1) % _tips.length;
-                }
-                _isTipVisible = !_isTipVisible;
-              });
-            },
-            backgroundColor: primaryColor,
-            elevation: 8,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 300),
-              child: Icon(
-                _isTipVisible ? Icons.close_rounded : Icons.lightbulb_rounded,
-                key: ValueKey<bool>(_isTipVisible),
-                color: secondaryColor,
-                size: 30,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  String _normalizeArabic(String text) {
-    return text
-        .replaceAll('أ', 'ا')
-        .replaceAll('إ', 'ا')
-        .replaceAll('آ', 'ا')
-        .replaceAll('ة', 'ه')
-        .replaceAll('ى', 'ي')
-        .toLowerCase()
-        .trim();
-  }
-
-  Widget _buildSearchResults(Color primaryColor, Color secondaryColor) {
-    final query = _normalizeArabic(_searchQuery);
-    final List<Map<String, dynamic>> results = [];
-    final currentSubjects = filteredSubjects;
-
-    void navigateAndClear(String route, {Object? arguments}) {
-      Navigator.pushNamed(context, route, arguments: arguments).then((_) {
-        if (mounted) {
-          setState(() {
-            _searchQuery = "";
-            _searchController.clear();
-          });
-        }
-      });
-    }
-
-    for (var subject in currentSubjects) {
-      final subjectLabel = subject['label'].toString();
-      final normalizedLabel = _normalizeArabic(subjectLabel);
-
-      // 1. البحث في الكتب (PDFs)
-      final pdfs = subject['pdfs'] as List;
-      for (var pdf in pdfs) {
-        final pdfData = pdf as Map<String, dynamic>;
-        final title = pdfData['title'].toString();
-        final normalizedTitle = _normalizeArabic(title);
-
-        if (normalizedTitle.contains(query) ||
-            normalizedLabel.contains(query)) {
-          results.add({
-            'title': "كتاب $subjectLabel - $title",
-            'type': 'كتاب',
-            'icon': Icons.menu_book_rounded,
-            'onTap': () => navigateAndClear(
-              '/pdf_viewer',
-              arguments: {'title': title, 'pdfPath': pdfData['path']},
-            ),
-          });
-        }
-      }
-
-      // 2. البحث في الاختبارات والوزاريات
-      if (_normalizeArabic("اختبارات $subjectLabel").contains(query) ||
-          _normalizeArabic("الاختبارات").contains(query)) {
-        results.add({
-          'title': "اختبارات $subjectLabel",
-          'type': 'اختبارات',
-          'icon': Icons.assignment_turned_in_rounded,
-          'onTap': () => navigateAndClear(
-            '/exams',
-            arguments: {
-              'subjectName': subjectLabel,
-              'category': _getCategoryForSubject(subjectLabel),
-            },
-          ),
-        });
-      }
-      if (_normalizeArabic("وزاريات $subjectLabel").contains(query) ||
-          _normalizeArabic("الوزاريات").contains(query)) {
-        results.add({
-          'title': "وزاريات $subjectLabel",
-          'type': 'وزاريات',
-          'icon': Icons.account_balance_rounded,
-          'onTap': () => navigateAndClear(
-            '/ministerials',
-            arguments: {
-              'subjectName': subjectLabel,
-              'category': _getCategoryForSubject(subjectLabel),
-            },
-          ),
-        });
-      }
-
-      // 3. الأقسام الخاصة
-      if (subjectLabel == 'الإسلامية') {
-        if (_normalizeArabic("أحكام التلاوة").contains(query)) {
-          results.add({
-            'title': "أحكام التلاوة - الإسلامية",
-            'type': 'قسم',
-            'icon': Icons.menu_book_rounded,
-            'onTap': () => navigateAndClear('/tajweed_rules'),
-          });
-        }
-        if (_normalizeArabic("سور الحفظ").contains(query)) {
-          results.add({
-            'title': "سور الحفظ - الإسلامية",
-            'type': 'قسم',
-            'icon': Icons.menu_book_outlined,
-            'onTap': () => navigateAndClear('/surahs'),
-          });
-        }
-      }
-      if (subjectLabel == 'العربية' &&
-          _normalizeArabic("قصائد الأدب").contains(query)) {
-        results.add({
-          'title': "قصائد الأدب - العربية",
-          'type': 'قسم',
-          'icon': Icons.auto_stories_rounded,
-          'onTap': () => navigateAndClear('/poems'),
-        });
-      }
-      if (subjectLabel == 'الإنكليزي') {
-        if (_normalizeArabic("الإنشاءات").contains(query)) {
-          results.add({
-            'title': "الإنشاءات - الإنكليزي",
-            'type': 'قسم',
-            'icon': Icons.edit_note_rounded,
-            'onTap': () => navigateAndClear('/essays'),
-          });
-        }
-        if (_normalizeArabic("قطع الكتاب").contains(query)) {
-          results.add({
-            'title': "قطع الكتاب - الإنكليزي",
-            'type': 'قسم',
-            'icon': Icons.book_rounded,
-            'onTap': () => navigateAndClear('/book_passages'),
-          });
-        }
-      }
-    }
-
-    if (results.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.only(top: 50),
-        child: Column(
-          children: [
-            Icon(Icons.search_off_rounded, size: 80, color: Colors.grey[300]),
-            const SizedBox(height: 16),
-            const Text(
-              "لا توجد نتائج بحث مطابقة",
-              style: TextStyle(color: Colors.grey, fontSize: 16),
-            ),
-          ],
-        ),
-      );
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildSectionHeader("نتائج البحث", "${results.length} نتيجة"),
-        ListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          itemCount: results.length,
-          itemBuilder: (context, index) {
-            final item = results[index];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(15),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(20),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
-                border: Border.all(color: Colors.grey[100]!),
-              ),
-              child: ListTile(
-                onTap: item['onTap'],
-                leading: CircleAvatar(
-                  backgroundColor: primaryColor.withAlpha(20),
-                  child: Icon(item['icon'], color: primaryColor, size: 22),
-                ),
-                title: Text(
-                  item['title'],
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-                subtitle: Text(
-                  item['type'],
-                  style: TextStyle(
-                    color: secondaryColor,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                trailing: Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  size: 14,
-                  color: Colors.grey[400],
-                ),
-              ),
-            );
-          },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSearchBar() {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.grey[100],
-          borderRadius: BorderRadius.circular(15),
-          border: Border.all(color: Colors.grey[200]!),
-        ),
-        child: TextField(
-          controller: _searchController,
-          onChanged: (value) {
-            setState(() {
-              _searchQuery = value;
-            });
-          },
-          decoration: const InputDecoration(
-            hintText: "ابحث داخل المواد...",
-            prefixIcon: Icon(Icons.search_rounded, color: Colors.grey),
-            border: InputBorder.none,
-            contentPadding: EdgeInsets.symmetric(vertical: 15),
-          ),
-        ),
+          const SizedBox(height: 100),
+        ],
       ),
     );
-  }
-
-  IconData _getTipIcon(String type) {
-    switch (type) {
-      case 'دعاء':
-        return Icons.star_rounded;
-      case 'تحفيز':
-        return Icons.bolt_rounded;
-      case 'حلم':
-        return Icons.auto_awesome_rounded;
-      default:
-        return Icons.lightbulb_rounded;
-    }
   }
 
   Widget _buildAiChatView(Color primaryColor) {
