@@ -256,7 +256,7 @@ class _HomePageScreenState extends State<HomePageScreen>
     _loadUserData();
     _loadTips();
     _startCountdown();
-    _tabController = TabController(length: 5, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
     _tabController.addListener(() {
       if (_tabController.index == 1) {
         if (!_didPulseChatHistory) {
@@ -2486,33 +2486,6 @@ class _HomePageScreenState extends State<HomePageScreen>
                         icon: Icon(Icons.auto_awesome_rounded, size: 26),
                       ),
                       const Tab(icon: Icon(Icons.handyman_rounded, size: 26)),
-                      Tab(
-                        icon: Stack(
-                          clipBehavior: Clip.none,
-                          children: [
-                            const Icon(
-                              Icons.notifications_none_rounded,
-                              size: 26,
-                            ),
-                            if (_unreadCount > 0)
-                              Positioned(
-                                right: -2,
-                                top: -2,
-                                child: Container(
-                                  padding: const EdgeInsets.all(4),
-                                  decoration: const BoxDecoration(
-                                    color: Colors.redAccent,
-                                    shape: BoxShape.circle,
-                                  ),
-                                  constraints: const BoxConstraints(
-                                    minWidth: 10,
-                                    minHeight: 10,
-                                  ),
-                                ),
-                              ),
-                          ],
-                        ),
-                      ),
                       const Tab(
                         icon: Icon(Icons.emoji_events_rounded, size: 26),
                       ),
@@ -2536,7 +2509,6 @@ class _HomePageScreenState extends State<HomePageScreen>
                   _buildHomeView(primaryColor, secondaryColor),
                   _buildAiChatView(primaryColor),
                   _buildToolsView(primaryColor, secondaryColor),
-                  _buildNotificationsView(primaryColor, secondaryColor),
                   _buildLeaderboardView(primaryColor, secondaryColor),
                 ],
               ),
@@ -3569,8 +3541,77 @@ class _HomePageScreenState extends State<HomePageScreen>
             ),
           ),
           const SizedBox(width: 14),
+          _buildNotificationsButton(primaryColor),
+          const SizedBox(width: 8),
           _buildUserAvatar(),
         ],
+      ),
+    );
+  }
+
+  Widget _buildNotificationsButton(Color primaryColor) {
+    return IconButton(
+      tooltip: 'الإشعارات',
+      onPressed: _openNotificationsPage,
+      constraints: const BoxConstraints.tightFor(width: 44, height: 44),
+      padding: EdgeInsets.zero,
+      icon: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Icon(
+            Icons.notifications_none_rounded,
+            size: 25,
+            color: primaryColor,
+          ),
+          if (_unreadCount > 0)
+            Positioned(
+              top: -3,
+              right: -4,
+              child: Container(
+                constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 4),
+                decoration: const BoxDecoration(
+                  color: Colors.redAccent,
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  _unreadCount > 99 ? '99+' : '$_unreadCount',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _openNotificationsPage() {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    final secondaryColor = Theme.of(context).colorScheme.secondary;
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (pageContext) => Directionality(
+          textDirection: widgets.TextDirection.rtl,
+          child: Scaffold(
+            backgroundColor: const Color(0xFFF7F8FA),
+            appBar: AppBar(
+              backgroundColor: Colors.white,
+              foregroundColor: primaryColor,
+              elevation: 0,
+              centerTitle: true,
+              title: const Text(
+                'الإشعارات',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            body: _buildNotificationsView(primaryColor, secondaryColor),
+          ),
+        ),
       ),
     );
   }
