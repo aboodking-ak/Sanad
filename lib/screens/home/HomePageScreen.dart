@@ -123,6 +123,20 @@ class _RoundedTabIndicatorPainter extends BoxPainter {
 
 }
 
+class _HomeShortcut {
+  const _HomeShortcut({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final VoidCallback onTap;
+}
+
 class _HomePageScreenState extends State<HomePageScreen>
     with TickerProviderStateMixin {
   final AdHelper _adHelper = AdHelper();
@@ -134,6 +148,11 @@ class _HomePageScreenState extends State<HomePageScreen>
   // منطق العد التنازلي
   late Timer _timer;
   Duration _timeLeft = const Duration(days: 45, hours: 12, minutes: 30);
+  final PageController _quickShortcutsController = PageController(
+    initialPage: 600,
+    viewportFraction: 0.62,
+  );
+  Timer? _quickShortcutsTimer;
 
 
   String userName = "الطالب";
@@ -251,6 +270,19 @@ class _HomePageScreenState extends State<HomePageScreen>
     _loadUserData();
     _startCountdown();
     _tabController = TabController(length: 4, vsync: this);
+    _quickShortcutsTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (!mounted ||
+          _tabController.index != 0 ||
+          !_quickShortcutsController.hasClients) {
+        return;
+      }
+      final nextPage = (_quickShortcutsController.page?.round() ?? 600) + 1;
+      _quickShortcutsController.animateToPage(
+        nextPage,
+        duration: const Duration(milliseconds: 650),
+        curve: Curves.easeInOutCubic,
+      );
+    });
     _tabController.addListener(() {
       if (_tabController.index == 1) {
         if (!_didPulseChatHistory) {
@@ -283,6 +315,8 @@ class _HomePageScreenState extends State<HomePageScreen>
   @override
   void dispose() {
     _timer.cancel();
+    _quickShortcutsTimer?.cancel();
+    _quickShortcutsController.dispose();
     _chatController.dispose();
     _liveAssistantText.dispose();
     _chatFocusNode.dispose();
@@ -3646,6 +3680,7 @@ class _HomePageScreenState extends State<HomePageScreen>
       child: Column(
         children: [
           _buildHomeHeader(primaryColor, secondaryColor),
+          _buildQuickShortcuts(primaryColor, secondaryColor),
           _buildSectionHeader(
             "المواد الدراسية",
             "${filteredSubjects.length} مواد",
@@ -3668,6 +3703,256 @@ class _HomePageScreenState extends State<HomePageScreen>
             ),
           ),
           const SizedBox(height: 100),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuickShortcuts(Color primaryColor, Color secondaryColor) {
+    final shortcuts = <_HomeShortcut>[
+      _HomeShortcut(
+        title: 'سند AI',
+        subtitle: 'اسأل وتعلّم بذكاء',
+        icon: Icons.auto_awesome_rounded,
+        onTap: () => _tabController.animateTo(1),
+      ),
+      _HomeShortcut(
+        title: 'قائمة المهام',
+        subtitle: 'نظّم مهامك اليومية',
+        icon: Icons.checklist_rounded,
+        onTap: () => Navigator.pushNamed(context, '/todos'),
+      ),
+      _HomeShortcut(
+        title: 'بومودورو',
+        subtitle: 'ركّز وأنجز أكثر',
+        icon: Icons.timer_rounded,
+        onTap: () => Navigator.pushNamed(context, '/pomodoro'),
+      ),
+      _HomeShortcut(
+        title: 'ملاحظات',
+        subtitle: 'أفكارك في مكان واحد',
+        icon: Icons.sticky_note_2_rounded,
+        onTap: () => Navigator.pushNamed(context, '/notes'),
+      ),
+      _HomeShortcut(
+        title: 'العد التنازلي',
+        subtitle: 'تابع موعدك القادم',
+        icon: Icons.hourglass_bottom_rounded,
+        onTap: () => Navigator.pushNamed(context, '/countdown'),
+      ),
+      _HomeShortcut(
+        title: 'المتصدرين',
+        subtitle: 'اكتشف ترتيبك',
+        icon: Icons.emoji_events_rounded,
+        onTap: () => _tabController.animateTo(3),
+      ),
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 14),
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 22),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'اختصارات سريعة',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      color: primaryColor,
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Container(
+                  width: 30,
+                  height: 3,
+                  decoration: BoxDecoration(
+                    color: secondaryColor,
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 176,
+            child: PageView.builder(
+              controller: _quickShortcutsController,
+              itemCount: null,
+              itemBuilder: (context, index) {
+                final shortcut = shortcuts[index % shortcuts.length];
+                return AnimatedBuilder(
+                  animation: _quickShortcutsController,
+                  builder: (context, child) {
+                    final currentPage = _quickShortcutsController.hasClients
+                        ? (_quickShortcutsController.page ??
+                              _quickShortcutsController.initialPage.toDouble())
+                        : _quickShortcutsController.initialPage.toDouble();
+                    final distance = (index - currentPage).abs();
+                    final scale = (1 - distance * 0.16)
+                        .clamp(0.72, 1.0)
+                        .toDouble();
+                    final opacity = (1 - distance * 0.4)
+                        .clamp(0.35, 1.0)
+                        .toDouble();
+
+                    return Transform.translate(
+                      offset: Offset(0, distance * 12),
+                      child: Transform.rotate(
+                        angle: (index - currentPage) * 0.055,
+                        child: Transform.scale(
+                          scale: scale,
+                          child: Opacity(opacity: opacity, child: child),
+                        ),
+                      ),
+                    );
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: shortcut.onTap,
+                        borderRadius: BorderRadius.circular(22),
+                        child: Ink(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topRight,
+                              end: Alignment.bottomLeft,
+                              colors: [
+                                primaryColor,
+                                Color.lerp(
+                                  primaryColor,
+                                  const Color(0xFF34405C),
+                                  0.52,
+                                )!,
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(22),
+                            border: Border.all(
+                              color: secondaryColor.withValues(alpha: 0.24),
+                            ),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(22),
+                            child: Stack(
+                              children: [
+                                Positioned(
+                                  right: -1,
+                                  top: 0,
+                                  bottom: 0,
+                                  child: Container(
+                                    width: 7,
+                                    color: secondaryColor,
+                                  ),
+                                ),
+                                Positioned(
+                                  left: -28,
+                                  top: -30,
+                                  child: Container(
+                                    width: 90,
+                                    height: 90,
+                                    decoration: BoxDecoration(
+                                      color: secondaryColor.withValues(
+                                        alpha: 0.055,
+                                      ),
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.fromLTRB(
+                                    18,
+                                    16,
+                                    20,
+                                    16,
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Expanded(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              shortcut.title,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              textAlign: TextAlign.right,
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 17,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 5),
+                                            Text(
+                                              shortcut.subtitle,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              textAlign: TextAlign.right,
+                                              style: TextStyle(
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.7,
+                                                ),
+                                                fontSize: 12,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 11),
+                                            Text(
+                                              'استكشف',
+                                              style: TextStyle(
+                                                color: secondaryColor,
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Container(
+                                        width: 56,
+                                        height: 56,
+                                        decoration: BoxDecoration(
+                                          color: secondaryColor.withValues(alpha: 0.16),
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: secondaryColor.withValues(
+                                              alpha: 0.35,
+                                            ),
+                                          ),
+                                        ),
+                                        child: Icon(
+                                          shortcut.icon,
+                                          color: secondaryColor,
+                                          size: 27,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
         ],
       ),
     );
