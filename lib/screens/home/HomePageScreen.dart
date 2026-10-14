@@ -30,56 +30,6 @@ class HomePageScreen extends StatefulWidget {
   State<HomePageScreen> createState() => _HomePageScreenState();
 }
 
-class _AiUsageBorderPainter extends CustomPainter {
-  const _AiUsageBorderPainter({required this.progress});
-
-  final double progress;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    const inset = 1.5;
-    const radius = 25.0;
-    final left = inset;
-    final top = inset;
-    final right = size.width - inset;
-    final bottom = size.height - inset;
-    final borderRect = Rect.fromLTRB(left, top, right, bottom);
-    // Start at the lower-right edge, travel upward, then continue
-    // counterclockwise around the dialog.
-    final path = Path()
-      ..moveTo(right, bottom - radius)
-      ..lineTo(right, top + radius)
-      ..quadraticBezierTo(right, top, right - radius, top)
-      ..lineTo(left + radius, top)
-      ..quadraticBezierTo(left, top, left, top + radius)
-      ..lineTo(left, bottom - radius)
-      ..quadraticBezierTo(left, bottom, left + radius, bottom)
-      ..lineTo(right - radius, bottom)
-      ..quadraticBezierTo(right, bottom, right, bottom - radius);
-    final trackPaint = Paint()
-      ..color = const Color(0xFFE3E7EF)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3;
-    canvas.drawPath(path, trackPaint);
-
-    if (progress <= 0) return;
-    final metric = path.computeMetrics().first;
-    final progressPath = metric.extractPath(0, metric.length * progress);
-    final progressPaint = Paint()
-      ..shader = const LinearGradient(
-        colors: [Color(0xFFFFD66B), Color(0xFFE7A91F)],
-      ).createShader(borderRect)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3
-      ..strokeCap = StrokeCap.round;
-    canvas.drawPath(progressPath, progressPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _AiUsageBorderPainter oldDelegate) =>
-      oldDelegate.progress != progress;
-}
-
 class _RoundedTabIndicator extends Decoration {
   const _RoundedTabIndicator({
     required this.color,
@@ -162,7 +112,12 @@ class _HomePageScreenState extends State<HomePageScreen>
     initialPage: 600,
     viewportFraction: 0.62,
   );
+  final PageController _studySuggestionsController = PageController(
+    initialPage: 5000,
+    viewportFraction: 0.84,
+  );
   Timer? _quickShortcutsTimer;
+  Timer? _studySuggestionsTimer;
   Timer? _studyQuoteTimer;
   final Random _studyQuoteRandom = Random();
   List<_StudyQuote> _studyQuotes = [];
@@ -175,10 +130,7 @@ class _HomePageScreenState extends State<HomePageScreen>
   String? selectedStage;
   bool _isDrawerOpen = false;
   bool isAdsRemoved = false;
-  int _aiMessagesCount = 0;
-  int _aiRemaining = 50;
   DateTime? _aiResetAt;
-  bool _aiQuotaLoaded = false;
   List<SubjectModel> _supabaseSubjects = [];
   bool _isLoadingSubjects = false; // حالة تحميل المواد
 
@@ -221,10 +173,11 @@ class _HomePageScreenState extends State<HomePageScreen>
   final TextEditingController _chatController = TextEditingController();
   final FocusNode _chatFocusNode = FocusNode();
   late final AnimationController _sendDotsController;
-  late final AnimationController _chatHistoryPulseController;
-  late final Animation<double> _chatHistoryPulseScale;
+  late final AnimationController _chatGlowController;
   XFile? _pendingChatImage;
-  final ScrollController _chatScrollController = ScrollController();
+  final ScrollController _chatScrollController = ScrollController(
+    keepScrollOffset: true,
+  );
   late TabController _tabController;
   final List<Map<String, dynamic>> _chatMessages = [];
   final ValueNotifier<String> _liveAssistantText = ValueNotifier('');
@@ -238,8 +191,6 @@ class _HomePageScreenState extends State<HomePageScreen>
   String? _currentConversationId;
   bool _isTyping = false;
   bool _isAiInitialized = false;
-  bool _didPulseChatHistory = false;
-  bool _isHistoryButtonPressed = false;
 
   String _appVersion = "1.1.0";
 
@@ -251,32 +202,20 @@ class _HomePageScreenState extends State<HomePageScreen>
       vsync: this,
       duration: const Duration(milliseconds: 850),
     );
-    _chatHistoryPulseController = AnimationController(
+    _chatGlowController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 650),
-    );
-    _chatHistoryPulseScale = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(
-          begin: 1.0,
-          end: 1.07,
-        ).chain(CurveTween(curve: Curves.easeOut)),
-        weight: 45,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(
-          begin: 1.07,
-          end: 1.0,
-        ).chain(CurveTween(curve: Curves.easeInOut)),
-        weight: 55,
-      ),
-    ]).animate(_chatHistoryPulseController);
+      duration: const Duration(seconds: 4),
+    )..repeat();
     _chatFocusNode.addListener(() {
+      if (_chatFocusNode.hasFocus) {
+        _chatGlowController.stop();
+      } else {
+        _chatGlowController.repeat();
+      }
       if (mounted) setState(() {});
     });
     // تصفير القيم عند الدخول لأول مرة فقط (للتجربة)
     isAdsRemoved = false;
-    _aiMessagesCount = 0;
 
     SystemChrome.setEnabledSystemUIMode(
       SystemUiMode.manual,
@@ -300,19 +239,27 @@ class _HomePageScreenState extends State<HomePageScreen>
     });
     _tabController.addListener(() {
       if (_tabController.index == 1) {
-        if (!_didPulseChatHistory) {
-          _didPulseChatHistory = true;
-          _chatHistoryPulseController.forward(from: 0);
-        }
         _loadAiLimit();
-        // Keep the newest messages anchored at the bottom when returning to chat.
-        if (_chatScrollController.hasClients) {
-          _chatScrollController.jumpTo(
-            _chatScrollController.position.maxScrollExtent,
-          );
-        }
       }
     });
+    _studySuggestionsTimer = Timer.periodic(
+      const Duration(milliseconds: 2600),
+      (_) {
+        if (!mounted ||
+            _tabController.index != 1 ||
+            _chatMessages.isNotEmpty ||
+            !_studySuggestionsController.hasClients) {
+          return;
+        }
+        final nextPage =
+            (_studySuggestionsController.page?.round() ?? 5000) + 1;
+        _studySuggestionsController.animateToPage(
+          nextPage,
+          duration: const Duration(milliseconds: 750),
+          curve: Curves.easeInOutCubic,
+        );
+      },
+    );
     _studyQuoteTimer = Timer.periodic(const Duration(seconds: 8), (_) {
       if (!mounted || _tabController.index != 0 || _studyQuotes.length < 2) {
         return;
@@ -369,13 +316,15 @@ class _HomePageScreenState extends State<HomePageScreen>
   void dispose() {
     _timer.cancel();
     _quickShortcutsTimer?.cancel();
+    _studySuggestionsTimer?.cancel();
     _studyQuoteTimer?.cancel();
     _quickShortcutsController.dispose();
+    _studySuggestionsController.dispose();
     _chatController.dispose();
     _liveAssistantText.dispose();
     _chatFocusNode.dispose();
     _sendDotsController.dispose();
-    _chatHistoryPulseController.dispose();
+    _chatGlowController.dispose();
     _chatScrollController.dispose();
     _tabController.dispose();
     _notificationsSubscription?.cancel();
@@ -666,7 +615,7 @@ class _HomePageScreenState extends State<HomePageScreen>
                       color: Colors.white,
                     ),
                   ),
-                ),
+                  ),
               ],
             ),
           ),
@@ -777,14 +726,8 @@ class _HomePageScreenState extends State<HomePageScreen>
 
   void _applyAiUsage(dynamic usage) {
     if (!mounted || usage is! Map) return;
-    final used = usage['used'];
-    final remaining = usage['remaining'];
-    if (used is! num || remaining is! num) return;
     setState(() {
-      _aiMessagesCount = used.toInt();
-      _aiRemaining = remaining.toInt();
       _aiResetAt = DateTime.tryParse(usage['reset_at']?.toString() ?? '');
-      _aiQuotaLoaded = true;
     });
   }
 
@@ -797,9 +740,7 @@ class _HomePageScreenState extends State<HomePageScreen>
       if (response.status == 200 && response.data is Map) {
         _applyAiUsage(response.data['usage']);
       }
-    } catch (_) {
-      if (mounted) setState(() => _aiQuotaLoaded = false);
-    }
+    } catch (_) {}
   }
 
   Future<void> _initAi() async {
@@ -1623,25 +1564,30 @@ class _HomePageScreenState extends State<HomePageScreen>
 
   void _showConversationPicker() {
     final primaryColor = Theme.of(context).colorScheme.primary;
-    showDialog<void>(
+    showGeneralDialog<void>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
+      barrierDismissible: true,
+      barrierLabel: 'إغلاق قائمة المحادثات',
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 200),
+      pageBuilder: (dialogContext, animation, secondaryAnimation) => StatefulBuilder(
         builder: (dialogContext, setDialogState) => Dialog(
           backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(
-            horizontal: 20,
-            vertical: 24,
+          alignment: Alignment.centerRight,
+          insetPadding: const EdgeInsets.fromLTRB(28, 12, 8, 12),
+          constraints: BoxConstraints(
+            maxWidth: min(MediaQuery.sizeOf(dialogContext).width * 0.86, 380),
+            maxHeight: MediaQuery.sizeOf(dialogContext).height * 0.90,
           ),
           child: SafeArea(
-            child: Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(26),
-                  child: SizedBox(
-                    height: MediaQuery.of(dialogContext).size.height * 0.74,
-                    child: DecoratedBox(
-                      decoration: const BoxDecoration(color: Color(0xFFF7F8FC)),
-                      child: Column(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(26),
+              child: SizedBox(
+                width: min(MediaQuery.sizeOf(dialogContext).width * 0.86, 380),
+                height: MediaQuery.sizeOf(dialogContext).height * 0.90,
+                child: DecoratedBox(
+                  decoration: const BoxDecoration(color: Color(0xFFF7F8FC)),
+                  child: Column(
                         children: [
                           Padding(
                             padding: const EdgeInsets.fromLTRB(20, 18, 16, 16),
@@ -1989,26 +1935,27 @@ class _HomePageScreenState extends State<HomePageScreen>
                             ),
                           ),
                         ],
-                      ),
-                    ),
                   ),
                 ),
-                Positioned.fill(
-                  child: IgnorePointer(
-                    child: CustomPaint(
-                      painter: _AiUsageBorderPainter(
-                        progress: _aiQuotaLoaded
-                            ? (_aiMessagesCount / 50).clamp(0.0, 1.0).toDouble()
-                            : 0,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),
       ),
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        final expansion = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+        );
+        return Align(
+          alignment: Alignment.centerRight,
+          child: ScaleTransition(
+            alignment: Alignment.centerRight,
+            scale: Tween<double>(begin: 0.96, end: 1).animate(expansion),
+            child: FadeTransition(opacity: animation, child: child),
+          ),
+        );
+      },
     );
   }
 
@@ -2563,6 +2510,8 @@ class _HomePageScreenState extends State<HomePageScreen>
                   ),
             child: SafeArea(
               bottom: false,
+              left: false,
+              right: false,
               child: TabBarView(
                 controller: _tabController,
                 children: [
@@ -4130,6 +4079,10 @@ class _HomePageScreenState extends State<HomePageScreen>
         );
     return Column(
       children: [
+        _buildAiChatHeader(
+          primaryColor,
+          currentConversation?['title']?.toString() ?? 'محادثة جديدة',
+        ),
         Expanded(
           child: Stack(
             children: [
@@ -4154,12 +4107,15 @@ class _HomePageScreenState extends State<HomePageScreen>
                               return false;
                             },
                             child: ListView.builder(
+                              key: PageStorageKey<String>(
+                                'sanad-ai-chat-${_currentConversationId ?? "new-conversation"}',
+                              ),
                               controller: _chatScrollController,
-                              padding: const EdgeInsets.fromLTRB(
+                              padding: EdgeInsets.fromLTRB(
                                 16,
                                 14,
                                 16,
-                                145,
+                                MediaQuery.of(context).padding.bottom + 170,
                               ),
                               itemCount:
                                   _chatMessages.length +
@@ -4203,18 +4159,93 @@ class _HomePageScreenState extends State<HomePageScreen>
                 alignment: Alignment.bottomCenter,
                 child: Padding(
                   padding: EdgeInsets.only(
-                    bottom: MediaQuery.of(context).viewInsets.bottom,
+                    bottom: MediaQuery.of(context).viewInsets.bottom > 0
+                        ? MediaQuery.of(context).viewInsets.bottom + 8
+                        : MediaQuery.of(context).padding.bottom + 74,
                   ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [_buildChatInput(primaryColor)],
-                  ),
+                  child: _buildChatInput(primaryColor),
                 ),
               ),
             ],
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildAiChatHeader(Color primaryColor, String chatTitle) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 8, 18, 10),
+      child: Row(
+        children: [
+          Tooltip(
+            message: 'فتح المحادثات السابقة',
+            child: Material(
+              color: primaryColor,
+              borderRadius: BorderRadius.circular(16),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: _isTyping ? null : _showConversationPicker,
+                child: Container(
+                  height: 46,
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: const Color(0xFFE6AD35).withAlpha(150),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: primaryColor.withAlpha(22),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.forum_rounded,
+                        color: Colors.white,
+                        size: 19,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'سند AI',
+                  style: TextStyle(
+                    color: primaryColor,
+                    fontSize: 21,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  chatTitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Color(0xFF7D8799),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -4242,9 +4273,8 @@ class _HomePageScreenState extends State<HomePageScreen>
     );
   }
 
-  Widget _buildTypingIndicator(Color primaryColor) => Align(
-    alignment: AlignmentDirectional.centerStart,
-    child: Container(
+  Widget _buildTypingIndicator(Color primaryColor) => Container(
+    width: double.infinity,
       margin: const EdgeInsets.only(bottom: 18),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
       decoration: BoxDecoration(
@@ -4266,23 +4296,29 @@ class _HomePageScreenState extends State<HomePageScreen>
             ),
           ),
           const SizedBox(width: 9),
-          ...List.generate(
-            3,
-            (index) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 2),
-              child: Container(
-                width: 5,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: primaryColor.withAlpha(110 + index * 35),
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
-          ),
+          ...List.generate(3, (index) {
+            return AnimatedBuilder(
+              animation: _sendDotsController,
+              builder: (context, _) {
+                final phase = (_sendDotsController.value + index / 3) % 1;
+                final lift = phase < 0.5 ? phase * 7 : (1 - phase) * 7;
+                return Transform.translate(
+                  offset: Offset(0, -lift),
+                  child: Container(
+                    width: 5,
+                    height: 5,
+                    margin: const EdgeInsets.symmetric(horizontal: 2),
+                    decoration: BoxDecoration(
+                      color: primaryColor.withAlpha(130 + (phase * 100).round()),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                );
+              },
+            );
+          }),
         ],
       ),
-    ),
   );
 
   Widget _buildAiWelcome(Color primaryColor) {
@@ -4293,92 +4329,209 @@ class _HomePageScreenState extends State<HomePageScreen>
       'حل مشكلة النسيان',
       'الوقت لا يكفي ماذا افعل',
     ];
+    const icons = [
+      Icons.menu_book_rounded,
+      Icons.event_note_rounded,
+      Icons.today_rounded,
+      Icons.psychology_alt_rounded,
+      Icons.hourglass_bottom_rounded,
+    ];
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(22, 22, 22, 160),
-      children: [
-        const Row(
-          children: [
-            Text(
-              'ابدأ من هنا',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800),
-            ),
-            SizedBox(width: 7),
-            Icon(Icons.bolt_rounded, size: 17, color: Color(0xFFE9A72D)),
-          ],
+    return LayoutBuilder(
+      builder: (context, constraints) => SingleChildScrollView(
+        padding: EdgeInsets.fromLTRB(
+          20,
+          18,
+          20,
+          MediaQuery.of(context).padding.bottom + 115,
         ),
-        const SizedBox(height: 12),
-        ...List.generate(suggestions.length, (index) {
-          final suggestion = suggestions[index];
-          const icons = [
-            Icons.menu_book_rounded,
-            Icons.event_note_rounded,
-            Icons.today_rounded,
-            Icons.psychology_alt_rounded,
-            Icons.hourglass_bottom_rounded,
-          ];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Material(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(17),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(17),
-                onTap: _isTyping
-                    ? null
-                    : () {
-                        _chatController.text = suggestion;
-                        _sendMessage();
-                      },
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 13,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            minHeight: (constraints.maxHeight - 135)
+                .clamp(0.0, double.infinity)
+                .toDouble(),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 92,
+                height: 92,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0xFF303D5D), Color(0xFF17213A)],
                   ),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(17),
-                    border: Border.all(color: const Color(0xFFE9ECF2)),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 37,
-                        height: 37,
-                        decoration: BoxDecoration(
-                          color: primaryColor.withAlpha(15),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          icons[index],
-                          size: 18,
-                          color: primaryColor,
-                        ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(50),
+                      blurRadius: 10,
+                      offset: const Offset(0, 0),
+                      spreadRadius: 1.5,
+                    ),
+                  ],
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Icon(
+                      Icons.smart_toy_rounded,
+                      size: 47,
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
+                    Positioned(
+                      top: 17,
+                      right: 19,
+                      child: Icon(
+                        Icons.auto_awesome_rounded,
+                        size: 14,
+                        color: Colors.white.withAlpha(220),
                       ),
-                      const SizedBox(width: 11),
-                      Expanded(
-                        child: Text(
-                          suggestion,
-                          textAlign: TextAlign.right,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(
-                        Icons.north_west_rounded,
-                        size: 16,
-                        color: Color(0xFF9AA3B3),
-                      ),
-                    ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 17),
+              Text(
+                'مرحبا، $userName',
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: Color(0xFF1D2433),
+                  fontSize: 23,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              const SizedBox(height: 7),
+              const Text(
+                'كيف يمكنني مساعدتك؟',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Color(0xFF7D8799),
+                  fontSize: 13,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 26),
+              const Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  'جرّب أن تسألني',
+                  style: TextStyle(
+                    color: Color(0xFF465064),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
-            ),
-          );
-        }),
-      ],
+              const SizedBox(height: 10),
+              SizedBox(
+                height: 78,
+                child: Directionality(
+                  textDirection: widgets.TextDirection.ltr,
+                  child: PageView.builder(
+                    controller: _studySuggestionsController,
+                    reverse: true,
+                    physics: const PageScrollPhysics(
+                      parent: BouncingScrollPhysics(),
+                    ),
+                    itemCount: 10000,
+                    itemBuilder: (context, page) {
+                      final index = page % suggestions.length;
+                      final suggestion = suggestions[index];
+                      return AnimatedBuilder(
+                        animation: _studySuggestionsController,
+                        builder: (context, child) {
+                          final currentPage =
+                              _studySuggestionsController.hasClients
+                              ? (_studySuggestionsController.page ?? 5000)
+                              : 5000.0;
+                          final distance = (currentPage - page)
+                              .abs()
+                              .clamp(0.0, 1.0);
+                          final scale = (1 - (distance * 0.035)).toDouble();
+                          return Transform.scale(scale: scale, child: child);
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 5),
+                          child: Material(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(19),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(19),
+                              onTap: _isTyping
+                                  ? null
+                                  : () {
+                                      _chatController.text = suggestion;
+                                      _sendMessage();
+                                    },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 14,
+                                  vertical: 9,
+                                ),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(19),
+                                  border: Border.all(
+                                    color: const Color(0xFFE8EBF1),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: primaryColor.withAlpha(9),
+                                      blurRadius: 14,
+                                      offset: const Offset(0, 5),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  textDirection: widgets.TextDirection.rtl,
+                                  children: [
+                                    Container(
+                                      width: 36,
+                                      height: 36,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFFFF5D9),
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      child: Icon(
+                                        icons[index],
+                                        size: 18,
+                                        color: primaryColor,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        suggestion,
+                                        textAlign: TextAlign.right,
+                                        maxLines: 2,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: const TextStyle(
+                                          color: Color(0xFF29334B),
+                                          fontSize: 13,
+                                          height: 1.45,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -4437,56 +4590,30 @@ class _HomePageScreenState extends State<HomePageScreen>
               textDirection: widgets.TextDirection.rtl,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Tooltip(
-                  message: 'المحادثات السابقة',
-                  child: AnimatedScale(
-                    scale: _isHistoryButtonPressed ? 0.94 : 1,
-                    duration: const Duration(milliseconds: 120),
-                    child: ScaleTransition(
-                      scale: _chatHistoryPulseScale,
-                      child: Container(
-                        width: 56,
-                        height: 56,
-                        margin: const EdgeInsets.only(left: 9),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFF9E9),
-                          shape: BoxShape.circle,
-                          border: Border.all(color: const Color(0xFFE7EAF0)),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF17233F).withAlpha(18),
-                              blurRadius: 16,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        child: Material(
-                          color: Colors.transparent,
-                          shape: const CircleBorder(),
-                          child: InkWell(
-                            customBorder: const CircleBorder(),
-                            onTap: _isTyping ? null : _showConversationPicker,
-                            onTapDown: (_) =>
-                                setState(() => _isHistoryButtonPressed = true),
-                            onTapUp: (_) =>
-                                setState(() => _isHistoryButtonPressed = false),
-                            onTapCancel: () =>
-                                setState(() => _isHistoryButtonPressed = false),
-                            child: Icon(
-                              _currentConversationId == null
-                                  ? Icons.forum_outlined
-                                  : Icons.chat_rounded,
-                              color: Color(0xFF465064),
-                              size: 23,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
                 Expanded(
-                  child: AnimatedContainer(
+                  child: AnimatedBuilder(
+                    animation: _chatGlowController,
+                    builder: (context, _) => Container(
+                      padding: EdgeInsets.all(isChatFocused ? 0 : 1.5),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(32),
+                        gradient: isChatFocused
+                            ? null
+                            : SweepGradient(
+                                transform: GradientRotation(
+                                  _chatGlowController.value * 2 * pi,
+                                ),
+                                colors: [
+                                  const Color(0xFFE9B642).withAlpha(18),
+                                  const Color(0xFFFFD76A).withAlpha(230),
+                                  const Color(0xFFE9B642).withAlpha(35),
+                                  const Color(0xFFFFD76A).withAlpha(170),
+                                  const Color(0xFFE9B642).withAlpha(18),
+                                ],
+                                stops: const [0, 0.28, 0.52, 0.76, 1],
+                              ),
+                      ),
+                      child: AnimatedContainer(
                     duration: const Duration(milliseconds: 220),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
@@ -4495,18 +4622,8 @@ class _HomePageScreenState extends State<HomePageScreen>
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(30),
-                      border: Border.all(
-                        color: isChatFocused
-                            ? const Color(0xFFD8B45B).withAlpha(150)
-                            : const Color(0xFFE7EAF0),
-                      ),
+                      border: Border.all(color: const Color(0xFFE7EAF0)),
                       boxShadow: [
-                        if (isChatFocused)
-                          BoxShadow(
-                            color: const Color(0xFFE9B642).withAlpha(24),
-                            blurRadius: 20,
-                            spreadRadius: 1,
-                          ),
                         BoxShadow(
                           color: const Color(0xFF17233F).withAlpha(22),
                           blurRadius: 22,
@@ -4609,6 +4726,8 @@ class _HomePageScreenState extends State<HomePageScreen>
                           ),
                         ),
                       ],
+                    ),
+                      ),
                     ),
                   ),
                 ),
@@ -4796,18 +4915,40 @@ class _HomePageScreenState extends State<HomePageScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
               decoration: BoxDecoration(
-                color: isMe ? primaryColor : Colors.white,
-                borderRadius: BorderRadius.circular(20),
+                gradient: isMe
+                    ? LinearGradient(
+                        begin: Alignment.topRight,
+                        end: Alignment.bottomLeft,
+                        colors: [
+                          primaryColor,
+                          Color.lerp(
+                            primaryColor,
+                            const Color(0xFF0D172D),
+                            0.3,
+                          )!,
+                        ],
+                      )
+                    : const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Colors.white, Color(0xFFFCFCFE)],
+                      ),
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(20),
+                  topRight: const Radius.circular(20),
+                  bottomLeft: Radius.circular(isMe ? 20 : 6),
+                  bottomRight: Radius.circular(isMe ? 6 : 20),
+                ),
                 border: isMe
                     ? null
-                    : Border.all(color: primaryColor.withAlpha(24)),
+                    : Border.all(color: primaryColor.withAlpha(30)),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF17233F).withAlpha(isMe ? 8 : 10),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
+                    color: const Color(0xFF17233F).withAlpha(isMe ? 12 : 13),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
                   ),
                 ],
               ),
@@ -4835,6 +4976,36 @@ class _HomePageScreenState extends State<HomePageScreen>
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFF5D9),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Icon(
+                                  Icons.auto_awesome_rounded,
+                                  size: 14,
+                                  color: primaryColor,
+                                ),
+                              ),
+                              const SizedBox(width: 7),
+                              Text(
+                                'سند AI',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: primaryColor,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                         SelectionArea(child: _buildAssistantContent(message)),
                         if (retryText == null && message.trim().isNotEmpty)
                           Align(
@@ -5051,7 +5222,12 @@ class _HomePageScreenState extends State<HomePageScreen>
   }
 
   Widget _buildAssistantMarkdown(String text) => MarkdownBody(
-    data: text,
+    data: text
+        .replaceAll(
+          RegExp(r'(?:<br\s*/?>|&lt;br\s*/?&gt;)', caseSensitive: false),
+          '  \n',
+        )
+        .replaceAll(RegExp(r'<\s*br\s*>', caseSensitive: false), '  \n'),
     selectable: true,
     styleSheet: MarkdownStyleSheet(
       p: const TextStyle(

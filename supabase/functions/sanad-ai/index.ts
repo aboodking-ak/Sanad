@@ -149,6 +149,23 @@ Deno.serve(async (request: Request) => {
             const reader = response.body!.getReader();
             const decoder = new TextDecoder();
             let providerDone = false;
+            const processProviderLine = (line: string) => {
+              if (!line.startsWith('data:')) return;
+              const data = line.slice(5).trim();
+              if (data === '[DONE]') { providerDone = true; return; }
+              try {
+                const event = JSON.parse(data);
+                const choice = event.choices?.[0];
+                if (typeof choice?.finish_reason === 'string') {
+                  finishReason = choice.finish_reason;
+                }
+                const delta = choice?.delta?.content;
+                if (typeof delta === 'string' && delta.length) {
+                  generatedText += delta;
+                  emit({ delta });
+                }
+              } catch { /* Ignore malformed or non-content provider events. */ }
+            };
             while (!providerDone) {
               const chunk = await reader.read();
               if (chunk.done) break;
@@ -156,23 +173,12 @@ Deno.serve(async (request: Request) => {
               const lines = pending.split(/\r?\n/);
               pending = lines.pop() ?? '';
               for (const line of lines) {
-                if (!line.startsWith('data:')) continue;
-                const data = line.slice(5).trim();
-                if (data === '[DONE]') { providerDone = true; break; }
-                try {
-                  const event = JSON.parse(data);
-                  const choice = event.choices?.[0];
-                  if (typeof choice?.finish_reason === 'string') {
-                    finishReason = choice.finish_reason;
-                  }
-                  const delta = choice?.delta?.content;
-                  if (typeof delta === 'string' && delta.length) {
-                    generatedText += delta;
-                    emit({ delta });
-                  }
-                } catch { /* Ignore malformed or non-content provider events. */ }
+                processProviderLine(line);
+                if (providerDone) break;
               }
             }
+            pending += decoder.decode();
+            if (!providerDone && pending.trim()) processProviderLine(pending);
             if (finishReason !== 'stop') {
               emit({ error: 'incomplete_response' });
             } else if (!generatedText.trim()) {
