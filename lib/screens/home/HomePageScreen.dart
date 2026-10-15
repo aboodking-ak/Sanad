@@ -3721,78 +3721,80 @@ class _HomePageScreenState extends State<HomePageScreen>
   }
 
   Widget _buildHomeHeader(Color primaryColor, Color secondaryColor) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 12),
-      child: Row(
-        children: [
-          Builder(
-            builder: (context) => IconButton(
-              tooltip: 'القائمة',
-              onPressed: () => Scaffold.of(context).openDrawer(),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints.tightFor(width: 48, height: 48),
-              icon: SizedBox(
-                width: 26,
-                height: 24,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _menuBar(23, primaryColor),
-                    const SizedBox(height: 4),
-                    _menuBar(17, primaryColor),
-                    const SizedBox(height: 4),
-                    _menuBar(11, primaryColor),
-                  ],
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(26)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(20, 32, 20, 34),
+        child: Row(
+          children: [
+            Builder(
+              builder: (context) => IconButton(
+                tooltip: 'القائمة',
+                onPressed: () => Scaffold.of(context).openDrawer(),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints.tightFor(width: 50, height: 50),
+                icon: SizedBox(
+                  width: 27,
+                  height: 25,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _menuBar(25, primaryColor),
+                      const SizedBox(height: 4),
+                      _menuBar(18, primaryColor),
+                      const SizedBox(height: 4),
+                      _menuBar(12, primaryColor),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text.rich(
-                  TextSpan(
-                    children: [
-                    const TextSpan(text: 'مرحباً، '),
-                      TextSpan(
-                        text: userName,
-                        style: TextStyle(
-                          color: secondaryColor,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'مرحباً',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      color: Color(0xFF7B8292),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.right,
-                  style: TextStyle(
-                    color: primaryColor,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                  const SizedBox(height: 2),
+                  Text(
+                    userName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.right,
+                    style: TextStyle(color: secondaryColor, fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  selectedStage ?? 'لم يتم تحديد المرحلة',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: Color(0xFF7B8292),
-                    fontSize: 12,
+                  const SizedBox(height: 2),
+                  Text(
+                    selectedStage ?? 'لم يتم تحديد المرحلة',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: const Color(0xFF7B8292),
+                      fontSize: 11,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 14),
-          _buildNotificationsButton(primaryColor),
-          const SizedBox(width: 8),
-          _buildUserAvatar(),
-        ],
+            const SizedBox(width: 12),
+            _buildNotificationsButton(primaryColor),
+            const SizedBox(width: 8),
+            _buildUserAvatar(radius: 25),
+          ],
+        ),
       ),
     );
   }
