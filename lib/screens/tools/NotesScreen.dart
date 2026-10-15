@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -21,6 +23,9 @@ class _NotesScreenState extends State<NotesScreen> {
   Stream<List<Map<String, dynamic>>>? _notesStream;
   String _searchQuery = "";
   bool _sortOldestFirst = false;
+  final Map<String, Map<String, dynamic>> _pendingDeletes = {};
+  Timer? _deleteTimer;
+  Timer? _undoSnackBarTimer;
 
   // قائمة ألوان الملاحظات
   final List<Color> _noteColors = [
@@ -53,6 +58,7 @@ class _NotesScreenState extends State<NotesScreen> {
 
   @override
   void dispose() {
+    _undoSnackBarTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -87,7 +93,7 @@ class _NotesScreenState extends State<NotesScreen> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text('حذف الملاحظة؟'),
-        content: const Text('سيتم حذف هذه الملاحظة نهائياً.'),
+        content: const Text('هل تريد حذف هذه الملاحظة؟'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, false),
@@ -101,23 +107,58 @@ class _NotesScreenState extends State<NotesScreen> {
         ],
       ),
     );
-    if (shouldDelete != true || !mounted) return false;
-    try {
-      final deleted = await supabase
-          .from('notes')
-          .delete()
-          .eq('id', note['id'])
-          .select('id');
-      if (deleted.isEmpty) throw StateError('No note was deleted');
-      if (mounted) _showMessage('تم حذف الملاحظة');
-      return true;
-    } catch (error) {
-      debugPrint('Delete note failed: $error');
-      if (mounted) {
+    return shouldDelete == true && mounted;
+  }
+
+  void _scheduleDelete(Map<String, dynamic> note) {
+    final id = note['id'].toString();
+    _pendingDeletes[id] = Map<String, dynamic>.from(note);
+    _deleteTimer?.cancel();
+    _deleteTimer = Timer(const Duration(seconds: 5), _commitDeletes);
+    _showUndoMessage('تم حذف الملاحظة');
+  }
+
+  void _showUndoMessage(String message) {
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 5),
+        behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'تراجع',
+          textColor: _gold,
+          onPressed: _undoDeletes,
+        ),
+      ));
+    _undoSnackBarTimer?.cancel();
+    _undoSnackBarTimer = Timer(const Duration(seconds: 5), () {
+      if (mounted) messenger.hideCurrentSnackBar();
+    });
+  }
+
+  void _undoDeletes() {
+    if (!mounted || _pendingDeletes.isEmpty) return;
+    _deleteTimer?.cancel();
+    _undoSnackBarTimer?.cancel();
+    setState(_pendingDeletes.clear);
+  }
+
+  Future<void> _commitDeletes() async {
+    final ids = _pendingDeletes.keys.toList();
+    _pendingDeletes.clear();
+    for (final id in ids) {
+      try {
+        final deleted = await supabase.from('notes').delete().eq('id', id).select('id');
+        if (deleted.isEmpty) throw StateError('No note was deleted');
+      } catch (error) {
+        debugPrint('Delete note failed: $error');
+        if (!mounted) return;
         setState(_initStream);
-        _showMessage('تعذر حذف الملاحظة. تحقق من الاتصال وحاول مجدداً.');
+        _showMessage('تعذر إكمال حذف الملاحظة. تحقق من الاتصال.');
       }
-      return false;
     }
   }
 
@@ -188,7 +229,9 @@ class _NotesScreenState extends State<NotesScreen> {
                   return const Center(child: CircularProgressIndicator(color: _gold));
                 }
                 
-                var notes = List<Map<String, dynamic>>.from(snapshot.data ?? const []);
+                var notes = List<Map<String, dynamic>>.from(snapshot.data ?? const [])
+                    .where((note) => !_pendingDeletes.containsKey(note['id'].toString()))
+                    .toList();
                 
                 // ترتيب يدوي لضمان ظهور المثبت في الأعلى دائماً
                 notes.sort((a, b) {
@@ -350,7 +393,9 @@ class _NotesScreenState extends State<NotesScreen> {
           key: Key(id),
           direction: DismissDirection.startToEnd,
           confirmDismiss: (_) => _confirmDelete(note),
-          onDismissed: (_) {},
+          onDismissed: (_) {
+            setState(() => _scheduleDelete(note));
+          },
           background: Container(
             margin: const EdgeInsets.only(bottom: 12),
             decoration: BoxDecoration(

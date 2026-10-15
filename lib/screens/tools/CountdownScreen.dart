@@ -19,6 +19,9 @@ class _CountdownScreenState extends State<CountdownScreen> {
   static const _background = Color(0xFFF4F5F8);
 
   List<Map<String, dynamic>> _countdowns = [];
+  final Map<String, (Map<String, dynamic>, int)> _pendingDeletes = {};
+  Timer? _deleteTimer;
+  Timer? _undoSnackBarTimer;
   late Timer _timer;
   bool _isLoading = true;
   bool _loadFailed = false;
@@ -38,6 +41,8 @@ class _CountdownScreenState extends State<CountdownScreen> {
   @override
   void dispose() {
     _timer.cancel();
+    _deleteTimer?.cancel();
+    _undoSnackBarTimer?.cancel();
     super.dispose();
   }
 
@@ -90,6 +95,61 @@ class _CountdownScreenState extends State<CountdownScreen> {
       }
       return false;
     }
+  }
+
+  Future<void> _deleteCountdown(Map<String, dynamic> item) async {
+    final id = item['id'].toString();
+    final currentIndex = _countdowns.indexWhere((entry) => entry['id'].toString() == id);
+    if (currentIndex < 0) return;
+    final removed = Map<String, dynamic>.from(_countdowns[currentIndex]);
+    setState(() => _countdowns.removeAt(currentIndex));
+    if (!await _saveCountdowns()) {
+      if (mounted) setState(() => _countdowns.insert(currentIndex, removed));
+      return;
+    }
+    _pendingDeletes[id] = (removed, currentIndex);
+    _deleteTimer?.cancel();
+    _deleteTimer = Timer(const Duration(seconds: 5), _pendingDeletes.clear);
+    _showUndoMessage();
+  }
+
+  void _showUndoMessage() {
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: const Text('تم حذف الموعد'),
+        duration: const Duration(seconds: 5),
+        behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'تراجع',
+          textColor: _gold,
+          onPressed: _undoDeletes,
+        ),
+      ));
+    _undoSnackBarTimer?.cancel();
+    _undoSnackBarTimer = Timer(const Duration(seconds: 5), () {
+      if (mounted) messenger.hideCurrentSnackBar();
+    });
+  }
+
+  Future<void> _undoDeletes() async {
+    if (!mounted || _pendingDeletes.isEmpty) return;
+    _deleteTimer?.cancel();
+    _undoSnackBarTimer?.cancel();
+    final pending = _pendingDeletes.values.toList()
+      ..sort((a, b) => a.$2.compareTo(b.$2));
+    _pendingDeletes.clear();
+    setState(() {
+      for (final entry in pending) {
+        _countdowns.insert(
+          entry.$2.clamp(0, _countdowns.length).toInt(),
+          entry.$1,
+        );
+      }
+    });
+    await _saveCountdowns();
   }
 
   void _checkCompletions() async {
@@ -436,10 +496,7 @@ class _CountdownScreenState extends State<CountdownScreen> {
     return Dismissible(
       key: Key(item['id'].toString()),
       direction: DismissDirection.startToEnd,
-      onDismissed: (_) {
-        setState(() => _countdowns.removeWhere((countdown) => countdown['id'].toString() == item['id'].toString()));
-        _saveCountdowns();
-      },
+      onDismissed: (_) => _deleteCountdown(item),
       background: Container(
         margin: const EdgeInsets.only(bottom: 14),
         decoration: BoxDecoration(color: Colors.redAccent, borderRadius: BorderRadius.circular(22)),

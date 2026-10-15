@@ -147,6 +147,12 @@ class _HomePageScreenState extends State<HomePageScreen>
 
   // متغيرات الإشعارات
   List<Map<String, dynamic>> _liveNotifications = [];
+  final ValueNotifier<int> _notificationsPageRevision = ValueNotifier(0);
+  final Map<String, (Map<String, dynamic>, int)> _pendingNotificationDeletes = {};
+  final Map<String, Map<String, dynamic>> _recentlyRestoredNotifications = {};
+  final Map<String, int> _notificationDismissGenerations = {};
+  Timer? _notificationDeleteTimer;
+  Timer? _undoSnackBarTimer;
   bool _isLoadingNotifications = false;
   int _unreadCount = 0;
   StreamSubscription? _notificationsSubscription;
@@ -189,6 +195,8 @@ class _HomePageScreenState extends State<HomePageScreen>
   final ValueNotifier<String> _liveAssistantText = ValueNotifier('');
   Map<String, dynamic>? _liveAssistantMessage;
   final List<Map<String, dynamic>> _aiConversations = [];
+  final Map<String, Map<String, dynamic>> _pendingConversationDeletes = {};
+  Timer? _conversationDeleteTimer;
   static const int _chatPageSize = 30;
   Map<String, dynamic>? _oldestChatMessageCursor;
   int _chatLoadGeneration = 0;
@@ -334,6 +342,8 @@ class _HomePageScreenState extends State<HomePageScreen>
     _chatScrollController.dispose();
     _tabController.dispose();
     _notificationsSubscription?.cancel();
+    _undoSnackBarTimer?.cancel();
+    _notificationsPageRevision.dispose();
     _leaderboardSubscription?.cancel();
     _leaderboardRankRefreshTimer?.cancel();
     super.dispose();
@@ -497,12 +507,21 @@ class _HomePageScreenState extends State<HomePageScreen>
           (data) {
             if (mounted) {
               setState(() {
-                _liveNotifications = List<Map<String, dynamic>>.from(data);
+                final snapshot = List<Map<String, dynamic>>.from(data)
+                    .where((item) => !_pendingNotificationDeletes.containsKey(item['id'].toString()))
+                    .toList();
+                final snapshotIds = snapshot.map((item) => item['id'].toString()).toSet();
+                for (final entry in _recentlyRestoredNotifications.entries) {
+                  if (snapshotIds.add(entry.key)) snapshot.add(entry.value);
+                }
+                _liveNotifications = snapshot;
+                _recentlyRestoredNotifications.removeWhere((id, _) => snapshotIds.contains(id));
                 _unreadCount = _liveNotifications
                     .where((n) => n['is_read'] != true)
                     .length;
                 _isLoadingNotifications = false;
               });
+              _refreshNotificationsPage();
             }
           },
           onError: (error) {
@@ -529,21 +548,109 @@ class _HomePageScreenState extends State<HomePageScreen>
             n['is_read'] = true;
           }
         });
+        _refreshNotificationsPage();
       }
     } catch (e) {
       debugPrint("Error marking as read: $e");
     }
   }
 
-  Future<void> _deleteNotification(String id) async {
-    try {
-      await Supabase.instance.client
-          .from('notifications')
-          .delete()
-          .eq('id', id);
-    } catch (e) {
-      debugPrint("Error deleting notification: $e");
+  void _refreshNotificationsPage() {
+    _notificationsPageRevision.value++;
+  }
+
+  void _scheduleNotificationDelete(Map<String, dynamic> notification, int index) {
+    final id = notification['id'].toString();
+    _pendingNotificationDeletes[id] = (Map<String, dynamic>.from(notification), index);
+    _notificationDeleteTimer?.cancel();
+    _notificationDeleteTimer = Timer(const Duration(seconds: 5), _commitNotificationDeletes);
+    _showUndoSnackBar('تم حذف الإشعار', _undoNotificationDeletes);
+  }
+
+  void _undoNotificationDeletes() {
+    if (!mounted || _pendingNotificationDeletes.isEmpty) return;
+    _notificationDeleteTimer?.cancel();
+    _undoSnackBarTimer?.cancel();
+    final pending = _pendingNotificationDeletes.values.toList()
+      ..sort((a, b) => a.$2.compareTo(b.$2));
+    for (final entry in pending) {
+      final id = entry.$1['id'].toString();
+      _recentlyRestoredNotifications[id] = entry.$1;
+      _notificationDismissGenerations[id] =
+          (_notificationDismissGenerations[id] ?? 0) + 1;
     }
+    setState(() {
+      for (final entry in pending) {
+        final index = entry.$2.clamp(0, _liveNotifications.length).toInt();
+        _liveNotifications.insert(index, entry.$1);
+      }
+      _pendingNotificationDeletes.clear();
+      _unreadCount = _liveNotifications.where((n) => n['is_read'] != true).length;
+    });
+    _refreshNotificationsPage();
+    _refreshNotificationsAfterUndo();
+  }
+
+  Future<void> _refreshNotificationsAfterUndo() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+    try {
+      final rows = await Supabase.instance.client
+          .from('notifications')
+          .select()
+          .eq('user_id', user.id)
+          .order('created_at', ascending: false);
+      if (!mounted) return;
+      setState(() {
+        final refreshed = List<Map<String, dynamic>>.from(rows);
+        final ids = refreshed.map((item) => item['id'].toString()).toSet();
+        _recentlyRestoredNotifications.removeWhere((id, _) => ids.contains(id));
+        for (final entry in _recentlyRestoredNotifications.entries) {
+          if (ids.add(entry.key)) refreshed.add(entry.value);
+        }
+        for (final item in _liveNotifications) {
+          if (ids.add(item['id'].toString())) refreshed.add(item);
+        }
+        _liveNotifications = refreshed;
+        _unreadCount = refreshed.where((n) => n['is_read'] != true).length;
+      });
+      _refreshNotificationsPage();
+    } catch (error) {
+      debugPrint('Could not refresh notifications after undo: $error');
+    }
+  }
+
+  Future<void> _commitNotificationDeletes() async {
+    final ids = _pendingNotificationDeletes.keys.toList();
+    _pendingNotificationDeletes.clear();
+    for (final id in ids) {
+      try {
+        await Supabase.instance.client.from('notifications').delete().eq('id', id);
+      } catch (e) {
+        debugPrint('Error deleting notification: $e');
+      }
+    }
+  }
+
+  void _showUndoSnackBar(String message, VoidCallback onUndo) {
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 5),
+        behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'تراجع',
+          textColor: const Color(0xFFF2B833),
+          onPressed: onUndo,
+        ),
+      ));
+    _undoSnackBarTimer?.cancel();
+    _undoSnackBarTimer = Timer(const Duration(seconds: 5), () {
+      if (mounted) messenger.hideCurrentSnackBar();
+    });
   }
 
   String _formatDuration(int totalSeconds) {
@@ -1331,6 +1438,7 @@ class _HomePageScreenState extends State<HomePageScreen>
             _scrollToBottom(isInstant: true);
           }
         });
+        _refreshNotificationsPage();
       }
     } catch (e) {
       debugPrint("Error loading chat messages: $e");
@@ -1550,7 +1658,7 @@ class _HomePageScreenState extends State<HomePageScreen>
       builder: (dialogContext) => AlertDialog(
         title: const Text('حذف المحادثة؟'),
         content: const Text(
-          'سيتم حذف المحادثة وجميع رسائلها نهائياً.',
+          'هل تريد حذف هذه المحادثة؟',
           textDirection: widgets.TextDirection.rtl,
         ),
         actions: [
@@ -1570,10 +1678,55 @@ class _HomePageScreenState extends State<HomePageScreen>
     );
     if (shouldDelete != true || !mounted) return;
 
+    _conversationDeleteTimer?.cancel();
+    _pendingConversationDeletes[id] = Map<String, dynamic>.from(conversation);
+    setState(() {
+      _aiConversations.removeWhere((item) => item['id']?.toString() == id);
+      if (_currentConversationId == id) {
+        _currentConversationId = null;
+        _chatLoadGeneration++;
+        _chatMessages.clear();
+        _oldestChatMessageCursor = null;
+        _hasMoreChatMessages = false;
+        _isLoadingOlderMessages = false;
+      }
+    });
+    onDialogRefresh?.call();
+    _conversationDeleteTimer = Timer(const Duration(seconds: 5), _commitConversationDeletes);
+    _showUndoSnackBar('تم حذف المحادثة', _undoConversationDeletes);
+  }
+
+  void _undoConversationDeletes() {
+    if (!mounted || _pendingConversationDeletes.isEmpty) return;
+    _conversationDeleteTimer?.cancel();
+    _undoSnackBarTimer?.cancel();
+    setState(() {
+      _aiConversations.addAll(
+        _pendingConversationDeletes.values.map(
+          (item) => Map<String, dynamic>.from(item),
+        ),
+      );
+      _aiConversations.sort((a, b) => (b['updated_at']?.toString() ?? '').compareTo(a['updated_at']?.toString() ?? ''));
+      _pendingConversationDeletes.clear();
+    });
+  }
+
+  Future<void> _commitConversationDeletes() async {
+    final pending = Map<String, Map<String, dynamic>>.from(_pendingConversationDeletes);
+    _pendingConversationDeletes.clear();
     final user = Supabase.instance.client.auth.currentUser;
-    if (user == null) return;
+    if (user == null) {
+      if (mounted) {
+        setState(() {
+          _aiConversations.addAll(pending.values);
+          _aiConversations.sort((a, b) => (b['updated_at']?.toString() ?? '').compareTo(a['updated_at']?.toString() ?? ''));
+        });
+      }
+      return;
+    }
     final client = Supabase.instance.client;
     try {
+      for (final id in pending.keys) {
       final imageRows = await client
           .from('chat_messages')
           .select('image_path')
@@ -1609,31 +1762,18 @@ class _HomePageScreenState extends State<HomePageScreen>
       if (deleted.isEmpty) {
         throw StateError('Conversation was not deleted');
       }
-
-      if (!mounted) return;
-      setState(() {
-        _aiConversations.removeWhere((item) => item['id']?.toString() == id);
-        if (_currentConversationId == id) {
-          _currentConversationId = null;
-          _chatLoadGeneration++;
-          _chatMessages.clear();
-          _oldestChatMessageCursor = null;
-          _hasMoreChatMessages = false;
-          _isLoadingOlderMessages = false;
-        }
-      });
-      onDialogRefresh?.call();
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تم حذف المحادثة ورسائلها وصورها.')),
-      );
+      }
     } catch (error) {
       debugPrint('Error deleting AI conversation, messages, or images: $error');
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('تعذر حذف المحادثة أو صورها. تحقق من صلاحيات حذف الصور.'),
-        ),
-      );
+      if (mounted) {
+        setState(() {
+          _aiConversations.addAll(pending.values);
+          _aiConversations.sort((a, b) => (b['updated_at']?.toString() ?? '').compareTo(a['updated_at']?.toString() ?? ''));
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تعذر إكمال حذف المحادثة أو صورها.')),
+        );
+      }
     }
   }
 
@@ -3717,7 +3857,11 @@ class _HomePageScreenState extends State<HomePageScreen>
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
-            body: _buildNotificationsView(primaryColor, secondaryColor),
+            body: ValueListenableBuilder<int>(
+              valueListenable: _notificationsPageRevision,
+              builder: (context, revision, child) =>
+                  _buildNotificationsView(primaryColor, secondaryColor),
+            ),
           ),
         ),
       ),
@@ -5470,6 +5614,7 @@ class _HomePageScreenState extends State<HomePageScreen>
                 .length;
           }
         });
+        _refreshNotificationsPage();
       }
     } catch (e) {
       debugPrint("Error marking as read in DB: $e");
@@ -5609,20 +5754,16 @@ class _HomePageScreenState extends State<HomePageScreen>
         }
 
         return Dismissible(
-          key: Key(id),
+          key: ValueKey(
+            'notification-$id-${_notificationDismissGenerations[id] ?? 0}',
+          ),
           direction: DismissDirection.startToEnd,
           onDismissed: (direction) {
             setState(() {
               _liveNotifications.removeAt(index);
             });
-            _deleteNotification(id);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text("تم حذف الإشعار"),
-                duration: Duration(seconds: 2),
-                behavior: SnackBarBehavior.floating,
-              ),
-            );
+            _refreshNotificationsPage();
+            _scheduleNotificationDelete(notification, index);
           },
           background: Container(
             margin: const EdgeInsets.only(bottom: 15),

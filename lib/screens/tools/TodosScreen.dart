@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -22,6 +23,9 @@ class _TodosScreenState extends State<TodosScreen> {
   static const _completedFilter = 'المكتملة';
 
   List<Map<String, dynamic>> _todos = [];
+  final Map<String, (Map<String, dynamic>, int)> _pendingDeletes = {};
+  Timer? _deleteTimer;
+  Timer? _undoSnackBarTimer;
   bool _isLoading = true;
   bool _loadFailed = false;
   String _selectedFilter = _todayFilter;
@@ -46,6 +50,8 @@ class _TodosScreenState extends State<TodosScreen> {
 
   @override
   void dispose() {
+    _deleteTimer?.cancel();
+    _undoSnackBarTimer?.cancel();
     super.dispose();
   }
 
@@ -204,13 +210,54 @@ class _TodosScreenState extends State<TodosScreen> {
 
   Future<void> _deleteTask(Map<String, dynamic> task) async {
     final id = task['id'].toString();
-    final previousTodos = _todos
-        .map((task) => Map<String, dynamic>.from(task))
-        .toList();
-    setState(() => _todos.removeWhere((item) => item['id'].toString() == id));
-    if (!await _saveTodos() && mounted) {
-      setState(() => _todos = previousTodos);
+    final index = _todos.indexWhere((item) => item['id'].toString() == id);
+    if (index < 0) return;
+    final removed = Map<String, dynamic>.from(_todos[index]);
+    setState(() => _todos.removeAt(index));
+    if (!await _saveTodos()) {
+      if (mounted) setState(() => _todos.insert(index, removed));
+      return;
     }
+    _pendingDeletes[id] = (removed, index);
+    _deleteTimer?.cancel();
+    _deleteTimer = Timer(const Duration(seconds: 5), _pendingDeletes.clear);
+    _showUndoMessage('تم حذف المهمة');
+  }
+
+  void _showUndoMessage(String message) {
+    if (!mounted) return;
+    final messenger = ScaffoldMessenger.of(context);
+    messenger
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 5),
+        behavior: SnackBarBehavior.floating,
+        action: SnackBarAction(
+          label: 'تراجع',
+          textColor: _gold,
+          onPressed: _undoDeletes,
+        ),
+      ));
+    _undoSnackBarTimer?.cancel();
+    _undoSnackBarTimer = Timer(const Duration(seconds: 5), () {
+      if (mounted) messenger.hideCurrentSnackBar();
+    });
+  }
+
+  Future<void> _undoDeletes() async {
+    if (!mounted || _pendingDeletes.isEmpty) return;
+    _deleteTimer?.cancel();
+    _undoSnackBarTimer?.cancel();
+    final pending = _pendingDeletes.values.toList()
+      ..sort((a, b) => a.$2.compareTo(b.$2));
+    _pendingDeletes.clear();
+    setState(() {
+      for (final entry in pending) {
+        _todos.insert(entry.$2.clamp(0, _todos.length).toInt(), entry.$1);
+      }
+    });
+    await _saveTodos();
   }
 
   Future<void> _showTaskEditor({Map<String, dynamic>? task}) async {
