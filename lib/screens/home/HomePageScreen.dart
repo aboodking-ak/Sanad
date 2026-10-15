@@ -137,6 +137,12 @@ class _HomePageScreenState extends State<HomePageScreen>
   // متغيرات تتبع الوقت والمتصدرين
   List<Map<String, dynamic>> _leaderboardUsers = [];
   bool _isLoadingLeaderboard = false;
+  String? _leaderboardError;
+  int? _currentUserLeaderboardRank;
+  Map<String, dynamic>? _currentUserLeaderboardData;
+  int _leaderboardRankRequestId = 0;
+  bool _isFetchingCurrentUserRank = false;
+  Timer? _leaderboardRankRefreshTimer;
   StreamSubscription? _leaderboardSubscription;
 
   // متغيرات الإشعارات
@@ -329,6 +335,7 @@ class _HomePageScreenState extends State<HomePageScreen>
     _tabController.dispose();
     _notificationsSubscription?.cancel();
     _leaderboardSubscription?.cancel();
+    _leaderboardRankRefreshTimer?.cancel();
     super.dispose();
   }
 
@@ -372,35 +379,103 @@ class _HomePageScreenState extends State<HomePageScreen>
   Future<void> _fetchLeaderboard() async {
     if (!mounted) return;
 
-    _leaderboardSubscription?.cancel();
-    setState(() => _isLoadingLeaderboard = true);
+    await _leaderboardSubscription?.cancel();
+    if (!mounted) return;
+    setState(() {
+      _isLoadingLeaderboard = true;
+      _leaderboardError = null;
+    });
 
-    // البدء بالاستماع المباشر للتغييرات في جدول البروفايلات لترتيب المتصدرين
+    // اطلب أفضل 50 من الخادم مباشرة بدلاً من تنزيل كل الملفات الشخصية وترتيبها محلياً.
     _leaderboardSubscription = Supabase.instance.client
         .from('profiles')
         .stream(primaryKey: ['id'])
+        .gte('weekly_study_time', 0)
+        .order('weekly_study_time', ascending: false)
+        .limit(50)
         .listen(
           (data) {
             if (mounted) {
+              final users = List<Map<String, dynamic>>.from(data);
+              final currentUserId =
+                  Supabase.instance.client.auth.currentUser?.id;
+              final currentUserIndex = currentUserId == null
+                  ? -1
+                  : users.indexWhere((user) => user['id'] == currentUserId);
+              if (currentUserIndex >= 0) _leaderboardRankRequestId++;
               setState(() {
-                // تحويل البيانات وترتيبها وأخذ أفضل 50
-                var sortedUsers = List<Map<String, dynamic>>.from(data);
-                sortedUsers.sort(
-                  (a, b) => (b['weekly_study_time'] ?? 0).compareTo(
-                    a['weekly_study_time'] ?? 0,
-                  ),
-                );
-
-                _leaderboardUsers = sortedUsers.take(50).toList();
+                _leaderboardUsers = users;
                 _isLoadingLeaderboard = false;
+                _leaderboardError = null;
+                if (currentUserIndex >= 0) {
+                  _currentUserLeaderboardRank = currentUserIndex + 1;
+                  _currentUserLeaderboardData = users[currentUserIndex];
+                }
               });
+
+              if (currentUserId != null &&
+                  currentUserIndex < 0 &&
+                  !_isFetchingCurrentUserRank) {
+                if (_currentUserLeaderboardData == null) {
+                  _fetchCurrentUserLeaderboardPosition(currentUserId);
+                } else {
+                  _scheduleCurrentUserRankRefresh(currentUserId);
+                }
+              } else if (currentUserIndex >= 0) {
+                _leaderboardRankRefreshTimer?.cancel();
+              }
             }
           },
           onError: (error) {
             debugPrint("Leaderboard Realtime Error: $error");
-            if (mounted) setState(() => _isLoadingLeaderboard = false);
+            if (mounted) {
+              setState(() {
+                _isLoadingLeaderboard = false;
+                _leaderboardError = error.toString();
+              });
+            }
           },
         );
+  }
+
+  void _scheduleCurrentUserRankRefresh(String userId) {
+    _leaderboardRankRefreshTimer?.cancel();
+    _leaderboardRankRefreshTimer = Timer(const Duration(seconds: 3), () {
+      if (mounted && !_isFetchingCurrentUserRank) {
+        _fetchCurrentUserLeaderboardPosition(userId);
+      }
+    });
+  }
+
+  Future<void> _fetchCurrentUserLeaderboardPosition(String userId) async {
+    if (_isFetchingCurrentUserRank) return;
+    _isFetchingCurrentUserRank = true;
+    final requestId = ++_leaderboardRankRequestId;
+    try {
+      final client = Supabase.instance.client;
+      final user = await client
+          .from('profiles')
+          .select('id, full_name, profile_image, stage, weekly_study_time')
+          .eq('id', userId)
+          .maybeSingle();
+
+      if (user == null) return;
+      final studyTime = int.tryParse('${user['weekly_study_time'] ?? 0}') ?? 0;
+      final higherRankedUsersCount = await client
+          .from('profiles')
+          .count()
+          .gt('weekly_study_time', studyTime);
+
+      if (!mounted || requestId != _leaderboardRankRequestId) return;
+      setState(() {
+        _currentUserLeaderboardData = Map<String, dynamic>.from(user);
+        _currentUserLeaderboardRank = higherRankedUsersCount + 1;
+      });
+    } catch (error) {
+      debugPrint('تعذر جلب ترتيب المستخدم في المتصدرين: $error');
+    } finally {
+      _isFetchingCurrentUserRank = false;
+    }
   }
 
   Future<void> _fetchNotifications() async {
@@ -5625,224 +5700,157 @@ class _HomePageScreenState extends State<HomePageScreen>
   }
 
   Widget _buildLeaderboardView(Color primaryColor, Color secondaryColor) {
-    if (_isLoadingLeaderboard)
-      return const Center(child: CircularProgressIndicator());
     if (_leaderboardUsers.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.emoji_events_outlined,
-              size: 80,
-              color: Colors.grey[300],
-            ),
+            if (_isLoadingLeaderboard)
+              CircularProgressIndicator(color: secondaryColor)
+            else
+              Icon(
+                _leaderboardError == null
+                    ? Icons.emoji_events_outlined
+                    : Icons.cloud_off_rounded,
+                size: 64,
+                color: Colors.grey[400],
+              ),
             const SizedBox(height: 16),
-            const Text(
-              "لا توجد بيانات حالياً",
-              style: TextStyle(color: Colors.grey, fontSize: 16),
+            Text(
+              _isLoadingLeaderboard
+                  ? 'جارٍ تحميل المتصدرين...'
+                  : _leaderboardError == null
+                  ? 'لا توجد بيانات حالياً'
+                  : 'تعذر تحميل قائمة المتصدرين',
+              style: const TextStyle(
+                color: Color(0xFF657087),
+                fontFamily: 'Tajawal',
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
             ),
+            if (!_isLoadingLeaderboard && _leaderboardError != null) ...[
+              const SizedBox(height: 12),
+              ElevatedButton.icon(
+                onPressed: _fetchLeaderboard,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('إعادة المحاولة'),
+              ),
+            ],
           ],
         ),
       );
     }
 
-    // إيجاد رتبة المستخدم الحالي
     final currentUser = Supabase.instance.client.auth.currentUser;
-    int userRank = -1;
-    Map<String, dynamic>? userData;
 
-    if (currentUser != null) {
-      for (int i = 0; i < _leaderboardUsers.length; i++) {
-        if (_leaderboardUsers[i]['id'] == currentUser.id) {
-          userRank = i + 1;
-          userData = _leaderboardUsers[i];
-          break;
-        }
-      }
-    }
-
-    return Stack(
-      children: [
-        SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: Column(
-            children: [
-              _buildSectionHeader("المتصدرين", "أفضل 50 طالب"),
-              const SizedBox(height: 40),
-              // منصة التتويج (أول 3)
-              if (_leaderboardUsers.length >= 3)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Expanded(
-                        child: _buildPodiumUser(
-                          user: _leaderboardUsers[1],
-                          rank: 2,
-                          height: 140,
-                          primaryColor: primaryColor,
-                          secondaryColor: secondaryColor,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _buildPodiumUser(
-                          user: _leaderboardUsers[0],
-                          rank: 1,
-                          height: 180,
-                          hasCrown: true,
-                          primaryColor: primaryColor,
-                          secondaryColor: secondaryColor,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _buildPodiumUser(
-                          user: _leaderboardUsers[2],
-                          rank: 3,
-                          height: 110,
-                          primaryColor: primaryColor,
-                          secondaryColor: secondaryColor,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              else if (_leaderboardUsers.isNotEmpty)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      if (_leaderboardUsers.length > 1)
-                        Expanded(
-                          child: _buildPodiumUser(
-                            user: _leaderboardUsers[1],
-                            rank: 2,
-                            height: 140,
-                            primaryColor: primaryColor,
-                            secondaryColor: secondaryColor,
-                          ),
-                        ),
-                      if (_leaderboardUsers.length > 1)
-                        const SizedBox(width: 8),
-                      Expanded(
-                        child: _buildPodiumUser(
-                          user: _leaderboardUsers[0],
-                          rank: 1,
-                          height: 180,
-                          hasCrown: true,
-                          primaryColor: primaryColor,
-                          secondaryColor: secondaryColor,
-                        ),
-                      ),
-                      if (_leaderboardUsers.length > 2)
-                        const SizedBox(width: 8),
-                      if (_leaderboardUsers.length > 2)
-                        Expanded(
-                          child: _buildPodiumUser(
-                            user: _leaderboardUsers[2],
-                            rank: 3,
-                            height: 110,
-                            primaryColor: primaryColor,
-                            secondaryColor: secondaryColor,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-              const SizedBox(height: 40),
-              _buildLeaderList(primaryColor),
-              const SizedBox(height: 240), // مساحة أسفل القائمة لشريط التنقل والتفاصيل الثابتة
-            ],
-          ),
-        ),
-        if (userData != null)
-          Positioned(
-            bottom: 120,
-            left: 20,
-            right: 20,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              // تصغير البادينج العمودي
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      child: Column(
+        children: [
+          _buildLeaderboardHeader(),
+          if (_leaderboardError != null)
+            Container(
+              margin: const EdgeInsets.fromLTRB(20, 4, 20, 16),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: primaryColor,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: primaryColor.withOpacity(0.4),
-                    blurRadius: 15,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
+                color: const Color(0xFFFFF5E5),
+                borderRadius: BorderRadius.circular(14),
               ),
               child: Row(
                 children: [
-                  Text(
-                    "#$userRank",
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                    ),
-                  ),
-                  const SizedBox(width: 15),
-                  _buildUserCircle(
-                    userData['profile_image'],
-                    userData['full_name'] ?? "أنت",
-                    20,
-                    Colors.white,
-                  ), // تصغير قطر الدائرة
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          userData['full_name'] ?? "أنت",
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        Text(
-                          userData['stage'] ?? "طالب",
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.8),
-                      fontSize: 10,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                  const Expanded(
                     child: Text(
-                      _formatDuration(userData['weekly_study_time'] ?? 0),
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
+                      'تعذر تحديث النتائج. تحقق من الاتصال وحاول مجدداً.',
+                      style: TextStyle(
+                        color: Color(0xFF76520A),
+                        fontFamily: 'Tajawal',
+                        fontSize: 12,
                       ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _fetchLeaderboard,
+                    child: const Text('إعادة'),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 32),
+          if (_leaderboardUsers.length >= 3)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: _buildPodiumUser(
+                      user: _leaderboardUsers[1],
+                      rank: 2,
+                      height: 140,
+                      primaryColor: primaryColor,
+                      secondaryColor: secondaryColor,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildPodiumUser(
+                      user: _leaderboardUsers[0],
+                      rank: 1,
+                      height: 180,
+                      hasCrown: true,
+                      primaryColor: primaryColor,
+                      secondaryColor: secondaryColor,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildPodiumUser(
+                      user: _leaderboardUsers[2],
+                      rank: 3,
+                      height: 110,
+                      primaryColor: primaryColor,
+                      secondaryColor: secondaryColor,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  if (_leaderboardUsers.length > 1)
+                    Expanded(
+                      child: _buildPodiumUser(
+                        user: _leaderboardUsers[1],
+                        rank: 2,
+                        height: 140,
+                        primaryColor: primaryColor,
+                        secondaryColor: secondaryColor,
+                      ),
+                    ),
+                  if (_leaderboardUsers.length > 1) const SizedBox(width: 8),
+                  Expanded(
+                    child: _buildPodiumUser(
+                      user: _leaderboardUsers[0],
+                      rank: 1,
+                      height: 180,
+                      hasCrown: true,
+                      primaryColor: primaryColor,
+                      secondaryColor: secondaryColor,
                     ),
                   ),
                 ],
               ),
             ),
-          ),
-      ],
+          const SizedBox(height: 36),
+          _buildLeaderList(primaryColor, currentUser?.id),
+          const SizedBox(height: 100),
+        ],
+      ),
     );
   }
 
@@ -6493,7 +6501,10 @@ class _HomePageScreenState extends State<HomePageScreen>
     final String name = user['full_name'] ?? "طالب";
     final String? imageUrl = user['profile_image'];
     final String? stage = user['stage'];
-    final int studyTime = user['weekly_study_time'] ?? 0;
+    final int studyTime =
+        int.tryParse('${user['weekly_study_time'] ?? 0}') ?? 0;
+    final isCurrentUser =
+        user['id'] == Supabase.instance.client.auth.currentUser?.id;
 
     return Column(
       children: [
@@ -6504,14 +6515,23 @@ class _HomePageScreenState extends State<HomePageScreen>
             size: 35,
           ),
         const SizedBox(height: 5),
-        _buildUserCircle(imageUrl, name, 30, primaryColor),
+        _buildUserCircle(
+          imageUrl,
+          name,
+          30,
+          isCurrentUser ? secondaryColor : primaryColor,
+        ),
         const SizedBox(height: 10),
         Text(
           name,
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          style: TextStyle(
+            color: isCurrentUser ? primaryColor : Colors.black87,
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
           textAlign: TextAlign.center,
           maxLines: 2,
-          overflow: TextOverflow.visible,
+          overflow: TextOverflow.ellipsis,
         ),
         if (stage != null && stage.isNotEmpty)
           Text(
@@ -6591,80 +6611,219 @@ class _HomePageScreenState extends State<HomePageScreen>
     );
   }
 
-  Widget _buildLeaderList(Color primaryColor) {
-    if (_leaderboardUsers.length <= 3) return const SizedBox();
+  Widget _buildLeaderList(Color primaryColor, String? currentUserId) {
+    final usersAfterPodium = _leaderboardUsers.skip(3).toList();
+    final currentUserIsInTop50 = currentUserId != null &&
+        _leaderboardUsers.any((user) => user['id'] == currentUserId);
+    final showCurrentUserSeparately = !currentUserIsInTop50 &&
+        _currentUserLeaderboardData != null &&
+        _currentUserLeaderboardRank != null;
+
+    if (usersAfterPodium.isEmpty && !showCurrentUserSeparately) {
+      return const SizedBox();
+    }
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: ListView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: _leaderboardUsers.length - 3,
-        itemBuilder: (context, index) {
-          final user = _leaderboardUsers[index + 3];
-          final String name = user['full_name'] ?? "طالب";
-          final String? imageUrl = user['profile_image'];
-          final String? stage = user['stage'];
-          final int studyTime = user['weekly_study_time'] ?? 0;
-
-          return Container(
-            margin: const EdgeInsets.only(bottom: 10),
-            padding: const EdgeInsets.all(15),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(20),
-                  blurRadius: 5,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+      child: Column(
+        children: [
+          if (usersAfterPodium.isNotEmpty)
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: usersAfterPodium.length,
+              itemBuilder: (context, index) {
+                final user = usersAfterPodium[index];
+                final isCurrentUser = user['id'] == currentUserId;
+                return _buildLeaderboardUserCard(
+                  user: user,
+                  rank: index + 4,
+                  primaryColor: primaryColor,
+                  isCurrentUser: isCurrentUser,
+                );
+              },
             ),
-            child: Row(
+          if (showCurrentUserSeparately) ...[
+            if (usersAfterPodium.isNotEmpty) const SizedBox(height: 12),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Text(
+                  'ترتيبك',
+                  style: TextStyle(
+                    color: primaryColor,
+                    fontFamily: 'Tajawal',
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
+            ),
+            _buildLeaderboardUserCard(
+              user: _currentUserLeaderboardData!,
+              rank: _currentUserLeaderboardRank!,
+              primaryColor: primaryColor,
+              isCurrentUser: true,
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLeaderboardHeader() {
+    const navy = Color(0xFF1A2238);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 18),
+      child: Row(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: const Color(0xFFFFF7E4),
+              borderRadius: BorderRadius.circular(15),
+            ),
+            child: const Icon(
+              Icons.emoji_events_rounded,
+              color: navy,
+              size: 24,
+            ),
+          ),
+          const SizedBox(width: 14),
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "${index + 4}",
+                  'المتصدرين',
+                  textAlign: TextAlign.right,
                   style: TextStyle(
-                    color: primaryColor,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                    color: navy,
+                    fontFamily: 'Tajawal',
+                    fontSize: 22,
+                    fontWeight: FontWeight.w900,
                   ),
                 ),
-                const SizedBox(width: 15),
-                _buildUserCircle(imageUrl, name, 22, primaryColor),
-                const SizedBox(width: 15),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        name,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      if (stage != null)
-                        Text(
-                          stage,
-                          style: TextStyle(
-                            color: Colors.grey[500],
-                            fontSize: 11,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
+                SizedBox(height: 3),
                 Text(
-                  _formatDuration(studyTime),
+                  'أفضل 50 طالباً حسب وقت الدراسة',
+                  textAlign: TextAlign.right,
                   style: TextStyle(
-                    color: primaryColor,
+                    color: Color(0xFF7D8799),
+                    fontFamily: 'Tajawal',
                     fontSize: 13,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
             ),
-          );
-        },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLeaderboardUserCard({
+    required Map<String, dynamic> user,
+    required int rank,
+    required Color primaryColor,
+    required bool isCurrentUser,
+  }) {
+    const navy = Color(0xFF1A2238);
+    const gold = Color(0xFFF2B833);
+    final name = user['full_name']?.toString() ?? 'طالب';
+    final stage = user['stage']?.toString();
+    final imageUrl = user['profile_image']?.toString();
+    final studyTime =
+        int.tryParse('${user['weekly_study_time'] ?? 0}') ?? 0;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: isCurrentUser ? navy : Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: const Color(0xFFE9ECF2),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: navy.withAlpha(isCurrentUser ? 28 : 12),
+            blurRadius: 9,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: isCurrentUser ? gold : primaryColor.withAlpha(12),
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: Text(
+              '$rank',
+              style: TextStyle(
+                color: isCurrentUser ? navy : primaryColor,
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          _buildUserCircle(
+            imageUrl,
+            name,
+            22,
+            isCurrentUser ? gold : primaryColor,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: isCurrentUser ? Colors.white : navy,
+                    fontFamily: 'Tajawal',
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                if (stage != null && stage.isNotEmpty)
+                  Text(
+                    stage,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: isCurrentUser
+                          ? Colors.white70
+                          : const Color(0xFF7C8493),
+                      fontFamily: 'Tajawal',
+                      fontSize: 11,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            _formatDuration(studyTime),
+            style: TextStyle(
+              color: isCurrentUser ? gold : primaryColor,
+              fontSize: 12,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
       ),
     );
   }
