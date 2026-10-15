@@ -2517,7 +2517,7 @@ class _HomePageScreenState extends State<HomePageScreen>
                 children: [
                   _buildHomeView(primaryColor, secondaryColor),
                   _buildAiChatView(primaryColor),
-                  _buildToolsView(primaryColor, secondaryColor),
+                  _buildToolsView(),
                   _buildLeaderboardView(primaryColor, secondaryColor),
                 ],
               ),
@@ -5243,45 +5243,111 @@ class _HomePageScreenState extends State<HomePageScreen>
     ),
   );
 
-  Widget _buildToolsView(Color primaryColor, Color secondaryColor) {
+  Widget _buildToolsView() {
+    const navy = Color(0xFF1A2238);
     return SingleChildScrollView(
-      padding: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _buildSectionHeader("الأدوات التعليمية", "4 أدوات"),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: ListView(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(2, 4, 2, 16),
+            child: Row(
               children: [
-                _buildToolListItem(
-                  label: 'قائمة المهام',
-                  icon: Icons.checklist_rounded,
-                  primaryColor: primaryColor,
-                  secondaryColor: secondaryColor,
+                Container(
+                  width: 46,
+                  height: 46,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF7E4),
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  child: const Icon(Icons.auto_awesome_rounded, color: navy, size: 24),
                 ),
-                _buildToolListItem(
-                  label: 'بومودورو',
-                  icon: Icons.timer_outlined,
-                  primaryColor: primaryColor,
-                  secondaryColor: secondaryColor,
-                ),
-                _buildToolListItem(
-                  label: 'ملاحظات',
-                  icon: Icons.note_alt_rounded,
-                  primaryColor: primaryColor,
-                  secondaryColor: secondaryColor,
-                ),
-                _buildToolListItem(
-                  label: 'العد التنازلي',
-                  icon: Icons.timer_rounded,
-                  primaryColor: primaryColor,
-                  secondaryColor: secondaryColor,
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'الأدوات التعليمية',
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                          color: navy,
+                          fontFamily: 'Tajawal',
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      const Text(
+                        'اختر الأداة التي تساعدك اليوم',
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                          color: Color(0xFF7D8799),
+                          fontFamily: 'Tajawal',
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
+          ),
+          const SizedBox(height: 4),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                flex: 11,
+                child: _buildToolListItem(
+                  label: 'قائمة المهام',
+                  subtitle: 'رتّب أولوياتك وأنجزها',
+                  badge: 'للتنظيم',
+                  icon: Icons.checklist_rounded,
+                  height: 176,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 9,
+                child: _buildToolListItem(
+                  label: 'بومودورو',
+                  subtitle: 'وازن بين التركيز والراحة',
+                  badge: 'للتركيز',
+                  icon: Icons.timer_outlined,
+                  height: 150,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 9,
+                child: _buildToolListItem(
+                  label: 'ملاحظات',
+                  subtitle: 'دوّن أفكارك بسهولة',
+                  badge: 'للتدوين',
+                  icon: Icons.note_alt_rounded,
+                  height: 150,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                flex: 11,
+                child: _buildToolListItem(
+                  label: 'العد التنازلي',
+                  subtitle: 'تابع مواعيدك المهمة',
+                  badge: 'للمواعيد',
+                  icon: Icons.hourglass_bottom_rounded,
+                  height: 176,
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -6605,56 +6671,107 @@ class _HomePageScreenState extends State<HomePageScreen>
 
   Widget _buildToolListItem({
     required String label,
+    required String subtitle,
+    required String badge,
     required IconData icon,
-    required Color primaryColor,
-    required Color secondaryColor,
+    required double height,
   }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      decoration: BoxDecoration(
-        color: primaryColor,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: primaryColor.withAlpha(50),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
+    const navy = Color(0xFF1A2238);
+    const gold = Color(0xFFF2B833);
+    return Material(
+      color: navy,
+      borderRadius: BorderRadius.circular(22),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(22),
+        onTap: () {
+          if (label == 'العد التنازلي') {
+            Navigator.pushNamed(context, '/countdown');
+          } else if (label == 'ملاحظات') {
+            Navigator.pushNamed(context, '/notes');
+          } else if (label == 'بومودورو') {
+            Navigator.pushNamed(context, '/pomodoro');
+          } else if (label == 'قائمة المهام') {
+            Navigator.pushNamed(context, '/todos');
+          }
+        },
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(22),
+            color: navy,
+            border: Border.all(color: Colors.white.withAlpha(18)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x1F0D1830),
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(15),
-          // يجعل تأثير الضغط دائرياً بنفس حواف الحاوية
-          onTap: () {
-            if (label == 'العد التنازلي') {
-              Navigator.pushNamed(context, '/countdown');
-            } else if (label == 'ملاحظات') {
-              Navigator.pushNamed(context, '/notes');
-            } else if (label == 'بومودورو') {
-              Navigator.pushNamed(context, '/pomodoro');
-            } else if (label == 'قائمة المهام') {
-              Navigator.pushNamed(context, '/todos');
-            }
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-            child: Row(
+          child: Container(
+            height: height,
+            padding: const EdgeInsets.all(17),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: Text(
-                    label,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withAlpha(18),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Icon(icon, color: gold, size: 26),
                     ),
+                    const Spacer(),
+                    Icon(Icons.arrow_outward_rounded, color: Colors.white.withAlpha(150), size: 19),
+                  ],
+                ),
+                const Spacer(),
+                Text(
+                  label,
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontFamily: 'Tajawal',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
-                CircleAvatar(
-                  backgroundColor: Colors.white.withAlpha(30),
-                  child: Icon(icon, color: secondaryColor, size: 28),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  textAlign: TextAlign.right,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white70,
+                    fontFamily: 'Tajawal',
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: gold,
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      badge,
+                      style: const TextStyle(
+                        color: navy,
+                        fontFamily: 'Tajawal',
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
