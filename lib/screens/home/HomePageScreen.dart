@@ -3135,7 +3135,7 @@ class _HomePageScreenState extends State<HomePageScreen>
                       child: Align(
                         alignment: Alignment.centerRight,
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
                               'سند',
@@ -3223,7 +3223,7 @@ class _HomePageScreenState extends State<HomePageScreen>
                         const SizedBox(width: 12),
                         const Expanded(
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
                               Text(
                                 'سند بلس',
@@ -3922,25 +3922,66 @@ class _HomePageScreenState extends State<HomePageScreen>
                 _buildQuickShortcuts(primaryColor, secondaryColor),
                 _buildStudyQuoteCard(primaryColor, secondaryColor),
                 _buildSectionHeader(
-                  "المواد الدراسية",
-                  "${filteredSubjects.length} مواد",
+                  'المواد الدراسية',
+                  '${filteredSubjects.length} مواد',
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    clipBehavior: Clip.none,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      childAspectRatio: 1.4,
-                      crossAxisSpacing: 15,
-                      mainAxisSpacing: 15,
+                  child: Column(
+                    children: List.generate(
+                      (filteredSubjects.length / 2).ceil(),
+                      (rowIndex) {
+                        final firstIndex = rowIndex * 2;
+                        final secondIndex = firstIndex + 1;
+                        final firstHeight = rowIndex.isEven ? 176.0 : 150.0;
+                        final secondHeight = rowIndex.isEven ? 150.0 : 176.0;
+
+                        Widget animatedSubject(int index, double height) =>
+                            TweenAnimationBuilder<double>(
+                              key: ValueKey(filteredSubjects[index]['label']),
+                              tween: Tween(begin: 0, end: 1),
+                              duration: Duration(
+                                milliseconds: 360 + index * 55,
+                              ),
+                              curve: Curves.easeOutCubic,
+                              builder: (context, value, child) => Opacity(
+                                opacity: value,
+                                child: Transform.translate(
+                                  offset: Offset(0, 16 * (1 - value)),
+                                  child: child,
+                                ),
+                              ),
+                              child: _buildSubjectCard(
+                                filteredSubjects[index],
+                                height: height,
+                              ),
+                            );
+
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Row(
+                            crossAxisAlignment: rowIndex.isEven
+                                ? CrossAxisAlignment.end
+                                : CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: animatedSubject(firstIndex, firstHeight),
+                              ),
+                              const SizedBox(width: 12),
+                              if (secondIndex < filteredSubjects.length)
+                                Expanded(
+                                  child: animatedSubject(
+                                    secondIndex,
+                                    secondHeight,
+                                  ),
+                                )
+                              else
+                                const Expanded(child: SizedBox()),
+                            ],
+                          ),
+                        );
+                      },
                     ),
-                    itemCount: filteredSubjects.length,
-                    itemBuilder: (context, index) =>
-                        _buildSubjectCard(filteredSubjects[index]),
                   ),
                 ),
                 const SizedBox(height: 100),
@@ -4280,7 +4321,7 @@ class _HomePageScreenState extends State<HomePageScreen>
                       ),
                       child: Column(
                         key: ValueKey(_studyQuoteIndex),
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
                             '«${quote.text}»',
@@ -5200,7 +5241,7 @@ class _HomePageScreenState extends State<HomePageScreen>
               ),
               child: isMe
                   ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         if (hasImage) image,
@@ -5512,7 +5553,7 @@ class _HomePageScreenState extends State<HomePageScreen>
                 const SizedBox(width: 14),
                 Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       const Text(
                         'الأدوات التعليمية',
@@ -7139,68 +7180,122 @@ class _HomePageScreenState extends State<HomePageScreen>
     return count;
   }
 
-  Widget _buildSubjectCard(Map<String, dynamic> subject) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
-    final secondaryColor = Theme.of(context).colorScheme.secondary;
+  Widget _buildSubjectCard(
+    Map<String, dynamic> subject, {
+    required double height,
+  }) {
+    const navy = Color(0xFF1A2238);
+    const gold = Color(0xFFF2B833);
+    final sectionCount = _getSectionsCount(subject);
+    final label = subject['label']?.toString() ?? '';
 
-    final int sectionCount = _getSectionsCount(subject);
-
-    return GestureDetector(
-      onTap: () => _showSubjectDetails(context, subject),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(50),
-              blurRadius: 10,
-              offset: const Offset(0, 0),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.only(right: 15),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(28),
+            blurRadius: 8,
+            spreadRadius: 0,
+            offset: Offset.zero,
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: () => _showSubjectDetails(context, subject),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
                   children: [
-                    Text(
-                      subject['label']!,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: primaryColor,
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFF7E4),
+                        borderRadius: BorderRadius.circular(15),
                       ),
-                      textAlign: TextAlign.right,
+                      child: Icon(
+                        subject['icon'] as IconData,
+                        color: gold,
+                        size: 24,
+                      ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "$sectionCount أقسام",
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: Colors.grey[500],
-                        fontWeight: FontWeight.w500,
+                    const Spacer(),
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF5F6F9),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.arrow_back_rounded,
+                        textDirection: widgets.TextDirection.ltr,
+                        color: Color(0xFF7D8799),
+                        size: 20,
                       ),
                     ),
                   ],
                 ),
-              ),
+                const Spacer(),
+                Text(
+                  label,
+                  textAlign: TextAlign.right,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: navy,
+                    fontFamily: 'Tajawal',
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 9,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF5F6F9),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.grid_view_rounded,
+                          size: 13,
+                          color: navy.withAlpha(150),
+                        ),
+                        const SizedBox(width: 5),
+                        Text(
+                          '$sectionCount أقسام',
+                          style: const TextStyle(
+                            color: Color(0xFF818897),
+                            fontFamily: 'Tajawal',
+                            fontSize: 11,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-            Expanded(
-              flex: 1,
-              child: Icon(
-                subject['icon'] as IconData,
-                size: 35,
-                color: secondaryColor,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
