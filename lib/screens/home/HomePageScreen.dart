@@ -71,7 +71,6 @@ class _RoundedTabIndicatorPainter extends BoxPainter {
       paint,
     );
   }
-
 }
 
 class _HomeShortcut {
@@ -124,7 +123,6 @@ class _HomePageScreenState extends State<HomePageScreen>
   List<_StudyQuote> _studyQuotes = [];
   int _studyQuoteIndex = 0;
 
-
   String userName = "الطالب";
   String userEmail = "user@email.com";
   String? _profileImagePath;
@@ -149,7 +147,8 @@ class _HomePageScreenState extends State<HomePageScreen>
   // متغيرات الإشعارات
   List<Map<String, dynamic>> _liveNotifications = [];
   final ValueNotifier<int> _notificationsPageRevision = ValueNotifier(0);
-  final Map<String, (Map<String, dynamic>, int)> _pendingNotificationDeletes = {};
+  final Map<String, (Map<String, dynamic>, int)> _pendingNotificationDeletes =
+      {};
   final Map<String, Map<String, dynamic>> _recentlyRestoredNotifications = {};
   final Map<String, int> _notificationDismissGenerations = {};
   Timer? _notificationDeleteTimer;
@@ -302,7 +301,9 @@ class _HomePageScreenState extends State<HomePageScreen>
 
   Future<void> _loadStudyQuotes() async {
     try {
-      final json = await rootBundle.loadString('assets/jsons/study_quotes.json');
+      final json = await rootBundle.loadString(
+        'assets/jsons/study_quotes.json',
+      );
       final decoded = jsonDecode(json);
       if (decoded is! List) return;
 
@@ -310,10 +311,8 @@ class _HomePageScreenState extends State<HomePageScreen>
           .whereType<Map<String, dynamic>>()
           .where((item) => item['text'] is String && item['source'] is String)
           .map(
-            (item) => _StudyQuote(
-              item['text'] as String,
-              item['source'] as String,
-            ),
+            (item) =>
+                _StudyQuote(item['text'] as String, item['source'] as String),
           )
           .toList();
       if (!mounted || quotes.isEmpty) return;
@@ -509,14 +508,22 @@ class _HomePageScreenState extends State<HomePageScreen>
             if (mounted) {
               setState(() {
                 final snapshot = List<Map<String, dynamic>>.from(data)
-                    .where((item) => !_pendingNotificationDeletes.containsKey(item['id'].toString()))
+                    .where(
+                      (item) => !_pendingNotificationDeletes.containsKey(
+                        item['id'].toString(),
+                      ),
+                    )
                     .toList();
-                final snapshotIds = snapshot.map((item) => item['id'].toString()).toSet();
+                final snapshotIds = snapshot
+                    .map((item) => item['id'].toString())
+                    .toSet();
                 for (final entry in _recentlyRestoredNotifications.entries) {
                   if (snapshotIds.add(entry.key)) snapshot.add(entry.value);
                 }
                 _liveNotifications = snapshot;
-                _recentlyRestoredNotifications.removeWhere((id, _) => snapshotIds.contains(id));
+                _recentlyRestoredNotifications.removeWhere(
+                  (id, _) => snapshotIds.contains(id),
+                );
                 _unreadCount = _liveNotifications
                     .where((n) => n['is_read'] != true)
                     .length;
@@ -560,11 +567,20 @@ class _HomePageScreenState extends State<HomePageScreen>
     _notificationsPageRevision.value++;
   }
 
-  void _scheduleNotificationDelete(Map<String, dynamic> notification, int index) {
+  void _scheduleNotificationDelete(
+    Map<String, dynamic> notification,
+    int index,
+  ) {
     final id = notification['id'].toString();
-    _pendingNotificationDeletes[id] = (Map<String, dynamic>.from(notification), index);
+    _pendingNotificationDeletes[id] = (
+      Map<String, dynamic>.from(notification),
+      index,
+    );
     _notificationDeleteTimer?.cancel();
-    _notificationDeleteTimer = Timer(const Duration(seconds: 5), _commitNotificationDeletes);
+    _notificationDeleteTimer = Timer(
+      const Duration(seconds: 5),
+      _commitNotificationDeletes,
+    );
     _showUndoSnackBar('تم حذف الإشعار', _undoNotificationDeletes);
   }
 
@@ -586,7 +602,9 @@ class _HomePageScreenState extends State<HomePageScreen>
         _liveNotifications.insert(index, entry.$1);
       }
       _pendingNotificationDeletes.clear();
-      _unreadCount = _liveNotifications.where((n) => n['is_read'] != true).length;
+      _unreadCount = _liveNotifications
+          .where((n) => n['is_read'] != true)
+          .length;
     });
     _refreshNotificationsPage();
     _refreshNotificationsAfterUndo();
@@ -626,7 +644,10 @@ class _HomePageScreenState extends State<HomePageScreen>
     _pendingNotificationDeletes.clear();
     for (final id in ids) {
       try {
-        await Supabase.instance.client.from('notifications').delete().eq('id', id);
+        await Supabase.instance.client
+            .from('notifications')
+            .delete()
+            .eq('id', id);
       } catch (e) {
         debugPrint('Error deleting notification: $e');
       }
@@ -638,16 +659,18 @@ class _HomePageScreenState extends State<HomePageScreen>
     final messenger = ScaffoldMessenger.of(context);
     messenger
       ..hideCurrentSnackBar()
-      ..showSnackBar(SnackBar(
-        content: Text(message),
-        duration: const Duration(seconds: 5),
-        behavior: SnackBarBehavior.floating,
-        action: SnackBarAction(
-          label: 'تراجع',
-          textColor: const Color(0xFFF2B833),
-          onPressed: onUndo,
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          duration: const Duration(seconds: 5),
+          behavior: SnackBarBehavior.floating,
+          action: SnackBarAction(
+            label: 'تراجع',
+            textColor: const Color(0xFFF2B833),
+            onPressed: onUndo,
+          ),
         ),
-      ));
+      );
     _undoSnackBarTimer?.cancel();
     _undoSnackBarTimer = Timer(const Duration(seconds: 5), () {
       if (mounted) messenger.hideCurrentSnackBar();
@@ -798,7 +821,7 @@ class _HomePageScreenState extends State<HomePageScreen>
                       color: Colors.white,
                     ),
                   ),
-                  ),
+                ),
               ],
             ),
           ),
@@ -1693,7 +1716,10 @@ class _HomePageScreenState extends State<HomePageScreen>
       }
     });
     onDialogRefresh?.call();
-    _conversationDeleteTimer = Timer(const Duration(seconds: 5), _commitConversationDeletes);
+    _conversationDeleteTimer = Timer(
+      const Duration(seconds: 5),
+      _commitConversationDeletes,
+    );
     _showUndoSnackBar('تم حذف المحادثة', _undoConversationDeletes);
   }
 
@@ -1707,20 +1733,30 @@ class _HomePageScreenState extends State<HomePageScreen>
           (item) => Map<String, dynamic>.from(item),
         ),
       );
-      _aiConversations.sort((a, b) => (b['updated_at']?.toString() ?? '').compareTo(a['updated_at']?.toString() ?? ''));
+      _aiConversations.sort(
+        (a, b) => (b['updated_at']?.toString() ?? '').compareTo(
+          a['updated_at']?.toString() ?? '',
+        ),
+      );
       _pendingConversationDeletes.clear();
     });
   }
 
   Future<void> _commitConversationDeletes() async {
-    final pending = Map<String, Map<String, dynamic>>.from(_pendingConversationDeletes);
+    final pending = Map<String, Map<String, dynamic>>.from(
+      _pendingConversationDeletes,
+    );
     _pendingConversationDeletes.clear();
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
       if (mounted) {
         setState(() {
           _aiConversations.addAll(pending.values);
-          _aiConversations.sort((a, b) => (b['updated_at']?.toString() ?? '').compareTo(a['updated_at']?.toString() ?? ''));
+          _aiConversations.sort(
+            (a, b) => (b['updated_at']?.toString() ?? '').compareTo(
+              a['updated_at']?.toString() ?? '',
+            ),
+          );
         });
       }
       return;
@@ -1728,48 +1764,52 @@ class _HomePageScreenState extends State<HomePageScreen>
     final client = Supabase.instance.client;
     try {
       for (final id in pending.keys) {
-      final imageRows = await client
-          .from('chat_messages')
-          .select('image_path')
-          .eq('user_id', user.id)
-          .eq('conversation_id', id);
-      final imagePaths = imageRows
-          .map((row) => row['image_path']?.toString())
-          .whereType<String>()
-          .where((path) => path.startsWith('${user.id}/'))
-          .toSet()
-          .toList();
+        final imageRows = await client
+            .from('chat_messages')
+            .select('image_path')
+            .eq('user_id', user.id)
+            .eq('conversation_id', id);
+        final imagePaths = imageRows
+            .map((row) => row['image_path']?.toString())
+            .whereType<String>()
+            .where((path) => path.startsWith('${user.id}/'))
+            .toSet()
+            .toList();
 
-      for (var start = 0; start < imagePaths.length; start += 100) {
-        final end = start + 100 < imagePaths.length
-            ? start + 100
-            : imagePaths.length;
-        await client.storage
-            .from('sanad-ai-chat-images')
-            .remove(imagePaths.sublist(start, end));
-      }
+        for (var start = 0; start < imagePaths.length; start += 100) {
+          final end = start + 100 < imagePaths.length
+              ? start + 100
+              : imagePaths.length;
+          await client.storage
+              .from('sanad-ai-chat-images')
+              .remove(imagePaths.sublist(start, end));
+        }
 
-      await client
-          .from('chat_messages')
-          .delete()
-          .eq('user_id', user.id)
-          .eq('conversation_id', id);
-      final deleted = await client
-          .from('ai_conversations')
-          .delete()
-          .eq('id', id)
-          .eq('user_id', user.id)
-          .select('id');
-      if (deleted.isEmpty) {
-        throw StateError('Conversation was not deleted');
-      }
+        await client
+            .from('chat_messages')
+            .delete()
+            .eq('user_id', user.id)
+            .eq('conversation_id', id);
+        final deleted = await client
+            .from('ai_conversations')
+            .delete()
+            .eq('id', id)
+            .eq('user_id', user.id)
+            .select('id');
+        if (deleted.isEmpty) {
+          throw StateError('Conversation was not deleted');
+        }
       }
     } catch (error) {
       debugPrint('Error deleting AI conversation, messages, or images: $error');
       if (mounted) {
         setState(() {
           _aiConversations.addAll(pending.values);
-          _aiConversations.sort((a, b) => (b['updated_at']?.toString() ?? '').compareTo(a['updated_at']?.toString() ?? ''));
+          _aiConversations.sort(
+            (a, b) => (b['updated_at']?.toString() ?? '').compareTo(
+              a['updated_at']?.toString() ?? '',
+            ),
+          );
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('تعذر إكمال حذف المحادثة أو صورها.')),
@@ -1804,353 +1844,317 @@ class _HomePageScreenState extends State<HomePageScreen>
                 child: DecoratedBox(
                   decoration: const BoxDecoration(color: Color(0xFFF7F8FC)),
                   child: Column(
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 18, 16, 16),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        'محادثاتي',
-                                        style: TextStyle(
-                                          fontSize: 21,
-                                          fontWeight: FontWeight.w800,
-                                          color: Color(0xFF1D2433),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '${_aiConversations.length} محادثة محفوظة',
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          color: Color(0xFF778198),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(20, 14, 20, 10),
-                            child: Row(
-                              children: [
-                                const Expanded(
-                                  child: Text(
-                                    'سجل المحادثات',
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 18, 16, 16),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    'محادثاتي',
                                     style: TextStyle(
-                                      fontSize: 14,
+                                      fontSize: 21,
                                       fontWeight: FontWeight.w800,
-                                      color: Color(0xFF35415A),
+                                      color: Color(0xFF1D2433),
                                     ),
                                   ),
-                                ),
-                                Text(
-                                  'الأحدث أولاً',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: primaryColor.withAlpha(180),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${_aiConversations.length} محادثة محفوظة',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      color: Color(0xFF778198),
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                          Expanded(
-                            child: _aiConversations.isEmpty
-                                ? Center(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Container(
-                                          width: 62,
-                                          height: 62,
+                          ],
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(20, 14, 20, 10),
+                        child: Row(
+                          children: [
+                            const Expanded(
+                              child: Text(
+                                'سجل المحادثات',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFF35415A),
+                                ),
+                              ),
+                            ),
+                            Text(
+                              'الأحدث أولاً',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: primaryColor.withAlpha(180),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Expanded(
+                        child: _aiConversations.isEmpty
+                            ? Center(
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Container(
+                                      width: 62,
+                                      height: 62,
+                                      decoration: BoxDecoration(
+                                        color: primaryColor.withAlpha(14),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        Icons.forum_outlined,
+                                        size: 27,
+                                        color: primaryColor.withAlpha(170),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    const Text(
+                                      'لا توجد محادثات بعد',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 15,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    const Text(
+                                      'ابدأ محادثة جديدة وسيظهر سجلّك هنا',
+                                      style: TextStyle(
+                                        color: Color(0xFF8992A4),
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              )
+                            : ListView.builder(
+                                padding: const EdgeInsets.fromLTRB(
+                                  16,
+                                  2,
+                                  16,
+                                  20,
+                                ),
+                                itemCount: _aiConversations.length,
+                                itemBuilder: (context, index) {
+                                  final conversation = _aiConversations[index];
+                                  final id = conversation['id']?.toString();
+                                  final isSelected =
+                                      id == _currentConversationId;
+                                  final updatedAt =
+                                      DateTime.tryParse(
+                                        conversation['updated_at']
+                                                ?.toString() ??
+                                            '',
+                                      )?.toLocal() ??
+                                      DateTime.now();
+                                  return Padding(
+                                    padding: const EdgeInsets.only(bottom: 9),
+                                    child: Material(
+                                      color: isSelected
+                                          ? primaryColor.withAlpha(13)
+                                          : Colors.white,
+                                      borderRadius: BorderRadius.circular(17),
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(17),
+                                        onTap: () =>
+                                            _selectConversation(conversation),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 13,
+                                            vertical: 12,
+                                          ),
                                           decoration: BoxDecoration(
-                                            color: primaryColor.withAlpha(14),
-                                            shape: BoxShape.circle,
-                                          ),
-                                          child: Icon(
-                                            Icons.forum_outlined,
-                                            size: 27,
-                                            color: primaryColor.withAlpha(170),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 12),
-                                        const Text(
-                                          'لا توجد محادثات بعد',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.w700,
-                                            fontSize: 15,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        const Text(
-                                          'ابدأ محادثة جديدة وسيظهر سجلّك هنا',
-                                          style: TextStyle(
-                                            color: Color(0xFF8992A4),
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  )
-                                : ListView.builder(
-                                    padding: const EdgeInsets.fromLTRB(
-                                      16,
-                                      2,
-                                      16,
-                                      20,
-                                    ),
-                                    itemCount: _aiConversations.length,
-                                    itemBuilder: (context, index) {
-                                      final conversation =
-                                          _aiConversations[index];
-                                      final id = conversation['id']?.toString();
-                                      final isSelected =
-                                          id == _currentConversationId;
-                                      final updatedAt =
-                                          DateTime.tryParse(
-                                            conversation['updated_at']
-                                                    ?.toString() ??
-                                                '',
-                                          )?.toLocal() ??
-                                          DateTime.now();
-                                      return Padding(
-                                        padding: const EdgeInsets.only(
-                                          bottom: 9,
-                                        ),
-                                        child: Material(
-                                          color: isSelected
-                                              ? primaryColor.withAlpha(13)
-                                              : Colors.white,
-                                          borderRadius: BorderRadius.circular(
-                                            17,
-                                          ),
-                                          child: InkWell(
                                             borderRadius: BorderRadius.circular(
                                               17,
                                             ),
-                                            onTap: () => _selectConversation(
-                                              conversation,
+                                            border: Border.all(
+                                              color: isSelected
+                                                  ? primaryColor.withAlpha(70)
+                                                  : const Color(0xFFE9ECF2),
                                             ),
-                                            child: Container(
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 13,
-                                                    vertical: 12,
-                                                  ),
-                                              decoration: BoxDecoration(
-                                                borderRadius:
-                                                    BorderRadius.circular(17),
-                                                border: Border.all(
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Container(
+                                                width: 40,
+                                                height: 40,
+                                                decoration: BoxDecoration(
                                                   color: isSelected
-                                                      ? primaryColor.withAlpha(
-                                                          70,
-                                                        )
-                                                      : const Color(0xFFE9ECF2),
+                                                      ? primaryColor
+                                                      : const Color(0xFFF0F2F7),
+                                                  borderRadius:
+                                                      BorderRadius.circular(13),
+                                                ),
+                                                child: Icon(
+                                                  Icons.forum_outlined,
+                                                  size: 18,
+                                                  color: isSelected
+                                                      ? Colors.white
+                                                      : const Color(0xFF657087),
                                                 ),
                                               ),
-                                              child: Row(
-                                                children: [
-                                                  Container(
-                                                    width: 40,
-                                                    height: 40,
-                                                    decoration: BoxDecoration(
-                                                      color: isSelected
-                                                          ? primaryColor
-                                                          : const Color(
-                                                              0xFFF0F2F7,
-                                                            ),
-                                                      borderRadius:
-                                                          BorderRadius.circular(
-                                                            13,
-                                                          ),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Text(
+                                                      conversation['title']
+                                                              ?.toString() ??
+                                                          'محادثة جديدة',
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                      style: const TextStyle(
+                                                        fontSize: 14,
+                                                        fontWeight:
+                                                            FontWeight.w700,
+                                                      ),
                                                     ),
-                                                    child: Icon(
-                                                      Icons.forum_outlined,
-                                                      size: 18,
-                                                      color: isSelected
-                                                          ? Colors.white
-                                                          : const Color(
-                                                              0xFF657087,
-                                                            ),
+                                                    const SizedBox(height: 4),
+                                                    Text(
+                                                      _getRelativeTime(
+                                                        updatedAt,
+                                                      ),
+                                                      style: const TextStyle(
+                                                        fontSize: 11,
+                                                        color: Color(
+                                                          0xFF8992A4,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              PopupMenuButton<String>(
+                                                tooltip: 'خيارات المحادثة',
+                                                enabled: !_isTyping,
+                                                icon: Icon(
+                                                  Icons.more_vert_rounded,
+                                                  size: 20,
+                                                  color: isSelected
+                                                      ? primaryColor
+                                                      : const Color(0xFFABB2C0),
+                                                ),
+                                                onSelected: (action) {
+                                                  if (action == 'rename') {
+                                                    _renameConversation(
+                                                      conversation,
+                                                      onDialogRefresh: () =>
+                                                          setDialogState(() {}),
+                                                    );
+                                                  } else if (action ==
+                                                      'delete') {
+                                                    _deleteConversation(
+                                                      conversation,
+                                                      onDialogRefresh: () =>
+                                                          setDialogState(() {}),
+                                                    );
+                                                  }
+                                                },
+                                                itemBuilder: (_) => [
+                                                  const PopupMenuItem(
+                                                    value: 'rename',
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(
+                                                          Icons.edit_outlined,
+                                                          size: 18,
+                                                        ),
+                                                        SizedBox(width: 10),
+                                                        Text('إعادة التسمية'),
+                                                      ],
                                                     ),
                                                   ),
-                                                  const SizedBox(width: 12),
-                                                  Expanded(
-                                                    child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
+                                                  const PopupMenuItem(
+                                                    value: 'delete',
+                                                    child: Row(
                                                       children: [
-                                                        Text(
-                                                          conversation['title']
-                                                                  ?.toString() ??
-                                                              'محادثة جديدة',
-                                                          maxLines: 1,
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
-                                                          style:
-                                                              const TextStyle(
-                                                                fontSize: 14,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .w700,
-                                                              ),
-                                                        ),
-                                                        const SizedBox(
-                                                          height: 4,
-                                                        ),
-                                                        Text(
-                                                          _getRelativeTime(
-                                                            updatedAt,
+                                                        Icon(
+                                                          Icons.delete_outline,
+                                                          size: 18,
+                                                          color: Color(
+                                                            0xFFB42318,
                                                           ),
-                                                          style:
-                                                              const TextStyle(
-                                                                fontSize: 11,
-                                                                color: Color(
-                                                                  0xFF8992A4,
-                                                                ),
-                                                              ),
+                                                        ),
+                                                        SizedBox(width: 10),
+                                                        Text(
+                                                          'حذف المحادثة',
+                                                          style: TextStyle(
+                                                            color: Color(
+                                                              0xFFB42318,
+                                                            ),
+                                                          ),
                                                         ),
                                                       ],
                                                     ),
                                                   ),
-                                                  PopupMenuButton<String>(
-                                                    tooltip: 'خيارات المحادثة',
-                                                    enabled: !_isTyping,
-                                                    icon: Icon(
-                                                      Icons.more_vert_rounded,
-                                                      size: 20,
-                                                      color: isSelected
-                                                          ? primaryColor
-                                                          : const Color(
-                                                              0xFFABB2C0,
-                                                            ),
-                                                    ),
-                                                    onSelected: (action) {
-                                                      if (action == 'rename') {
-                                                        _renameConversation(
-                                                          conversation,
-                                                          onDialogRefresh: () =>
-                                                              setDialogState(
-                                                                () {},
-                                                              ),
-                                                        );
-                                                      } else if (action ==
-                                                          'delete') {
-                                                        _deleteConversation(
-                                                          conversation,
-                                                          onDialogRefresh: () =>
-                                                              setDialogState(
-                                                                () {},
-                                                              ),
-                                                        );
-                                                      }
-                                                    },
-                                                    itemBuilder: (_) => [
-                                                      const PopupMenuItem(
-                                                        value: 'rename',
-                                                        child: Row(
-                                                          children: [
-                                                            Icon(
-                                                              Icons
-                                                                  .edit_outlined,
-                                                              size: 18,
-                                                            ),
-                                                            SizedBox(width: 10),
-                                                            Text(
-                                                              'إعادة التسمية',
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                      const PopupMenuItem(
-                                                        value: 'delete',
-                                                        child: Row(
-                                                          children: [
-                                                            Icon(
-                                                              Icons
-                                                                  .delete_outline,
-                                                              size: 18,
-                                                              color: Color(
-                                                                0xFFB42318,
-                                                              ),
-                                                            ),
-                                                            SizedBox(width: 10),
-                                                            Text(
-                                                              'حذف المحادثة',
-                                                              style: TextStyle(
-                                                                color: Color(
-                                                                  0xFFB42318,
-                                                                ),
-                                                              ),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
                                                 ],
                                               ),
-                                            ),
+                                            ],
                                           ),
                                         ),
-                                      );
-                                    },
-                                  ),
+                                      ),
+                                    ),
+                                  );
+                                },
+                              ),
+                      ),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                        decoration: const BoxDecoration(
+                          border: Border(
+                            top: BorderSide(color: Color(0xFFE9ECF2)),
                           ),
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                            decoration: const BoxDecoration(
-                              border: Border(
-                                top: BorderSide(color: Color(0xFFE9ECF2)),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextButton(
+                                onPressed: () =>
+                                    Navigator.of(dialogContext).pop(),
+                                child: const Text(
+                                  'إلغاء',
+                                  style: TextStyle(
+                                    color: Color(0xFF657087),
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                               ),
                             ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(dialogContext).pop(),
-                                    child: const Text(
-                                      'إلغاء',
-                                      style: TextStyle(
-                                        color: Color(0xFF657087),
-                                        fontWeight: FontWeight.w700,
-                                      ),
-                                    ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: FilledButton.icon(
+                                onPressed: () {
+                                  Navigator.of(dialogContext).pop();
+                                  _startNewConversation();
+                                },
+                                icon: const Icon(Icons.add_rounded, size: 18),
+                                label: const Text('محادثة جديدة'),
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: primaryColor,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
                                   ),
                                 ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: FilledButton.icon(
-                                    onPressed: () {
-                                      Navigator.of(dialogContext).pop();
-                                      _startNewConversation();
-                                    },
-                                    icon: const Icon(
-                                      Icons.add_rounded,
-                                      size: 18,
-                                    ),
-                                    label: const Text('محادثة جديدة'),
-                                    style: FilledButton.styleFrom(
-                                      backgroundColor: primaryColor,
-                                      padding: const EdgeInsets.symmetric(
-                                        vertical: 12,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -3142,7 +3146,7 @@ class _HomePageScreenState extends State<HomePageScreen>
                               textAlign: TextAlign.right,
                               textDirection: widgets.TextDirection.rtl,
                               style: TextStyle(
-                                color: navy,
+                                color: Colors.white,
                                 fontSize: 23,
                                 fontWeight: FontWeight.w900,
                               ),
@@ -3750,8 +3754,10 @@ class _HomePageScreenState extends State<HomePageScreen>
                     tooltip: 'القائمة',
                     onPressed: () => Scaffold.of(context).openDrawer(),
                     padding: EdgeInsets.zero,
-                    constraints:
-                        const BoxConstraints.tightFor(width: 50, height: 50),
+                    constraints: const BoxConstraints.tightFor(
+                      width: 50,
+                      height: 50,
+                    ),
                     icon: SizedBox(
                       width: 27,
                       height: 25,
@@ -3820,11 +3826,7 @@ class _HomePageScreenState extends State<HomePageScreen>
       icon: Stack(
         clipBehavior: Clip.none,
         children: [
-          Icon(
-            Icons.notifications_none_rounded,
-            size: 25,
-            color: primaryColor,
-          ),
+          Icon(Icons.notifications_none_rounded, size: 25, color: primaryColor),
           if (_unreadCount > 0)
             Positioned(
               top: -3,
@@ -4216,7 +4218,9 @@ class _HomePageScreenState extends State<HomePageScreen>
                                         width: 56,
                                         height: 56,
                                         decoration: BoxDecoration(
-                                          color: secondaryColor.withValues(alpha: 0.16),
+                                          color: secondaryColor.withValues(
+                                            alpha: 0.16,
+                                          ),
                                           shape: BoxShape.circle,
                                           border: Border.all(
                                             color: secondaryColor.withValues(
@@ -4562,50 +4566,50 @@ class _HomePageScreenState extends State<HomePageScreen>
 
   Widget _buildTypingIndicator(Color primaryColor) => Container(
     width: double.infinity,
-      margin: const EdgeInsets.only(bottom: 18),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE9ECF2)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.auto_awesome_rounded, size: 14, color: primaryColor),
-          const SizedBox(width: 8),
-          Text(
-            'سند يكتب الآن',
-            style: TextStyle(
-              fontSize: 12,
-              color: primaryColor,
-              fontWeight: FontWeight.w600,
-            ),
+    margin: const EdgeInsets.only(bottom: 18),
+    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
+    decoration: BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: const Color(0xFFE9ECF2)),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.auto_awesome_rounded, size: 14, color: primaryColor),
+        const SizedBox(width: 8),
+        Text(
+          'سند يكتب الآن',
+          style: TextStyle(
+            fontSize: 12,
+            color: primaryColor,
+            fontWeight: FontWeight.w600,
           ),
-          const SizedBox(width: 9),
-          ...List.generate(3, (index) {
-            return AnimatedBuilder(
-              animation: _sendDotsController,
-              builder: (context, _) {
-                final phase = (_sendDotsController.value + index / 3) % 1;
-                final lift = phase < 0.5 ? phase * 7 : (1 - phase) * 7;
-                return Transform.translate(
-                  offset: Offset(0, -lift),
-                  child: Container(
-                    width: 5,
-                    height: 5,
-                    margin: const EdgeInsets.symmetric(horizontal: 2),
-                    decoration: BoxDecoration(
-                      color: primaryColor.withAlpha(130 + (phase * 100).round()),
-                      shape: BoxShape.circle,
-                    ),
+        ),
+        const SizedBox(width: 9),
+        ...List.generate(3, (index) {
+          return AnimatedBuilder(
+            animation: _sendDotsController,
+            builder: (context, _) {
+              final phase = (_sendDotsController.value + index / 3) % 1;
+              final lift = phase < 0.5 ? phase * 7 : (1 - phase) * 7;
+              return Transform.translate(
+                offset: Offset(0, -lift),
+                child: Container(
+                  width: 5,
+                  height: 5,
+                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                  decoration: BoxDecoration(
+                    color: primaryColor.withAlpha(130 + (phase * 100).round()),
+                    shape: BoxShape.circle,
                   ),
-                );
-              },
-            );
-          }),
-        ],
-      ),
+                ),
+              );
+            },
+          );
+        }),
+      ],
+    ),
   );
 
   Widget _buildAiWelcome(Color primaryColor) {
@@ -4736,9 +4740,10 @@ class _HomePageScreenState extends State<HomePageScreen>
                               _studySuggestionsController.hasClients
                               ? (_studySuggestionsController.page ?? 5000)
                               : 5000.0;
-                          final distance = (currentPage - page)
-                              .abs()
-                              .clamp(0.0, 1.0);
+                          final distance = (currentPage - page).abs().clamp(
+                            0.0,
+                            1.0,
+                          );
                           final scale = (1 - (distance * 0.035)).toDouble();
                           return Transform.scale(scale: scale, child: child);
                         },
@@ -4901,119 +4906,120 @@ class _HomePageScreenState extends State<HomePageScreen>
                               ),
                       ),
                       child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 220),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 7,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(30),
-                      border: Border.all(color: const Color(0xFFE7EAF0)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFF17233F).withAlpha(22),
-                          blurRadius: 22,
-                          offset: const Offset(0, 7),
+                        duration: const Duration(milliseconds: 220),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 7,
                         ),
-                      ],
-                    ),
-                    child: Row(
-                      textDirection: widgets.TextDirection.ltr,
-                      children: [
-                        AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          width: 42,
-                          height: 42,
-                          decoration: BoxDecoration(
-                            color: (_isTyping || canSend)
-                                ? const Color(0xFF1D2433)
-                                : const Color(0xFFD7DAE1),
-                            shape: BoxShape.circle,
-                            boxShadow: canSend
-                                ? [
-                                    BoxShadow(
-                                      color: const Color(
-                                        0xFF1D2433,
-                                      ).withAlpha(35),
-                                      blurRadius: 9,
-                                      offset: const Offset(0, 3),
-                                    ),
-                                  ]
-                                : null,
-                          ),
-                          child: Material(
-                            color: Colors.transparent,
-                            shape: const CircleBorder(),
-                            child: InkWell(
-                              customBorder: const CircleBorder(),
-                              onTap: canSend ? _sendMessage : null,
-                              child: Center(
-                                child: _isTyping
-                                    ? _buildSendingDots()
-                                    : const Icon(
-                                        Icons.arrow_upward_rounded,
-                                        color: Colors.white,
-                                        size: 20,
-                                      ),
-                              ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(30),
+                          border: Border.all(color: const Color(0xFFE7EAF0)),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF17233F).withAlpha(22),
+                              blurRadius: 22,
+                              offset: const Offset(0, 7),
                             ),
-                          ),
+                          ],
                         ),
-                        const SizedBox(width: 5),
-                        Expanded(
-                          child: TextField(
-                            controller: _chatController,
-                            focusNode: _chatFocusNode,
-                            minLines: 1,
-                            maxLines: 4,
-                            keyboardType: TextInputType.multiline,
-                            textInputAction: _chatController.text.trim().isEmpty
-                                ? TextInputAction.done
-                                : TextInputAction.newline,
-                            textDirection: widgets.TextDirection.rtl,
-                            onChanged: (_) => setState(() {}),
-                            onSubmitted: (_) {
-                              if (_chatController.text.trim().isEmpty) {
-                                _chatFocusNode.unfocus();
-                              }
-                            },
-                            decoration: const InputDecoration(
-                              hintText: 'اسأل سند...',
-                              border: InputBorder.none,
-                              contentPadding: EdgeInsets.symmetric(
-                                vertical: 10,
+                        child: Row(
+                          textDirection: widgets.TextDirection.ltr,
+                          children: [
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 180),
+                              width: 42,
+                              height: 42,
+                              decoration: BoxDecoration(
+                                color: (_isTyping || canSend)
+                                    ? const Color(0xFF1D2433)
+                                    : const Color(0xFFD7DAE1),
+                                shape: BoxShape.circle,
+                                boxShadow: canSend
+                                    ? [
+                                        BoxShadow(
+                                          color: const Color(
+                                            0xFF1D2433,
+                                          ).withAlpha(35),
+                                          blurRadius: 9,
+                                          offset: const Offset(0, 3),
+                                        ),
+                                      ]
+                                    : null,
                               ),
-                              hintStyle: TextStyle(
-                                fontSize: 14,
-                                color: Color(0xFF929BAD),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 5),
-                        Tooltip(
-                          message: 'إرفاق صورة',
-                          child: Material(
-                            color: Colors.transparent,
-                            shape: const CircleBorder(),
-                            child: InkWell(
-                              customBorder: const CircleBorder(),
-                              onTap: _isTyping ? null : _pickChatImage,
-                              child: const SizedBox(
-                                width: 42,
-                                height: 42,
-                                child: Icon(
-                                  Icons.add_rounded,
-                                  color: Color(0xFF465064),
-                                  size: 25,
+                              child: Material(
+                                color: Colors.transparent,
+                                shape: const CircleBorder(),
+                                child: InkWell(
+                                  customBorder: const CircleBorder(),
+                                  onTap: canSend ? _sendMessage : null,
+                                  child: Center(
+                                    child: _isTyping
+                                        ? _buildSendingDots()
+                                        : const Icon(
+                                            Icons.arrow_upward_rounded,
+                                            color: Colors.white,
+                                            size: 20,
+                                          ),
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
+                            const SizedBox(width: 5),
+                            Expanded(
+                              child: TextField(
+                                controller: _chatController,
+                                focusNode: _chatFocusNode,
+                                minLines: 1,
+                                maxLines: 4,
+                                keyboardType: TextInputType.multiline,
+                                textInputAction:
+                                    _chatController.text.trim().isEmpty
+                                    ? TextInputAction.done
+                                    : TextInputAction.newline,
+                                textDirection: widgets.TextDirection.rtl,
+                                onChanged: (_) => setState(() {}),
+                                onSubmitted: (_) {
+                                  if (_chatController.text.trim().isEmpty) {
+                                    _chatFocusNode.unfocus();
+                                  }
+                                },
+                                decoration: const InputDecoration(
+                                  hintText: 'اسأل سند...',
+                                  border: InputBorder.none,
+                                  contentPadding: EdgeInsets.symmetric(
+                                    vertical: 10,
+                                  ),
+                                  hintStyle: TextStyle(
+                                    fontSize: 14,
+                                    color: Color(0xFF929BAD),
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                            Tooltip(
+                              message: 'إرفاق صورة',
+                              child: Material(
+                                color: Colors.transparent,
+                                shape: const CircleBorder(),
+                                child: InkWell(
+                                  customBorder: const CircleBorder(),
+                                  onTap: _isTyping ? null : _pickChatImage,
+                                  child: const SizedBox(
+                                    width: 42,
+                                    height: 42,
+                                    child: Icon(
+                                      Icons.add_rounded,
+                                      color: Color(0xFF465064),
+                                      size: 25,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
                       ),
                     ),
                   ),
@@ -5264,7 +5270,7 @@ class _HomePageScreenState extends State<HomePageScreen>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.fromLTRB(8, 4, 8, 8),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -5487,7 +5493,7 @@ class _HomePageScreenState extends State<HomePageScreen>
                   mathStyle: isDisplay ? MathStyle.display : MathStyle.text,
                   textStyle: const TextStyle(
                     color: Colors.black87,
-                      fontSize: 15,
+                    fontSize: 15,
                   ),
                   onErrorFallback: (_) => SelectableText(expression),
                 ),
@@ -5548,7 +5554,11 @@ class _HomePageScreenState extends State<HomePageScreen>
                     color: const Color(0xFFFFF7E4),
                     borderRadius: BorderRadius.circular(15),
                   ),
-                  child: const Icon(Icons.auto_awesome_rounded, color: navy, size: 24),
+                  child: const Icon(
+                    Icons.auto_awesome_rounded,
+                    color: navy,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 14),
                 Expanded(
@@ -6444,219 +6454,284 @@ class _HomePageScreenState extends State<HomePageScreen>
     );
   }
 
-  void _showSubjectDetails(BuildContext context, Map<String, dynamic> subject) {
+  void _showSubjectDetails(
+    BuildContext context,
+    Map<String, dynamic> subject,
+    Offset origin,
+  ) {
     final primaryColor = Theme.of(context).colorScheme.primary;
-    final secondaryColor = Theme.of(context).colorScheme.secondary;
     final List pdfs = subject['pdfs'] as List;
 
-    showModalBottomSheet(
+    showGeneralDialog<void>(
       context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (context) {
-        return Container(
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(30),
-              topRight: Radius.circular(30),
+      barrierDismissible: true,
+      barrierLabel: 'إغلاق نافذة المادة',
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 260),
+      pageBuilder: (context, animation, secondaryAnimation) {
+        final dialogHeight = MediaQuery.sizeOf(context).height * 0.66;
+        return Center(
+          child: SafeArea(
+            child: Material(
+              color: Colors.transparent,
+              child: Container(
+                width: MediaQuery.sizeOf(context).width * 0.9,
+                constraints: const BoxConstraints(maxWidth: 460),
+                height: dialogHeight,
+                padding: const EdgeInsets.fromLTRB(18, 18, 18, 12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFCFCFD),
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                child: Directionality(
+                  textDirection: widgets.TextDirection.ltr,
+                  child: Column(
+                    children: [
+                      Row(
+                        children: [
+                          IconButton(
+                            tooltip: 'إغلاق',
+                            onPressed: () => Navigator.pop(context),
+                            style: IconButton.styleFrom(
+                              backgroundColor: const Color(0xFFF5F6F9),
+                              foregroundColor: primaryColor,
+                            ),
+                            icon: const Icon(Icons.close_rounded, size: 20),
+                          ),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  subject['label']!,
+                                  textAlign: TextAlign.right,
+                                  style: TextStyle(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w900,
+                                    color: primaryColor,
+                                    fontFamily: 'Tajawal',
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                const Text(
+                                  'اختر القسم الذي تريد فتحه',
+                                  textAlign: TextAlign.right,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Color(0xFF858B98),
+                                    fontFamily: 'Tajawal',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 18),
+                      Expanded(
+                        child: ListView(
+                          clipBehavior: Clip.hardEdge,
+                          padding: const EdgeInsets.fromLTRB(10, 8, 10, 12),
+                          children: [
+                            ...pdfs.map((pdf) {
+                              final pdfData = pdf as Map<String, dynamic>;
+                              return _buildBottomSheetItem(
+                                pdfData['title']!.toString(),
+                                Icons.menu_book_rounded,
+                                primaryColor,
+                                onTap: () {
+                                  _adHelper.showRewardedAd(() {
+                                    Navigator.pop(context);
+                                    Navigator.pushNamed(
+                                      context,
+                                      '/pdf_viewer',
+                                      arguments: {
+                                        'title': pdfData['title'],
+                                        'pdfPath': pdfData['path'],
+                                      },
+                                    );
+                                  });
+                                },
+                              );
+                            }),
+                            if (![
+                              'الفيزياء',
+                              'الكيمياء',
+                              'الفرنسية',
+                            ].contains(subject['label']))
+                              _buildBottomSheetItem(
+                                'الاختبارات',
+                                Icons.assignment_turned_in_rounded,
+                                primaryColor,
+                                onTap: () {
+                                  _adHelper.showRewardedAd(() {
+                                    Navigator.pop(context);
+                                    Navigator.pushNamed(
+                                      context,
+                                      '/exams',
+                                      arguments: {
+                                        'subjectName': subject['label'],
+                                        'category': _getCategoryForSubject(
+                                          subject['label'],
+                                        ),
+                                      },
+                                    );
+                                  });
+                                },
+                              ),
+                            if (![
+                              'الفيزياء',
+                              'الكيمياء',
+                              'الفرنسية',
+                            ].contains(subject['label']))
+                              _buildBottomSheetItem(
+                                'الوزاريات',
+                                Icons.account_balance_rounded,
+                                primaryColor,
+                                onTap: () {
+                                  _adHelper.showRewardedAd(() {
+                                    Navigator.pop(context);
+                                    Navigator.pushNamed(
+                                      context,
+                                      '/ministerials',
+                                      arguments: {
+                                        'subjectName': subject['label'],
+                                        'category': _getCategoryForSubject(
+                                          subject['label'],
+                                        ),
+                                      },
+                                    );
+                                  });
+                                },
+                              ),
+                            if (subject['label'] == 'الإسلامية')
+                              _buildBottomSheetItem(
+                                'أحكام التلاوة',
+                                Icons.menu_book_rounded,
+                                primaryColor,
+                                onTap: () {
+                                  _adHelper.showRewardedAd(() {
+                                    Navigator.pop(context);
+                                    Navigator.pushNamed(
+                                      context,
+                                      '/tajweed_rules',
+                                    );
+                                  });
+                                },
+                              ),
+                            if (subject['label'] == 'الإسلامية')
+                              _buildBottomSheetItem(
+                                'سور الحفظ',
+                                Icons.menu_book_outlined,
+                                primaryColor,
+                                onTap: () {
+                                  _adHelper.showRewardedAd(() {
+                                    Navigator.pop(context);
+                                    Navigator.pushNamed(context, '/surahs');
+                                  });
+                                },
+                              ),
+                            if (subject['label'] == 'الإسلامية')
+                              _buildBottomSheetItem(
+                                'الأحاديث النبوية الشريفة',
+                                Icons.menu_book_rounded,
+                                primaryColor,
+                                onTap: () {
+                                  _adHelper.showRewardedAd(() {
+                                    Navigator.pop(context);
+                                    Navigator.pushNamed(context, '/hadiths');
+                                  });
+                                },
+                              ),
+                            if (subject['label'] == 'العربية')
+                              _buildBottomSheetItem(
+                                'قصائد الأدب',
+                                Icons.auto_stories_rounded,
+                                primaryColor,
+                                onTap: () {
+                                  _adHelper.showRewardedAd(() {
+                                    Navigator.pop(context);
+                                    Navigator.pushNamed(context, '/poems');
+                                  });
+                                },
+                              ),
+                            if (subject['label'] == 'الإنكليزي')
+                              _buildBottomSheetItem(
+                                'الإنشاءات',
+                                Icons.edit_note_rounded,
+                                primaryColor,
+                                onTap: () {
+                                  _adHelper.showRewardedAd(() {
+                                    Navigator.pop(context);
+                                    Navigator.pushNamed(context, '/essays');
+                                  });
+                                },
+                              ),
+                            if (subject['label'] == 'الإنكليزي')
+                              _buildBottomSheetItem(
+                                'قطع الكتاب',
+                                Icons.book_rounded,
+                                primaryColor,
+                                onTap: () {
+                                  _adHelper.showRewardedAd(() {
+                                    Navigator.pop(context);
+                                    Navigator.pushNamed(
+                                      context,
+                                      '/book_passages',
+                                    );
+                                  });
+                                },
+                              ),
+                            if (subject['label'] == 'الأحياء')
+                              _buildBottomSheetItem(
+                                'الرسومات',
+                                Icons.palette_rounded,
+                                primaryColor,
+                                onTap: () {
+                                  _adHelper.showRewardedAd(() {
+                                    Navigator.pop(context);
+                                    Navigator.pushNamed(
+                                      context,
+                                      '/biology_diagrams',
+                                    );
+                                  });
+                                },
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 50,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              const SizedBox(height: 25),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    subject['label']!,
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: primaryColor,
-                    ),
-                  ),
-                  Icon(
-                    subject['icon'] as IconData,
-                    size: 40,
-                    color: secondaryColor,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 30),
-              // عرض الكتب (سواء كتاب واحد أو أجزاء)
-              ...pdfs.map((pdf) {
-                final pdfData = pdf as Map<String, dynamic>;
-                return _buildBottomSheetItem(
-                  pdfData['title']!.toString(),
-                  Icons.menu_book_rounded,
-                  primaryColor,
-                  onTap: () {
-                    _adHelper.showRewardedAd(() {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(
-                        context,
-                        '/pdf_viewer',
-                        arguments: {
-                          'title': pdfData['title'],
-                          'pdfPath': pdfData['path'],
-                        },
-                      );
-                    });
-                  },
-                );
-              }),
-              // زر الاختبارات (مخفي لمواد معينة)
-              if (![
-                'الفيزياء',
-                'الكيمياء',
-                'الفرنسية',
-              ].contains(subject['label']))
-                _buildBottomSheetItem(
-                  "الاختبارات",
-                  Icons.assignment_turned_in_rounded,
-                  primaryColor,
-                  onTap: () {
-                    _adHelper.showRewardedAd(() {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(
-                        context,
-                        '/exams',
-                        arguments: {
-                          'subjectName': subject['label'],
-                          'category': _getCategoryForSubject(subject['label']),
-                        },
-                      );
-                    });
-                  },
-                ),
-              // زر الوزاريات (مخفي لمواد معينة)
-              if (![
-                'الفيزياء',
-                'الكيمياء',
-                'الفرنسية',
-              ].contains(subject['label']))
-                _buildBottomSheetItem(
-                  "الوزاريات",
-                  Icons.account_balance_rounded,
-                  primaryColor,
-                  onTap: () {
-                    _adHelper.showRewardedAd(() {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(
-                        context,
-                        '/ministerials',
-                        arguments: {
-                          'subjectName': subject['label'],
-                          'category': _getCategoryForSubject(subject['label']),
-                        },
-                      );
-                    });
-                  },
-                ),
-              // قسم أحكام التلاوة (فقط لمادة الإسلامية)
-              if (subject['label'] == 'الإسلامية')
-                _buildBottomSheetItem(
-                  "أحكام التلاوة",
-                  Icons.menu_book_rounded,
-                  primaryColor,
-                  onTap: () {
-                    _adHelper.showRewardedAd(() {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/tajweed_rules');
-                    });
-                  },
-                ),
-              // قسم سور الحفظ (فقط لمادة الإسلامية)
-              if (subject['label'] == 'الإسلامية')
-                _buildBottomSheetItem(
-                  "سور الحفظ",
-                  Icons.menu_book_outlined,
-                  primaryColor,
-                  onTap: () {
-                    _adHelper.showRewardedAd(() {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/surahs');
-                    });
-                  },
-                ),
-              // قسم الأحاديث النبوية الشريفة (فقط لمادة الإسلامية)
-              if (subject['label'] == 'الإسلامية')
-                _buildBottomSheetItem(
-                  "الأحاديث النبوية الشريفة",
-                  Icons.menu_book_rounded,
-                  primaryColor,
-                  onTap: () {
-                    _adHelper.showRewardedAd(() {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/hadiths');
-                    });
-                  },
-                ),
-              // قسم قصائد الأدب (فقط لمادة العربية)
-              if (subject['label'] == 'العربية')
-                _buildBottomSheetItem(
-                  "قصائد الأدب",
-                  Icons.auto_stories_rounded,
-                  primaryColor,
-                  onTap: () {
-                    _adHelper.showRewardedAd(() {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/poems');
-                    });
-                  },
-                ),
-              // قسم الإنشاءات (فقط لمادة الإنكليزي)
-              if (subject['label'] == 'الإنكليزي')
-                _buildBottomSheetItem(
-                  "الإنشاءات",
-                  Icons.edit_note_rounded,
-                  primaryColor,
-                  onTap: () {
-                    _adHelper.showRewardedAd(() {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/essays');
-                    });
-                  },
-                ),
-              // قسم قطع الكتاب (فقط لمادة الإنكليزي)
-              if (subject['label'] == 'الإنكليزي')
-                _buildBottomSheetItem(
-                  "قطع الكتاب",
-                  Icons.book_rounded,
-                  primaryColor,
-                  onTap: () {
-                    _adHelper.showRewardedAd(() {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/book_passages');
-                    });
-                  },
-                ),
-              // قسم الرسومات (فقط لمادة الأحياء)
-              if (subject['label'] == 'الأحياء')
-                _buildBottomSheetItem(
-                  "الرسومات",
-                  Icons.palette_rounded,
-                  primaryColor,
-                  onTap: () {
-                    _adHelper.showRewardedAd(() {
-                      Navigator.pop(context);
-                      Navigator.pushNamed(context, '/biology_diagrams');
-                    });
-                  },
-                ),
-              const SizedBox(height: 20),
-            ],
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        final screenSize = MediaQuery.sizeOf(context);
+        final safePadding = MediaQuery.paddingOf(context);
+        final dialogWidth = (screenSize.width * 0.9).clamp(0.0, 460.0);
+        final dialogHeight = screenSize.height * 0.66;
+        final dialogCenterY =
+            safePadding.top +
+            (screenSize.height - safePadding.top - safePadding.bottom) / 2;
+        final alignment = Alignment(
+          (origin.dx - screenSize.width / 2) / (dialogWidth / 2),
+          (origin.dy - dialogCenterY) / (dialogHeight / 2),
+        );
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+        return FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+            alignment: alignment,
+            scale: Tween<double>(begin: 0, end: 1).animate(curved),
+            child: child,
           ),
         );
       },
@@ -6669,31 +6744,77 @@ class _HomePageScreenState extends State<HomePageScreen>
     Color color, {
     VoidCallback? onTap,
   }) {
+    const navy = Color(0xFF1A2238);
+    const gold = Color(0xFFF2B833);
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 15),
+      margin: const EdgeInsets.fromLTRB(4, 4, 4, 10),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.grey[100]!),
-      ),
-      child: ListTile(
-        onTap: onTap ?? () => Navigator.pop(context),
-        leading: CircleAvatar(
-          backgroundColor: color.withAlpha(20),
-          child: Icon(icon, color: color, size: 24),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: color.withAlpha(200),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(28),
+            blurRadius: 8,
+            spreadRadius: 0,
+            offset: Offset.zero,
           ),
-        ),
-        trailing: Icon(
-          Icons.arrow_forward_ios_rounded,
-          size: 16,
-          color: Theme.of(context).colorScheme.secondary,
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(18),
+        child: InkWell(
+          onTap: onTap ?? () => Navigator.pop(context),
+          borderRadius: BorderRadius.circular(18),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 15, 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF7E4),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(icon, color: gold, size: 22),
+                ),
+                const SizedBox(width: 13),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        title,
+                        textAlign: TextAlign.right,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: color,
+                          fontFamily: 'Tajawal',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      const Text(
+                        'اضغط لفتح القسم',
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                          color: Color(0xFF858B98),
+                          fontFamily: 'Tajawal',
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
@@ -6822,9 +6943,11 @@ class _HomePageScreenState extends State<HomePageScreen>
 
   Widget _buildLeaderList(Color primaryColor, String? currentUserId) {
     final usersAfterPodium = _leaderboardUsers.skip(3).toList();
-    final currentUserIsInTop50 = currentUserId != null &&
+    final currentUserIsInTop50 =
+        currentUserId != null &&
         _leaderboardUsers.any((user) => user['id'] == currentUserId);
-    final showCurrentUserSeparately = !currentUserIsInTop50 &&
+    final showCurrentUserSeparately =
+        !currentUserIsInTop50 &&
         _currentUserLeaderboardData != null &&
         _currentUserLeaderboardRank != null;
 
@@ -6945,8 +7068,7 @@ class _HomePageScreenState extends State<HomePageScreen>
     final name = user['full_name']?.toString() ?? 'طالب';
     final stage = user['stage']?.toString();
     final imageUrl = user['profile_image']?.toString();
-    final studyTime =
-        int.tryParse('${user['weekly_study_time'] ?? 0}') ?? 0;
+    final studyTime = int.tryParse('${user['weekly_study_time'] ?? 0}') ?? 0;
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -6954,10 +7076,7 @@ class _HomePageScreenState extends State<HomePageScreen>
       decoration: BoxDecoration(
         color: isCurrentUser ? navy : Colors.white,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: const Color(0xFFE9ECF2),
-          width: 1,
-        ),
+        border: Border.all(color: const Color(0xFFE9ECF2), width: 1),
         boxShadow: [
           BoxShadow(
             color: navy.withAlpha(isCurrentUser ? 28 : 12),
@@ -7094,7 +7213,11 @@ class _HomePageScreenState extends State<HomePageScreen>
                       child: Icon(icon, color: gold, size: 26),
                     ),
                     const Spacer(),
-                    Icon(Icons.arrow_outward_rounded, color: Colors.white.withAlpha(150), size: 19),
+                    Icon(
+                      Icons.arrow_outward_rounded,
+                      color: Colors.white.withAlpha(150),
+                      size: 19,
+                    ),
                   ],
                 ),
                 const Spacer(),
@@ -7125,7 +7248,10 @@ class _HomePageScreenState extends State<HomePageScreen>
                 Align(
                   alignment: Alignment.centerRight,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
                       color: gold,
                       borderRadius: BorderRadius.circular(20),
@@ -7188,6 +7314,7 @@ class _HomePageScreenState extends State<HomePageScreen>
     const gold = Color(0xFFF2B833);
     final sectionCount = _getSectionsCount(subject);
     final label = subject['label']?.toString() ?? '';
+    Offset? tapOrigin;
 
     return Container(
       height: height,
@@ -7208,7 +7335,12 @@ class _HomePageScreenState extends State<HomePageScreen>
         borderRadius: BorderRadius.circular(24),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
-          onTap: () => _showSubjectDetails(context, subject),
+          onTapDown: (details) => tapOrigin = details.globalPosition,
+          onTap: () => _showSubjectDetails(
+            context,
+            subject,
+            tapOrigin ?? MediaQuery.sizeOf(context).center(Offset.zero),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
