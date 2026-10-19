@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/rendering.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../core/constants/app_assets.dart';
@@ -17,6 +18,8 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   static const _supportEmail = 'admin@co-pure.com';
+  static const _supportWhatsAppUrl = 'https://wa.me/9647874371446';
+  static const _supportTelegramUrl = 'https://t.me/+9647874371446';
 
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
@@ -440,25 +443,285 @@ class _RegisterScreenState extends State<RegisterScreen> {
     ],
   );
 
-  Widget _supportLink() => TextButton.icon(
-    onPressed: () async {
-      final uri = Uri(scheme: 'mailto', path: _supportEmail);
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri);
-      } else if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('تعذر فتح تطبيق البريد الإلكتروني.')),
+  Widget _supportOptions() {
+    Offset? tapOrigin;
+    return Align(
+      alignment: Alignment.center,
+      child: Builder(
+        builder: (supportContext) => Material(
+          color: Colors.transparent,
+          borderRadius: BorderRadius.circular(16),
+          child: InkWell(
+            onTapDown: (details) => tapOrigin = details.globalPosition,
+            onTap: () => _showSupportDialog(
+              tapOrigin ??
+                  MediaQuery.sizeOf(supportContext).center(Offset.zero),
+            ),
+            borderRadius: BorderRadius.circular(16),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF2F4F7),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: const Color(0xFFE5E8EE)),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF1A2238).withAlpha(10),
+                    blurRadius: 6,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'دعم:',
+                    style: TextStyle(
+                      color: Color(0xFF4B5563),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      fontFamily: 'Tajawal',
+                    ),
+                  ),
+                  const SizedBox(width: 9),
+                  const Icon(
+                    Icons.email_rounded,
+                    color: Color(0xFF555D69),
+                    size: 19,
+                  ),
+                  const SizedBox(width: 12),
+                  SvgPicture.asset(
+                    'assets/icons/social/whatsapp.svg',
+                    width: 20,
+                    height: 20,
+                    colorFilter: const ColorFilter.mode(
+                      Color(0xFF555D69),
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  SvgPicture.asset(
+                    'assets/icons/social/telegram.svg',
+                    width: 20,
+                    height: 20,
+                    colorFilter: const ColorFilter.mode(
+                      Color(0xFF555D69),
+                      BlendMode.srcIn,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showSupportDialog(Offset origin) {
+    showGeneralDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'إغلاق نافذة الدعم',
+      barrierColor: Colors.black45,
+      transitionDuration: const Duration(milliseconds: 280),
+      pageBuilder: (dialogContext, animation, secondaryAnimation) => Center(
+        child: SafeArea(
+          child: Dialog(
+            backgroundColor: Colors.white,
+            insetPadding: const EdgeInsets.symmetric(horizontal: 28),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 360),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      children: [
+                        const Expanded(
+                          child: Text(
+                            'اختر وسيلة التواصل',
+                            textAlign: TextAlign.right,
+                            style: TextStyle(
+                              color: Color(0xFF1A2238),
+                              fontFamily: 'Tajawal',
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'إغلاق',
+                          onPressed: () => Navigator.pop(dialogContext),
+                          icon: const Icon(Icons.close_rounded),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    _supportChoice(
+                      dialogContext,
+                      icon: const Icon(
+                        Icons.email_rounded,
+                        color: Color(0xFF1A2238),
+                        size: 22,
+                      ),
+                      title: 'البريد الإلكتروني',
+                      destination: Uri(scheme: 'mailto', path: _supportEmail),
+                    ),
+                    _supportChoice(
+                      dialogContext,
+                      icon: SvgPicture.asset(
+                        'assets/icons/social/whatsapp.svg',
+                        width: 22,
+                        height: 22,
+                      ),
+                      title: 'واتساب',
+                      destination: Uri.parse(_supportWhatsAppUrl),
+                    ),
+                    _supportChoice(
+                      dialogContext,
+                      icon: SvgPicture.asset(
+                        'assets/icons/social/telegram.svg',
+                        width: 22,
+                        height: 22,
+                      ),
+                      title: 'تليغرام',
+                      destination: Uri(
+                        scheme: 'tg',
+                        host: 'resolve',
+                        queryParameters: const {'phone': '9647874371446'},
+                      ),
+                      fallback: Uri.parse(_supportTelegramUrl),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+      transitionBuilder: (dialogContext, animation, secondaryAnimation, child) {
+        final screenSize = MediaQuery.sizeOf(dialogContext);
+        final safePadding = MediaQuery.paddingOf(dialogContext);
+        final centerY =
+            safePadding.top +
+            (screenSize.height - safePadding.top - safePadding.bottom) / 2;
+        final alignment = Alignment(
+          (origin.dx - screenSize.width / 2) / (screenSize.width * 0.36),
+          (origin.dy - centerY) / (screenSize.height * 0.18),
         );
-      }
-    },
-    icon: const Icon(Icons.support_agent_rounded, size: 19),
-    label: const Text('دعم'),
-    style: TextButton.styleFrom(
-      foregroundColor: const Color(0xFF1A2238),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+        return FadeTransition(
+          opacity: animation,
+          child: ScaleTransition(
+            alignment: alignment,
+            scale: Tween<double>(begin: 0, end: 1).animate(curved),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _supportChoice(
+    BuildContext dialogContext, {
+    required Widget icon,
+    required String title,
+    required Uri destination,
+    Uri? fallback,
+  }) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Material(
+      color: const Color(0xFFF7F8FA),
+      borderRadius: BorderRadius.circular(15),
+      child: InkWell(
+        onTap: () {
+          Navigator.pop(dialogContext);
+          _openSupportDestination(destination, fallback: fallback);
+        },
+        borderRadius: BorderRadius.circular(15),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              SizedBox(width: 28, height: 28, child: Center(child: icon)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: Text(
+                    title,
+                    textAlign: TextAlign.right,
+                    style: const TextStyle(
+                      color: Color(0xFF1A2238),
+                      fontFamily: 'Tajawal',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                color: Color(0xFF9AA1AE),
+                size: 15,
+              ),
+            ],
+          ),
+        ),
+      ),
     ),
   );
+
+  Future<void> _openSupportDestination(Uri destination, {Uri? fallback}) async {
+    try {
+      var opened = await launchUrl(
+        destination,
+        mode: LaunchMode.externalApplication,
+      );
+      if (!opened && fallback != null) {
+        opened = await launchUrl(
+          fallback,
+          mode: LaunchMode.externalApplication,
+        );
+      }
+      if (!opened && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تعذر فتح وسيلة التواصل.')),
+        );
+      }
+    } catch (_) {
+      if (fallback != null) {
+        try {
+          final opened = await launchUrl(
+            fallback,
+            mode: LaunchMode.externalApplication,
+          );
+          if (!opened && mounted) _showSupportLaunchError();
+          return;
+        } catch (_) {
+          // Show the common launch error below.
+        }
+      }
+      if (mounted) _showSupportLaunchError();
+    }
+  }
+
+  void _showSupportLaunchError() {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('تعذر فتح وسيلة التواصل.')));
+  }
 
   Widget _stagePicker() => FormField<String>(
     initialValue: _stage,
@@ -1111,7 +1374,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 _legalLinks(),
                               if (!_completeProfile &&
                                   _verificationEmail == null)
-                                _supportLink(),
+                                _supportOptions(),
                             ],
                           ),
                         ),
