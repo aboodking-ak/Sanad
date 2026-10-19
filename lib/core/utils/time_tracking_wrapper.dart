@@ -10,7 +10,8 @@ class TimeTrackingWrapper extends StatefulWidget {
   State<TimeTrackingWrapper> createState() => _TimeTrackingWrapperState();
 }
 
-class _TimeTrackingWrapperState extends State<TimeTrackingWrapper> with WidgetsBindingObserver {
+class _TimeTrackingWrapperState extends State<TimeTrackingWrapper>
+    with WidgetsBindingObserver {
   final StudyTimerService _timerService = StudyTimerService();
 
   @override
@@ -23,21 +24,21 @@ class _TimeTrackingWrapperState extends State<TimeTrackingWrapper> with WidgetsB
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _timerService.syncTime();
+    _timerService.stopTimer();
     super.dispose();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive || state == AppLifecycleState.detached) {
-      // إيقاف العد فوراً وحفظ الوقت الحالي في السيرفر
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
       _timerService.stopTimer();
-      _timerService.syncTime();
-      debugPrint("Study Timer: Paused (App in background)");
+      debugPrint('Study Timer: Paused (${state.name})');
     } else if (state == AppLifecycleState.resumed) {
-      // إعادة تشغيل العد بمجرد عودة المستخدم
       _timerService.startTimer();
-      debugPrint("Study Timer: Resumed (App in foreground)");
+      debugPrint('Study Timer: Resumed (App in foreground)');
     }
   }
 

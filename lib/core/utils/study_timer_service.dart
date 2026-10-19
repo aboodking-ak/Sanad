@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -8,57 +9,84 @@ class StudyTimerService {
   StudyTimerService._internal();
 
   DateTime? _entryTime;
-  bool _isUpdating = false;
   Timer? _periodicTimer;
+  Future<void>? _syncing;
+  int _pendingSeconds = 0;
+  bool _isTracking = false;
 
   void startTimer() {
+    if (_isTracking) return;
+
+    _isTracking = true;
     _entryTime = DateTime.now();
-    debugPrint("StudyTimerService: Timer Started at $_entryTime");
-    
-    // بدء مزامنة تلقائية كل 60 ثانية لضمان رفع الوقت أولاً بأول
     _periodicTimer?.cancel();
-    _periodicTimer = Timer.periodic(const Duration(seconds: 60), (timer) {
-      syncTime();
+    _periodicTimer = Timer.periodic(const Duration(seconds: 60), (_) {
+      _captureElapsedTime();
+      unawaited(_flushPendingTime());
     });
+    unawaited(_flushPendingTime());
   }
 
   void stopTimer() {
+    if (!_isTracking) return;
+
+    _isTracking = false;
     _periodicTimer?.cancel();
-    syncTime(); // مزامنة أخيرة عند التوقف
+    _periodicTimer = null;
+    _captureElapsedTime();
+    unawaited(_flushPendingTime());
   }
 
   Future<void> syncTime() async {
-    if (_entryTime == null || _isUpdating) return;
-    
-    final now = DateTime.now();
-    final secondsSpent = now.difference(_entryTime!).inSeconds;
-    
-    if (secondsSpent <= 0) return;
+    if (_isTracking) _captureElapsedTime();
+    await _flushPendingTime();
+  }
 
-    _isUpdating = true;
-    _entryTime = now; // Reset entry time immediately to avoid double counting
+  void _captureElapsedTime() {
+    final startedAt = _entryTime;
+    if (startedAt == null) return;
+
+    final now = DateTime.now();
+    _entryTime = _isTracking ? now : null;
+    final elapsedSeconds = now.difference(startedAt).inSeconds;
+    if (elapsedSeconds > 0) _pendingSeconds += elapsedSeconds;
+  }
+
+  Future<void> _flushPendingTime() async {
+    final activeSync = _syncing;
+    if (activeSync != null) {
+      await activeSync;
+      return;
+    }
+    if (_pendingSeconds <= 0) return;
 
     final user = Supabase.instance.client.auth.currentUser;
-    if (user != null) {
-      try {
-        debugPrint("StudyTimerService: Syncing +$secondsSpent seconds for user ${user.id}");
-        
-        // استخدام RPC لضمان عملية إضافة ذرية (Atomic) ومنع التضارب
-        await Supabase.instance.client.rpc('increment_study_time', params: {
-          'user_id': user.id,
-          'seconds_to_add': secondsSpent,
-        });
-        
-        debugPrint("StudyTimerService: Sync Successful");
-      } catch (e) {
-        debugPrint("StudyTimerService: Error syncing time: $e");
-        // في حال الخطأ، نعيد الثواني لوقت الدخول للمحاولة لاحقاً
-        _entryTime = now.subtract(Duration(seconds: secondsSpent));
-      } finally {
-        _isUpdating = false;
-      }
-    } else {
-      _isUpdating = false;
+    if (user == null) return;
+
+    final secondsToAdd = _pendingSeconds;
+    _pendingSeconds = 0;
+    final sync = _sendTime(user.id, secondsToAdd);
+    _syncing = sync;
+    final synced = await sync;
+    _syncing = null;
+
+    // Include any time captured while the previous request was in flight.
+    if (synced && _pendingSeconds > 0) await _flushPendingTime();
+  }
+
+  Future<bool> _sendTime(String userId, int secondsToAdd) async {
+    try {
+      await Supabase.instance.client.rpc(
+        'increment_study_time',
+        params: {'user_id': userId, 'seconds_to_add': secondsToAdd},
+      );
+      debugPrint('StudyTimerService: Synced $secondsToAdd seconds');
+      return true;
+    } catch (error) {
+      // Keep failed time for the next foreground sync attempt.
+      _pendingSeconds += secondsToAdd;
+      debugPrint('StudyTimerService: Error syncing time: $error');
+      return false;
     }
   }
 }
