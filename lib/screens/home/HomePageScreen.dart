@@ -5544,7 +5544,7 @@ class _HomePageScreenState extends State<HomePageScreen>
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: const EdgeInsets.fromLTRB(2, 4, 2, 16),
+            padding: const EdgeInsets.only(bottom: 18),
             child: Row(
               children: [
                 Container(
@@ -5561,11 +5561,11 @@ class _HomePageScreenState extends State<HomePageScreen>
                   ),
                 ),
                 const SizedBox(width: 14),
-                Expanded(
+                const Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'الأدوات التعليمية',
                         textAlign: TextAlign.right,
                         style: TextStyle(
@@ -5575,8 +5575,8 @@ class _HomePageScreenState extends State<HomePageScreen>
                           fontWeight: FontWeight.w900,
                         ),
                       ),
-                      const SizedBox(height: 3),
-                      const Text(
+                      SizedBox(height: 3),
+                      Text(
                         'اختر الأداة التي تساعدك اليوم',
                         textAlign: TextAlign.right,
                         style: TextStyle(
