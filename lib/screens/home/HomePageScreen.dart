@@ -3139,14 +3139,14 @@ class _HomePageScreenState extends State<HomePageScreen>
                       child: Align(
                         alignment: Alignment.centerRight,
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               'سند',
                               textAlign: TextAlign.right,
                               textDirection: widgets.TextDirection.rtl,
                               style: TextStyle(
-                                color: Colors.white,
+                                color: navy,
                                 fontSize: 23,
                                 fontWeight: FontWeight.w900,
                               ),
@@ -3227,10 +3227,12 @@ class _HomePageScreenState extends State<HomePageScreen>
                         const SizedBox(width: 12),
                         const Expanded(
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 'سند بلس',
+                                textAlign: TextAlign.right,
+                                textDirection: widgets.TextDirection.rtl,
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 15,
@@ -3240,6 +3242,8 @@ class _HomePageScreenState extends State<HomePageScreen>
                               SizedBox(height: 3),
                               Text(
                                 'اكتشف مزايا الاشتراك',
+                                textAlign: TextAlign.right,
+                                textDirection: widgets.TextDirection.rtl,
                                 style: TextStyle(
                                   color: Colors.white70,
                                   fontSize: 11,
