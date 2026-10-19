@@ -1112,16 +1112,12 @@ class _RegisterScreenState extends State<RegisterScreen>
                                       stops: [0, 0.35, 1],
                                     ),
                                     borderRadius: BorderRadius.circular(24),
-                                    border: Border.all(
-                                      color: const Color(0xFFE5DDCA),
-                                    ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: const Color(
-                                          0xFF1A2238,
-                                        ).withValues(alpha: 0.07),
-                                        blurRadius: 24,
-                                        offset: const Offset(0, 10),
+                                        color: Colors.black.withAlpha(38),
+                                        blurRadius: 10,
+                                        spreadRadius: 1,
+                                        offset: const Offset(0, 2),
                                       ),
                                     ],
                                   ),
