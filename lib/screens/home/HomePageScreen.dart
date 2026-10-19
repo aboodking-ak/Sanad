@@ -4046,7 +4046,7 @@ class _HomePageScreenState extends State<HomePageScreen>
     ];
 
     return Padding(
-      padding: const EdgeInsets.only(top: 4, bottom: 14),
+      padding: const EdgeInsets.only(top: 4, bottom: 30),
       child: Column(
         children: [
           Padding(
