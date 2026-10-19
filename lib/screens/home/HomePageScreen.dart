@@ -2653,6 +2653,10 @@ class _HomePageScreenState extends State<HomePageScreen>
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
+        if (_tabController.index != 0) {
+          _tabController.animateTo(0);
+          return;
+        }
         final shouldPop = await _showExitDialog();
         if (shouldPop && context.mounted) {
           SystemNavigator.pop();
