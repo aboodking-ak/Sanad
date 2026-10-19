@@ -16,7 +16,8 @@ class RegisterScreen extends StatefulWidget {
   State<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends State<RegisterScreen> {
+class _RegisterScreenState extends State<RegisterScreen>
+    with SingleTickerProviderStateMixin {
   static const _supportEmail = 'admin@co-pure.com';
   static const _supportWhatsAppUrl = 'https://wa.me/9647874371446';
   static const _supportTelegramUrl = 'https://t.me/+9647874371446';
@@ -28,6 +29,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _confirmPasswordController = TextEditingController();
   final _authService = AuthService();
   late bool _isLogin;
+  late final AnimationController _modeAnimationController;
+  double _modeSlideDirection = -1;
+  bool _isModeTransitioning = false;
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmation = true;
@@ -42,6 +46,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void initState() {
     super.initState();
+    _modeAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 160),
+    );
     _isLogin = widget.initialIsLogin;
     final user = _authService.currentUser;
     if (user != null &&
@@ -54,6 +62,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   void dispose() {
     _resendTimer?.cancel();
+    _modeAnimationController.dispose();
     _nameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
@@ -101,9 +110,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return 'تعذر إتمام العملية. تحقق من اتصالك وحاول مجدداً.';
   }
 
-  void _toggleMode() {
-    if (_isLoading) return;
+  Future<void> _toggleMode() async {
+    if (_isLoading || _isModeTransitioning) return;
     FocusScope.of(context).unfocus();
+    _modeSlideDirection = _isLogin ? -1 : 1;
+    setState(() => _isModeTransitioning = true);
+    await _modeAnimationController.animateTo(1, curve: Curves.easeInOut);
+    if (!mounted) return;
     setState(() {
       _isLogin = !_isLogin;
       _error = null;
@@ -112,6 +125,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       _confirmPasswordController.clear();
     });
     _formKey.currentState?.reset();
+    await _modeAnimationController.animateBack(0, curve: Curves.easeInOut);
+    if (mounted) setState(() => _isModeTransitioning = false);
   }
 
   void _startCooldown() {
@@ -1026,359 +1041,381 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: SizedBox(
                     width: constraints.maxWidth,
                     height: keyboardOpen ? null : constraints.maxHeight,
-                    child: _FullWidthAuthFit(
-                      preserveScale: keyboardOpen,
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 22,
-                            vertical: 12,
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              ...[
-                                const Text(
-                                  'سند',
-                                  textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                    color: Color(0xFF1A2238),
-                                    fontSize: 32,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                if (_verificationEmail == null) ...[
-                                  Text(
-                                    _completeProfile
-                                        ? 'لنجهّز موادك الدراسية'
-                                        : _isLogin
-                                        ? 'مرحباً بعودتك'
-                                        : 'ابدأ رحلتك مع سند',
-                                    style: const TextStyle(
+                    child: AnimatedBuilder(
+                      animation: _modeAnimationController,
+                      child: _FullWidthAuthFit(
+                        preserveScale: keyboardOpen,
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 22,
+                              vertical: 12,
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                ...[
+                                  const Text(
+                                    'سند',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
                                       color: Color(0xFF1A2238),
-                                      fontSize: 23,
+                                      fontSize: 32,
                                       fontWeight: FontWeight.w900,
                                     ),
-                                    textAlign: TextAlign.center,
                                   ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    _completeProfile
-                                        ? 'حدد فرعك مرة واحدة لتظهر لك المواد المناسبة.'
-                                        : _isLogin
-                                        ? 'سجّل الدخول وتابع رحلتك نحو التفوق.'
-                                        : 'حساب واحد يجمع دراستك ومراجعتك وتنظيم وقتك.',
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                      color: Color(0xFF64748B),
-                                      height: 1.6,
-                                      fontSize: 14,
+                                  const SizedBox(height: 10),
+                                  if (_verificationEmail == null) ...[
+                                    Text(
+                                      _completeProfile
+                                          ? 'لنجهّز موادك الدراسية'
+                                          : _isLogin
+                                          ? 'مرحباً بعودتك'
+                                          : 'ابدأ رحلتك مع سند',
+                                      style: const TextStyle(
+                                        color: Color(0xFF1A2238),
+                                        fontSize: 23,
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                      textAlign: TextAlign.center,
                                     ),
-                                  ),
-                                ],
-                                const SizedBox(height: 14),
-                              ],
-                              Container(
-                                padding: const EdgeInsets.all(16),
-                                decoration: BoxDecoration(
-                                  gradient: const LinearGradient(
-                                    begin: Alignment.topRight,
-                                    end: Alignment.bottomLeft,
-                                    colors: [
-                                      Color(0xFFFFFCF4),
-                                      Colors.white,
-                                      Colors.white,
-                                    ],
-                                    stops: [0, 0.35, 1],
-                                  ),
-                                  borderRadius: BorderRadius.circular(24),
-                                  border: Border.all(
-                                    color: const Color(0xFFE5DDCA),
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(
-                                        0xFF1A2238,
-                                      ).withValues(alpha: 0.07),
-                                      blurRadius: 24,
-                                      offset: const Offset(0, 10),
+                                    const SizedBox(height: 8),
+                                    Text(
+                                      _completeProfile
+                                          ? 'حدد فرعك مرة واحدة لتظهر لك المواد المناسبة.'
+                                          : _isLogin
+                                          ? 'سجّل الدخول وتابع رحلتك نحو التفوق.'
+                                          : 'حساب واحد يجمع دراستك ومراجعتك وتنظيم وقتك.',
+                                      textAlign: TextAlign.center,
+                                      style: const TextStyle(
+                                        color: Color(0xFF64748B),
+                                        height: 1.6,
+                                        fontSize: 14,
+                                      ),
                                     ),
                                   ],
-                                ),
-                                child: _verificationEmail != null
-                                    ? _verificationContent()
-                                    : AutofillGroup(
-                                        child: Form(
-                                          key: _formKey,
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.stretch,
-                                            children: [
-                                              if (!_completeProfile) ...[
-                                                SizedBox(
-                                                  height: 48,
-                                                  child: OutlinedButton.icon(
-                                                    onPressed: _isLoading
-                                                        ? null
-                                                        : _signInWithGoogle,
-                                                    icon: Image.asset(
-                                                      AppAssets.google,
-                                                      width: 22,
-                                                    ),
-                                                    label: const Text(
-                                                      'المتابعة باستخدام Google',
-                                                      style: TextStyle(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
-                                                    ),
-                                                    style: OutlinedButton.styleFrom(
-                                                      backgroundColor:
-                                                          Colors.white,
-                                                      foregroundColor:
-                                                          const Color(
-                                                            0xFF1A2238,
-                                                          ),
-                                                      side: const BorderSide(
-                                                        color: Color(
-                                                          0xFFD9D2C3,
-                                                        ),
-                                                      ),
-                                                      shape: RoundedRectangleBorder(
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                              14,
-                                                            ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                                const SizedBox(height: 12),
-                                                const Row(
-                                                  children: [
-                                                    Expanded(child: Divider()),
-                                                    Padding(
-                                                      padding:
-                                                          EdgeInsets.symmetric(
-                                                            horizontal: 12,
-                                                          ),
-                                                      child: Text(
-                                                        'أو باستخدام البريد الإلكتروني',
-                                                        style: TextStyle(
-                                                          fontSize: 11,
-                                                          color: Color(
-                                                            0xFF7A8495,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                    Expanded(child: Divider()),
-                                                  ],
-                                                ),
-                                                const SizedBox(height: 12),
-                                                if (!_isLogin)
-                                                  _field(
-                                                    _nameController,
-                                                    'الاسم الكامل',
-                                                    Icons
-                                                        .person_outline_rounded,
-                                                    validator: (v) =>
-                                                        (v?.trim().isEmpty ??
-                                                            true)
-                                                        ? 'يرجى إدخال الاسم الكامل'
-                                                        : null,
-                                                  ),
-                                                _field(
-                                                  _emailController,
-                                                  'البريد الإلكتروني',
-                                                  Icons.mail_outline_rounded,
-                                                  email: true,
-                                                  validator: _validateEmail,
-                                                ),
-                                                _field(
-                                                  _passwordController,
-                                                  'كلمة المرور',
-                                                  Icons.lock_outline_rounded,
-                                                  password: true,
-                                                  validator: (v) =>
-                                                      (v?.isEmpty ?? true)
-                                                      ? 'يرجى إدخال كلمة المرور'
-                                                      : !_isLogin &&
-                                                            v!.length < 6
-                                                      ? 'استخدم 6 أحرف على الأقل'
-                                                      : null,
-                                                ),
-                                                if (!_isLogin)
-                                                  _field(
-                                                    _confirmPasswordController,
-                                                    'تأكيد كلمة المرور',
-                                                    Icons.lock_outline_rounded,
-                                                    password: true,
-                                                    confirmation: true,
-                                                    validator: (v) =>
-                                                        v !=
-                                                            _passwordController
-                                                                .text
-                                                        ? 'كلمتا المرور غير متطابقتين'
-                                                        : null,
-                                                  ),
-                                                if (_isLogin)
-                                                  Align(
-                                                    alignment:
-                                                        AlignmentDirectional
-                                                            .centerEnd,
-                                                    child: TextButton(
+                                  const SizedBox(height: 14),
+                                ],
+                                Container(
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    gradient: const LinearGradient(
+                                      begin: Alignment.topRight,
+                                      end: Alignment.bottomLeft,
+                                      colors: [
+                                        Color(0xFFFFFCF4),
+                                        Colors.white,
+                                        Colors.white,
+                                      ],
+                                      stops: [0, 0.35, 1],
+                                    ),
+                                    borderRadius: BorderRadius.circular(24),
+                                    border: Border.all(
+                                      color: const Color(0xFFE5DDCA),
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(
+                                          0xFF1A2238,
+                                        ).withValues(alpha: 0.07),
+                                        blurRadius: 24,
+                                        offset: const Offset(0, 10),
+                                      ),
+                                    ],
+                                  ),
+                                  child: _verificationEmail != null
+                                      ? _verificationContent()
+                                      : AutofillGroup(
+                                          child: Form(
+                                            key: _formKey,
+                                            child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.stretch,
+                                              children: [
+                                                if (!_completeProfile) ...[
+                                                  SizedBox(
+                                                    height: 48,
+                                                    child: OutlinedButton.icon(
                                                       onPressed: _isLoading
                                                           ? null
-                                                          : _forgotPassword,
-                                                      child: const Text(
-                                                        'نسيت كلمة المرور؟',
+                                                          : _signInWithGoogle,
+                                                      icon: Image.asset(
+                                                        AppAssets.google,
+                                                        width: 22,
+                                                      ),
+                                                      label: const Text(
+                                                        'المتابعة باستخدام Google',
                                                         style: TextStyle(
-                                                          fontSize: 13,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      style: OutlinedButton.styleFrom(
+                                                        backgroundColor:
+                                                            Colors.white,
+                                                        foregroundColor:
+                                                            const Color(
+                                                              0xFF1A2238,
+                                                            ),
+                                                        side: const BorderSide(
+                                                          color: Color(
+                                                            0xFFD9D2C3,
+                                                          ),
+                                                        ),
+                                                        shape: RoundedRectangleBorder(
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                14,
+                                                              ),
                                                         ),
                                                       ),
                                                     ),
                                                   ),
-                                              ],
-                                              if (!_isLogin ||
-                                                  _completeProfile) ...[
-                                                _stagePicker(),
-                                                const SizedBox(height: 10),
-                                              ],
-                                              if (!_isLogin &&
-                                                  !_completeProfile) ...[
-                                                CheckboxListTile(
-                                                  contentPadding:
-                                                      EdgeInsets.zero,
-                                                  controlAffinity:
-                                                      ListTileControlAffinity
-                                                          .leading,
-                                                  value: _agreeToTerms,
-                                                  onChanged: _isLoading
-                                                      ? null
-                                                      : (v) => setState(
-                                                          () => _agreeToTerms =
-                                                              v ?? false,
+                                                  const SizedBox(height: 12),
+                                                  const Row(
+                                                    children: [
+                                                      Expanded(
+                                                        child: Divider(),
+                                                      ),
+                                                      Padding(
+                                                        padding:
+                                                            EdgeInsets.symmetric(
+                                                              horizontal: 12,
+                                                            ),
+                                                        child: Text(
+                                                          'أو باستخدام البريد الإلكتروني',
+                                                          style: TextStyle(
+                                                            fontSize: 11,
+                                                            color: Color(
+                                                              0xFF7A8495,
+                                                            ),
+                                                          ),
                                                         ),
-                                                  title: const Text(
-                                                    'أوافق على الشروط وسياسة الخصوصية',
-                                                    style: TextStyle(
-                                                      fontSize: 12,
+                                                      ),
+                                                      Expanded(
+                                                        child: Divider(),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 12),
+                                                  if (!_isLogin)
+                                                    _field(
+                                                      _nameController,
+                                                      'الاسم الكامل',
+                                                      Icons
+                                                          .person_outline_rounded,
+                                                      validator: (v) =>
+                                                          (v?.trim().isEmpty ??
+                                                              true)
+                                                          ? 'يرجى إدخال الاسم الكامل'
+                                                          : null,
+                                                    ),
+                                                  _field(
+                                                    _emailController,
+                                                    'البريد الإلكتروني',
+                                                    Icons.mail_outline_rounded,
+                                                    email: true,
+                                                    validator: _validateEmail,
+                                                  ),
+                                                  _field(
+                                                    _passwordController,
+                                                    'كلمة المرور',
+                                                    Icons.lock_outline_rounded,
+                                                    password: true,
+                                                    validator: (v) =>
+                                                        (v?.isEmpty ?? true)
+                                                        ? 'يرجى إدخال كلمة المرور'
+                                                        : !_isLogin &&
+                                                              v!.length < 6
+                                                        ? 'استخدم 6 أحرف على الأقل'
+                                                        : null,
+                                                  ),
+                                                  if (!_isLogin)
+                                                    _field(
+                                                      _confirmPasswordController,
+                                                      'تأكيد كلمة المرور',
+                                                      Icons
+                                                          .lock_outline_rounded,
+                                                      password: true,
+                                                      confirmation: true,
+                                                      validator: (v) =>
+                                                          v !=
+                                                              _passwordController
+                                                                  .text
+                                                          ? 'كلمتا المرور غير متطابقتين'
+                                                          : null,
+                                                    ),
+                                                  if (_isLogin)
+                                                    Align(
+                                                      alignment:
+                                                          AlignmentDirectional
+                                                              .centerEnd,
+                                                      child: TextButton(
+                                                        onPressed: _isLoading
+                                                            ? null
+                                                            : _forgotPassword,
+                                                        child: const Text(
+                                                          'نسيت كلمة المرور؟',
+                                                          style: TextStyle(
+                                                            fontSize: 13,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                ],
+                                                if (!_isLogin ||
+                                                    _completeProfile) ...[
+                                                  _stagePicker(),
+                                                  const SizedBox(height: 10),
+                                                ],
+                                                if (!_isLogin &&
+                                                    !_completeProfile) ...[
+                                                  CheckboxListTile(
+                                                    contentPadding:
+                                                        EdgeInsets.zero,
+                                                    controlAffinity:
+                                                        ListTileControlAffinity
+                                                            .leading,
+                                                    value: _agreeToTerms,
+                                                    onChanged: _isLoading
+                                                        ? null
+                                                        : (v) => setState(
+                                                            () =>
+                                                                _agreeToTerms =
+                                                                    v ?? false,
+                                                          ),
+                                                    title: const Text(
+                                                      'أوافق على الشروط وسياسة الخصوصية',
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                      ),
                                                     ),
                                                   ),
+                                                  const SizedBox(height: 12),
+                                                ],
+                                                if (_error != null)
+                                                  _errorBanner(),
+                                                _primaryButton(
+                                                  _completeProfile
+                                                      ? 'حفظ ومتابعة'
+                                                      : _isLogin
+                                                      ? 'تسجيل الدخول'
+                                                      : 'إنشاء حساب',
+                                                  _completeProfile
+                                                      ? _saveStage
+                                                      : _submit,
                                                 ),
-                                                const SizedBox(height: 12),
-                                              ],
-                                              if (_error != null)
-                                                _errorBanner(),
-                                              _primaryButton(
-                                                _completeProfile
-                                                    ? 'حفظ ومتابعة'
-                                                    : _isLogin
-                                                    ? 'تسجيل الدخول'
-                                                    : 'إنشاء حساب',
-                                                _completeProfile
-                                                    ? _saveStage
-                                                    : _submit,
-                                              ),
-                                              if (_completeProfile)
-                                                TextButton(
-                                                  onPressed: _isLoading
-                                                      ? null
-                                                      : () async {
-                                                          setState(
-                                                            () => _isLoading =
-                                                                true,
-                                                          );
-                                                          try {
-                                                            await _authService
-                                                                .signOut();
-                                                            if (mounted)
-                                                              setState(() {
-                                                                _completeProfile =
-                                                                    false;
-                                                                _isLogin = true;
-                                                                _stage = null;
-                                                              });
-                                                          } catch (e) {
-                                                            if (mounted)
-                                                              setState(
-                                                                () => _error =
-                                                                    _errorMessage(
-                                                                      e,
-                                                                    ),
-                                                              );
-                                                          } finally {
-                                                            if (mounted)
-                                                              setState(
-                                                                () =>
-                                                                    _isLoading =
-                                                                        false,
-                                                              );
-                                                          }
-                                                        },
-                                                  child: const Text(
-                                                    'تسجيل الخروج',
+                                                if (_completeProfile)
+                                                  TextButton(
+                                                    onPressed: _isLoading
+                                                        ? null
+                                                        : () async {
+                                                            setState(
+                                                              () => _isLoading =
+                                                                  true,
+                                                            );
+                                                            try {
+                                                              await _authService
+                                                                  .signOut();
+                                                              if (mounted)
+                                                                setState(() {
+                                                                  _completeProfile =
+                                                                      false;
+                                                                  _isLogin =
+                                                                      true;
+                                                                  _stage = null;
+                                                                });
+                                                            } catch (e) {
+                                                              if (mounted)
+                                                                setState(
+                                                                  () => _error =
+                                                                      _errorMessage(
+                                                                        e,
+                                                                      ),
+                                                                );
+                                                            } finally {
+                                                              if (mounted)
+                                                                setState(
+                                                                  () =>
+                                                                      _isLoading =
+                                                                          false,
+                                                                );
+                                                            }
+                                                          },
+                                                    child: const Text(
+                                                      'تسجيل الخروج',
+                                                    ),
                                                   ),
-                                                ),
-                                            ],
+                                              ],
+                                            ),
                                           ),
                                         ),
-                                      ),
-                              ),
-                              const SizedBox(height: 14),
-                              if (!_completeProfile &&
-                                  _verificationEmail == null)
-                                TextButton(
-                                  onPressed: _isLoading ? null : _toggleMode,
-                                  style: TextButton.styleFrom(
-                                    foregroundColor: const Color(0xFF1A2238),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 4,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(14),
-                                    ),
-                                  ),
-                                  child: Text.rich(
-                                    TextSpan(
-                                      children: [
-                                        TextSpan(
-                                          text: _isLogin
-                                              ? 'ليس لديك حساب؟ '
-                                              : 'لديك حساب بالفعل؟ ',
-                                          style: const TextStyle(
-                                            color: Color(0xFF64748B),
-                                          ),
-                                        ),
-                                        TextSpan(
-                                          text: _isLogin
-                                              ? 'أنشئ حساباً'
-                                              : 'سجّل الدخول',
-                                          style: const TextStyle(
-                                            color: Color(0xFF1A2238),
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
                                 ),
-                              if (!_completeProfile &&
-                                  _verificationEmail == null)
-                                _legalLinks(),
-                              if (!_completeProfile &&
-                                  _verificationEmail == null)
-                                _supportOptions(),
-                            ],
+                                const SizedBox(height: 14),
+                                if (!_completeProfile &&
+                                    _verificationEmail == null)
+                                  TextButton(
+                                    onPressed: _isLoading ? null : _toggleMode,
+                                    style: TextButton.styleFrom(
+                                      foregroundColor: const Color(0xFF1A2238),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                    ),
+                                    child: Text.rich(
+                                      TextSpan(
+                                        children: [
+                                          TextSpan(
+                                            text: _isLogin
+                                                ? 'ليس لديك حساب؟ '
+                                                : 'لديك حساب بالفعل؟ ',
+                                            style: const TextStyle(
+                                              color: Color(0xFF64748B),
+                                            ),
+                                          ),
+                                          TextSpan(
+                                            text: _isLogin
+                                                ? 'أنشئ حساباً'
+                                                : 'سجّل الدخول',
+                                            style: const TextStyle(
+                                              color: Color(0xFF1A2238),
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                if (!_completeProfile &&
+                                    _verificationEmail == null)
+                                  _legalLinks(),
+                                if (!_completeProfile &&
+                                    _verificationEmail == null)
+                                  _supportOptions(),
+                              ],
+                            ),
                           ),
                         ),
                       ),
+                      builder: (context, child) {
+                        return Transform.translate(
+                          offset: Offset(
+                            _modeSlideDirection *
+                                MediaQuery.sizeOf(context).width *
+                                0.06 *
+                                _modeAnimationController.value,
+                            0,
+                          ),
+                          child: child,
+                        );
+                      },
                     ),
                   ),
                 ),
