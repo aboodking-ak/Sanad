@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -81,11 +82,13 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
   bool _marksLoaded = false;
   bool _viewerReady = false;
   int _lastPage = 1;
+  int _pageCount = 0;
   _PdfTool _activeTool = _PdfTool.none;
   Color _penColor = _navy;
   double _penWidth = 4;
   final Map<int, List<_PdfMark>> _marksByPage = {};
   final PdfViewerController _controller = PdfViewerController();
+  final TextEditingController _pageInputController = TextEditingController();
   Timer? _saveDebounce;
   Timer? _toolPreferenceDebounce;
   int? _activePage;
@@ -110,7 +113,6 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
       _downloadRemotePdf();
     }
     _setSystemBarStyle();
-    _loadSavedPage();
     _loadMarks();
     _loadToolPreferences();
   }
@@ -298,14 +300,6 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
     );
   }
 
-  Future<void> _loadSavedPage() async {
-    final prefs = await SharedPreferences.getInstance();
-    final page = prefs.getInt(_pagePreferenceKey);
-    if (!mounted || page == null || page < 1) return;
-    _lastPage = page;
-    if (_viewerReady) _controller.goToPage(pageNumber: page);
-  }
-
   Future<void> _loadMarks() async {
     final prefs = await SharedPreferences.getInstance();
     final saved = prefs.getString(_marksPreferenceKey);
@@ -406,7 +400,108 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
 
   void _onViewerReady() {
     _viewerReady = true;
-    if (_lastPage > 1) _controller.goToPage(pageNumber: _lastPage);
+    _pageCount = _controller.pageCount;
+    _lastPage = _controller.pageNumber ?? 1;
+    _pageInputController.text = '$_lastPage';
+    if (mounted) setState(() {});
+  }
+
+  void _goToPageFromInput(String value) {
+    if (!_viewerReady) return;
+    final requestedPage = int.tryParse(value);
+    if (requestedPage == null) {
+      _pageInputController.text = '$_lastPage';
+      return;
+    }
+    final page = requestedPage.clamp(1, _pageCount).toInt();
+    _pageInputController.text = '$page';
+    FocusScope.of(context).unfocus();
+    _controller.goToPage(pageNumber: page);
+  }
+
+  void _changePage(int delta) {
+    if (!_viewerReady) return;
+    final currentPage = _controller.pageNumber ?? _lastPage;
+    final page = currentPage + delta;
+    if (page < 1 || page > _pageCount) return;
+    _pageInputController.text = '$page';
+    _controller.goToPage(pageNumber: page);
+  }
+
+  Widget _buildPageNavigation() {
+    final enabled = _viewerReady && _pageCount > 0;
+    return Container(
+      height: 44,
+      margin: const EdgeInsets.fromLTRB(18, 2, 18, 6),
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF4F5F8),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            tooltip: 'الصفحة السابقة',
+            onPressed: enabled ? () => _changePage(-1) : null,
+            icon: const Icon(Icons.chevron_left_rounded),
+            color: _navy,
+            style: IconButton.styleFrom(
+              minimumSize: const Size(36, 36),
+              maximumSize: const Size(36, 36),
+              padding: EdgeInsets.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ),
+          SizedBox(
+            width: 112,
+            height: 32,
+            child: TextField(
+                controller: _pageInputController,
+                enabled: enabled,
+                textAlign: TextAlign.center,
+                keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.go,
+                onSubmitted: _goToPageFromInput,
+                decoration: InputDecoration(
+                  hintText: 'رقم الصفحة',
+                  suffixText: _pageCount > 0 ? '/ $_pageCount' : null,
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: _gold, width: 1.5),
+                  ),
+                ),
+            ),
+          ),
+          IconButton(
+            tooltip: 'الصفحة التالية',
+            onPressed: enabled ? () => _changePage(1) : null,
+            icon: const Icon(Icons.chevron_right_rounded),
+            color: _navy,
+            style: IconButton.styleFrom(
+              minimumSize: const Size(36, 36),
+              maximumSize: const Size(36, 36),
+              padding: EdgeInsets.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _onMarkStart(int pageNumber, Offset position, Size pageSize) {
@@ -549,26 +644,6 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
     );
   }
 
-  Widget _buildScrollThumb(BuildContext context) {
-    return PdfViewerScrollThumb(
-      controller: _controller,
-      orientation: ScrollbarOrientation.right,
-      thumbSize: const Size(40, 50),
-      thumbBuilder: (context, thumbSize, pageNumber, controller) => Container(
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary.withAlpha(200),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Center(
-          child: Text(
-            pageNumber?.toString() ?? '',
-            style: const TextStyle(color: Colors.white, fontSize: 12),
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildMarkLayer(Rect pageRect, PdfPage page) {
     final marks = _marksByPage[page.pageNumber] ?? const <_PdfMark>[];
     return Positioned.fill(
@@ -605,9 +680,59 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
     }
     final params = PdfViewerParams(
       backgroundColor: Colors.white,
+      pageAnchor: PdfPageAnchor.center,
+      sizeDelegateProvider: PdfViewerSizeDelegateProviderLegacy(
+        calculateInitialZoom: (_, _, fitZoom, _) => fitZoom,
+      ),
+      calculateInitialPageNumber: (document, controller) => 1,
+      layoutPages: (pages, params) {
+        final margin = params.margin;
+        final contentHeight = pages.fold<double>(
+          0,
+          (height, page) => math.max(height, page.height).toDouble(),
+        );
+        final documentWidth = pages.fold<double>(
+          margin,
+          (width, page) => width + page.width + margin,
+        );
+        final pageLayouts = <Rect>[];
+        var right = documentWidth - margin;
+        for (final page in pages) {
+          final left = right - page.width;
+          final top = margin + (contentHeight - page.height) / 2;
+          pageLayouts.add(Rect.fromLTWH(left, top, page.width, page.height));
+          right = left - margin;
+        }
+        return PdfPageLayout(
+          pageLayouts: pageLayouts,
+          documentSize: Size(documentWidth, contentHeight + margin * 2),
+        );
+      },
+      calculateCurrentPageNumber: (visibleRect, pageRects, controller) {
+        var currentPage = 1;
+        var largestVisibleArea = 0.0;
+        for (var index = 0; index < pageRects.length; index++) {
+          final pageRect = pageRects[index];
+          final visiblePage = pageRect.intersect(visibleRect);
+          if (visiblePage.isEmpty) continue;
+          final visibleArea =
+              visiblePage.width * visiblePage.height /
+              (pageRect.width * pageRect.height);
+          if (visibleArea > largestVisibleArea) {
+            largestVisibleArea = visibleArea;
+            currentPage = index + 1;
+          }
+        }
+        return currentPage;
+      },
       onViewerReady: (_, _) => _onViewerReady(),
       onPageChanged: (pageNumber) {
-        if (pageNumber != null) _saveLastPage(pageNumber);
+        if (pageNumber != null) {
+          _lastPage = pageNumber;
+          _pageInputController.text = '$pageNumber';
+          _saveLastPage(pageNumber);
+          if (mounted) setState(() {});
+        }
       },
       onGeneralTap: (context, controller, details) => false,
       loadingBannerBuilder: (context, bytesDownloaded, totalBytes) {
@@ -694,9 +819,6 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
       },
       pageOverlaysBuilder: (context, pageRect, page) => [
         _buildMarkLayer(pageRect, page),
-      ],
-      viewerOverlayBuilder: (context, size, handleLinkTap) => [
-        _buildScrollThumb(context),
       ],
     );
 
@@ -857,6 +979,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
       );
     }
     _toolPreferenceDebounce?.cancel();
+    _pageInputController.dispose();
     SystemChrome.setEnabledSystemUIMode(
       SystemUiMode.manual,
       overlays: SystemUiOverlay.values,
@@ -943,6 +1066,7 @@ class _PdfViewerScreenState extends State<PdfViewerScreen> {
                   ],
                 ),
               ),
+              _buildPageNavigation(),
             ],
           ),
         ),
