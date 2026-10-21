@@ -151,11 +151,6 @@ class _ExamsScreenState extends State<ExamsScreen> {
           'sub': 'Arabic',
           'file': 'literature/literature_ministerials.json',
         },
-        {
-          'cat': 'Preparatory',
-          'sub': 'Arabic',
-          'file': 'criticism/criticism_ministerials.json',
-        },
       ],
       'الإنكليزي': [
         {
@@ -165,6 +160,14 @@ class _ExamsScreenState extends State<ExamsScreen> {
         },
       ],
     };
+
+    if (widget.subjectName == 'العربية' && widget.category == 'Literary') {
+      subjectFiles['العربية']?.add({
+        'cat': 'Preparatory',
+        'sub': 'Arabic',
+        'file': 'criticism/criticism_ministerials.json',
+      });
+    }
 
     try {
       if (!mounted) return;

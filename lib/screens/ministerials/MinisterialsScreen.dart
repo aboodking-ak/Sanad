@@ -165,11 +165,6 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
           'sub': 'Arabic',
           'file': 'literature/literature_ministerials.json',
         },
-        {
-          'cat': 'Preparatory',
-          'sub': 'Arabic',
-          'file': 'criticism/criticism_ministerials.json',
-        },
       ],
       'الإنكليزي': [
         {
