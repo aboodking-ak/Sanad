@@ -14,6 +14,7 @@ class _EssaysScreenState extends State<EssaysScreen> {
   Map<String, dynamic>? selectedEssayData;
   int? selectedUnit; // لتعقب الوحدة المختارة
   bool isInitialLoading = true;
+  bool _showSelectionBar = true;
 
   @override
   void initState() {
@@ -23,7 +24,9 @@ class _EssaysScreenState extends State<EssaysScreen> {
 
   Future<void> _loadEssays() async {
     try {
-      final String response = await rootBundle.loadString('assets/jsons/Content/Preparatory/English/essays.json');
+      final String response = await rootBundle.loadString(
+        'assets/jsons/Content/Preparatory/English/essays.json',
+      );
       final Map<String, dynamic> data = json.decode(response);
       setState(() {
         essaysData = data;
@@ -44,151 +47,174 @@ class _EssaysScreenState extends State<EssaysScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text("الإنشاءات الإنجليزية", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, fontFamily: 'Tajawal')),
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        title: const Text(
+          "الإنشاءات الإنجليزية",
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 19,
+            fontFamily: 'Tajawal',
+            color: Color(0xFF1A2238),
+          ),
+        ),
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF1A2238),
         elevation: 0,
         centerTitle: true,
-        toolbarHeight: 70,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => Navigator.pop(context),
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.white,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.white,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list_rounded),
-            onPressed: isInitialLoading ? null : () => _showSelectionBottomSheet(context, primaryColor),
+            tooltip: _showSelectionBar ? 'Hide selections' : 'Show selections',
+            icon: Icon(
+              _showSelectionBar
+                  ? Icons.keyboard_arrow_up_rounded
+                  : Icons.tune_rounded,
+            ),
+            onPressed: isInitialLoading
+                ? null
+                : () => setState(() => _showSelectionBar = !_showSelectionBar),
           ),
         ],
       ),
-      body: isInitialLoading 
-          ? Center(child: SizedBox(width: 40, height: 40, child: CircularProgressIndicator(strokeWidth: 3, color: primaryColor)))
+      body: isInitialLoading
+          ? Center(
+              child: SizedBox(
+                width: 40,
+                height: 40,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  color: primaryColor,
+                ),
+              ),
+            )
           : (essaysData == null
-              ? const Center(child: Text("تعذر تحميل البيانات"))
-              : _buildEssayContent(primaryColor)),
+                ? const Center(child: Text("تعذر تحميل البيانات"))
+                : Stack(
+                    children: [
+                      Positioned.fill(
+                        top: _showSelectionBar
+                            ? (selectedUnit == null ? 62 : 107)
+                            : 0,
+                        child: _buildEssayContent(primaryColor),
+                      ),
+                      if (_showSelectionBar)
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: _buildEssaySelector(),
+                        ),
+                    ],
+                  )),
     );
   }
 
-  void _showSelectionBottomSheet(BuildContext context, Color primaryColor) {
-    final List<dynamic> unitsData = essaysData?['units'] ?? [];
+  Widget _buildEssaySelector() {
+    final units = essaysData?['units'] as List? ?? [];
+    final selectedUnitData = units.cast<Map<String, dynamic>?>().firstWhere(
+      (unit) => unit?['number'] == selectedUnit,
+      orElse: () => null,
+    );
+    final essays = selectedUnitData?['essays'] as List? ?? [];
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1A2238).withValues(alpha: 0.12),
+            blurRadius: 20,
+            offset: const Offset(0, 7),
+          ),
+        ],
       ),
-      builder: (context) {
-        // متغيرات مؤقتة للاختيار داخل الـ BottomSheet فقط
-        int? tempUnit = selectedUnit;
-        Map<String, dynamic>? tempEssay = selectedEssayData;
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildEnglishChoiceRow(
+            height: 62,
+            items: units,
+            selectedTitle: selectedUnitData?['title']?.toString(),
+            titleOf: (unit) => unit['title'].toString(),
+            onSelected: (unit) => setState(() {
+              selectedUnit = unit['number'] as int;
+              selectedEssayData = null;
+            }),
+          ),
+          if (selectedUnitData != null)
+            _buildEnglishChoiceRow(
+              height: 45,
+              items: essays,
+              selectedTitle: selectedEssayData?['title']?.toString(),
+              titleOf: (essay) => essay['title'].toString(),
+              onSelected: (essay) => setState(() => selectedEssayData = essay),
+            ),
+        ],
+      ),
+    );
+  }
 
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            final selectedUnitData = unitsData.firstWhere(
-              (u) => u['number'] == tempUnit,
-              orElse: () => null,
-            );
-            final filteredEssays = selectedUnitData?['essays'] as List? ?? [];
-
-            return Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "اختيار الوحدة والإنشاء",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
-                  ),
-                  const SizedBox(height: 20),
-                  _buildModalDropdown(
-                    "اختر الوحدة (Unit)",
-                    Icons.grid_view_rounded,
-                    unitsData.map((u) => u['title'] as String).toList(),
-                    selectedUnitData?['title'],
-                    (val) {
-                      final unit = unitsData.firstWhere((u) => u['title'] == val);
-                      setModalState(() {
-                        tempUnit = unit['number'];
-                        tempEssay = null;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 15),
-                  _buildModalDropdown(
-                    "اختر الإنشاء (Essay)",
-                    Icons.edit_note_rounded,
-                    filteredEssays.map((e) => e['title'] as String).toList(),
-                    tempEssay?['title'],
-                    (val) {
-                      final essay = filteredEssays.firstWhere((e) => e['title'] == val);
-                      setModalState(() => tempEssay = essay);
-                    },
-                    isEnabled: tempUnit != null,
-                  ),
-                  const SizedBox(height: 30),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: (tempEssay != null)
-                          ? () {
-                              // تحديث الحالة الرئيسية فقط عند الضغط على زر التأكيد
-                              setState(() {
-                                selectedUnit = tempUnit;
-                                selectedEssayData = tempEssay;
-                              });
-                              Navigator.pop(context);
-                            }
-                          : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: const Text("تأكيد الاختيار", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal')),
+  Widget _buildEnglishChoiceRow({
+    required double height,
+    required List items,
+    required String? selectedTitle,
+    required String Function(dynamic item) titleOf,
+    required ValueChanged<dynamic> onSelected,
+  }) {
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: SizedBox(
+        height: height,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsetsDirectional.fromSTEB(12, 7, 19, 7),
+          itemCount: items.length,
+          separatorBuilder: (_, _) => const SizedBox(width: 9),
+          itemBuilder: (context, index) {
+            final item = items[index];
+            final title = titleOf(item);
+            final selected = selectedTitle == title;
+            return Material(
+              color: selected ? const Color(0xFF1A2238) : Colors.white,
+              borderRadius: BorderRadius.circular(13),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(13),
+                onTap: () => onSelected(item),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 13),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(13),
+                    border: Border.all(
+                      color: selected
+                          ? const Color(0xFF1A2238)
+                          : const Color(0xFFE5E8EF),
                     ),
                   ),
-                ],
+                  child: Center(
+                    child: Text(
+                      title,
+                      textDirection: TextDirection.ltr,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'Tajawal',
+                        color: selected
+                            ? Colors.white
+                            : const Color(0xFF1A2238),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             );
           },
-        );
-      },
-    );
-  }
-
-  Widget _buildModalDropdown(String hint, IconData icon, List<String> items, String? value, ValueChanged<String?> onChanged, {bool isEnabled = true}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: isEnabled ? Colors.grey[50] : Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          isExpanded: true,
-          value: value,
-          hint: Row(
-            children: [
-              Icon(icon, size: 20, color: isEnabled ? Colors.grey[400] : Colors.grey[300]),
-              const SizedBox(width: 12),
-              Text(hint, style: TextStyle(color: isEnabled ? Colors.grey[400] : Colors.grey[300], fontFamily: 'Tajawal')),
-            ],
-          ),
-          items: isEnabled
-              ? items
-                  .map((item) => DropdownMenuItem(
-                      value: item,
-                      child: Directionality(
-                          textDirection: TextDirection.ltr,
-                          child: Text(item, textAlign: TextAlign.left, style: const TextStyle(fontFamily: 'Tajawal')))))
-                  .toList()
-              : null,
-          onChanged: isEnabled ? onChanged : null,
         ),
       ),
     );
@@ -206,15 +232,27 @@ class _EssaysScreenState extends State<EssaysScreen> {
                 color: Colors.white,
                 shape: BoxShape.circle,
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 20,
+                  ),
                 ],
               ),
-              child: Icon(Icons.edit_note_rounded, size: 50, color: primaryColor.withValues(alpha: 0.3)),
+              child: Icon(
+                Icons.edit_note_rounded,
+                size: 50,
+                color: primaryColor.withValues(alpha: 0.3),
+              ),
             ),
             const SizedBox(height: 20),
             const Text(
               "يرجى اختيار الإنشاء للعرض",
-              style: TextStyle(color: Colors.grey, fontSize: 15, fontWeight: FontWeight.w600, fontFamily: 'Tajawal'),
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Tajawal',
+              ),
             ),
           ],
         ),
@@ -231,7 +269,7 @@ class _EssaysScreenState extends State<EssaysScreen> {
           const SizedBox(height: 10),
           _buildSectionHeader("نص الإنشاء (English)", primaryColor),
           _buildEssayTextCard(primaryColor),
-          
+
           const SizedBox(height: 10),
           _buildSectionHeader("الترجمة (Translation)", primaryColor),
           _buildTranslationCard(primaryColor),
@@ -257,7 +295,12 @@ class _EssaysScreenState extends State<EssaysScreen> {
             textDirection: TextDirection.ltr,
             child: Text(
               selectedEssayData!['question'] ?? "",
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Color(0xFF1E293B), height: 1.5),
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1E293B),
+                height: 1.5,
+              ),
             ),
           ),
           const Padding(
@@ -267,7 +310,13 @@ class _EssaysScreenState extends State<EssaysScreen> {
           Text(
             selectedEssayData!['question_ar'] ?? "",
             textAlign: TextAlign.right,
-            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF475569), height: 1.5, fontFamily: 'Tajawal'),
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF475569),
+              height: 1.5,
+              fontFamily: 'Tajawal',
+            ),
           ),
         ],
       ),
@@ -291,7 +340,12 @@ class _EssaysScreenState extends State<EssaysScreen> {
           const SizedBox(width: 10),
           Text(
             title,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E293B), fontFamily: 'Tajawal'),
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1E293B),
+              fontFamily: 'Tajawal',
+            ),
           ),
         ],
       ),
@@ -300,7 +354,10 @@ class _EssaysScreenState extends State<EssaysScreen> {
 
   Widget _buildEssayTextCard(Color primaryColor) {
     final String essayText = selectedEssayData!['answer'];
-    final int wordCount = essayText.split(' ').where((w) => w.isNotEmpty).length;
+    final int wordCount = essayText
+        .split(' ')
+        .where((w) => w.isNotEmpty)
+        .length;
 
     return Container(
       width: double.infinity,
@@ -308,7 +365,11 @@ class _EssaysScreenState extends State<EssaysScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.02), offset: const Offset(0, 2), blurRadius: 5),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            offset: const Offset(0, 2),
+            blurRadius: 5,
+          ),
         ],
       ),
       child: Column(
@@ -316,9 +377,16 @@ class _EssaysScreenState extends State<EssaysScreen> {
           Directionality(
             textDirection: TextDirection.ltr, // Title in English
             child: Center(
-              child: Text(selectedEssayData!['title'],
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: primaryColor, fontFamily: 'Tajawal')),
+              child: Text(
+                selectedEssayData!['title'],
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: primaryColor,
+                  fontFamily: 'Tajawal',
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -331,7 +399,12 @@ class _EssaysScreenState extends State<EssaysScreen> {
             ),
             child: Text(
               "$wordCount Words",
-              style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 11, fontFamily: 'Tajawal'),
+              style: TextStyle(
+                color: primaryColor,
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+                fontFamily: 'Tajawal',
+              ),
             ),
           ),
           const Divider(height: 40, thickness: 1),
@@ -340,7 +413,13 @@ class _EssaysScreenState extends State<EssaysScreen> {
             child: Text(
               essayText,
               textAlign: TextAlign.justify,
-              style: const TextStyle(fontSize: 17, height: 1.8, fontWeight: FontWeight.w500, color: Color(0xFF334155), fontFamily: 'Tajawal'),
+              style: const TextStyle(
+                fontSize: 17,
+                height: 1.8,
+                fontWeight: FontWeight.w500,
+                color: Color(0xFF334155),
+                fontFamily: 'Tajawal',
+              ),
             ),
           ),
         ],
@@ -354,13 +433,17 @@ class _EssaysScreenState extends State<EssaysScreen> {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(25),
-      decoration: const BoxDecoration(
-        color: Colors.white,
-      ),
+      decoration: const BoxDecoration(color: Colors.white),
       child: Text(
         translationText,
         textAlign: TextAlign.justify,
-        style: const TextStyle(fontSize: 17, height: 1.8, fontWeight: FontWeight.w500, color: Color(0xFF334155), fontFamily: 'Tajawal'),
+        style: const TextStyle(
+          fontSize: 17,
+          height: 1.8,
+          fontWeight: FontWeight.w500,
+          color: Color(0xFF334155),
+          fontFamily: 'Tajawal',
+        ),
       ),
     );
   }

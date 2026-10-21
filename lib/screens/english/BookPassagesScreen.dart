@@ -14,6 +14,7 @@ class _BookPassagesScreenState extends State<BookPassagesScreen> {
   Map<String, dynamic>? selectedPassageData;
   int? selectedUnit;
   bool isLoading = true;
+  bool _showSelectionBar = true;
 
   @override
   void initState() {
@@ -23,7 +24,9 @@ class _BookPassagesScreenState extends State<BookPassagesScreen> {
 
   Future<void> _loadData() async {
     try {
-      final String response = await rootBundle.loadString('assets/jsons/Content/Preparatory/English/book_passages.json');
+      final String response = await rootBundle.loadString(
+        'assets/jsons/Content/Preparatory/English/book_passages.json',
+      );
       final Map<String, dynamic> data = json.decode(response);
       setState(() {
         bookData = data;
@@ -44,149 +47,175 @@ class _BookPassagesScreenState extends State<BookPassagesScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text("قطع الكتاب", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, fontFamily: 'Tajawal')),
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        title: const Text(
+          "قطع الكتاب",
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 19,
+            fontFamily: 'Tajawal',
+            color: Color(0xFF1A2238),
+          ),
+        ),
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF1A2238),
         elevation: 0,
         centerTitle: true,
-        toolbarHeight: 70,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
-          onPressed: () => Navigator.of(context).pop(),
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.white,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.white,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list_rounded),
-            onPressed: isLoading ? null : () => _showSelectionBottomSheet(context, primaryColor),
+            tooltip: _showSelectionBar ? 'Hide selections' : 'Show selections',
+            icon: Icon(
+              _showSelectionBar
+                  ? Icons.keyboard_arrow_up_rounded
+                  : Icons.tune_rounded,
+            ),
+            onPressed: isLoading
+                ? null
+                : () => setState(() => _showSelectionBar = !_showSelectionBar),
           ),
         ],
       ),
-      body: isLoading 
-          ? Center(child: SizedBox(width: 40, height: 40, child: CircularProgressIndicator(strokeWidth: 3, color: primaryColor)))
+      body: isLoading
+          ? Center(
+              child: SizedBox(
+                width: 40,
+                height: 40,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  color: primaryColor,
+                ),
+              ),
+            )
           : (bookData == null
-              ? const Center(child: Text("تعذر تحميل البيانات"))
-              : _buildPassageContent(primaryColor)),
+                ? const Center(child: Text("تعذر تحميل البيانات"))
+                : Stack(
+                    children: [
+                      Positioned.fill(
+                        top: _showSelectionBar
+                            ? (selectedUnit == null ? 62 : 107)
+                            : 0,
+                        child: _buildPassageContent(primaryColor),
+                      ),
+                      if (_showSelectionBar)
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: _buildPassageSelector(),
+                        ),
+                    ],
+                  )),
     );
   }
 
-  void _showSelectionBottomSheet(BuildContext context, Color primaryColor) {
-    final List<dynamic> unitsData = bookData?['units'] ?? [];
+  Widget _buildPassageSelector() {
+    final units = bookData?['units'] as List? ?? [];
+    final selectedUnitData = units.cast<Map<String, dynamic>?>().firstWhere(
+      (unit) => unit?['number'] == selectedUnit,
+      orElse: () => null,
+    );
+    final passages = selectedUnitData?['passages'] as List? ?? [];
 
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1A2238).withValues(alpha: 0.12),
+            blurRadius: 20,
+            offset: const Offset(0, 7),
+          ),
+        ],
       ),
-      builder: (context) {
-        int? tempUnit = selectedUnit;
-        Map<String, dynamic>? tempPassage = selectedPassageData;
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildEnglishChoiceRow(
+            height: 62,
+            items: units,
+            selectedTitle: selectedUnitData?['title']?.toString(),
+            titleOf: (unit) => unit['title'].toString(),
+            onSelected: (unit) => setState(() {
+              selectedUnit = unit['number'] as int;
+              selectedPassageData = null;
+            }),
+          ),
+          if (selectedUnitData != null)
+            _buildEnglishChoiceRow(
+              height: 45,
+              items: passages,
+              selectedTitle: selectedPassageData?['title']?.toString(),
+              titleOf: (passage) => passage['title'].toString(),
+              onSelected: (passage) =>
+                  setState(() => selectedPassageData = passage),
+            ),
+        ],
+      ),
+    );
+  }
 
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            final selectedUnitData = unitsData.firstWhere(
-              (u) => u['number'] == tempUnit,
-              orElse: () => null,
-            );
-            final filteredPassages = selectedUnitData?['passages'] as List? ?? [];
-
-            return Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "اختيار الوحدة والقطعة",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
-                  ),
-                  const SizedBox(height: 20),
-                  _buildModalDropdown(
-                    "اختر الوحدة (Unit)",
-                    Icons.grid_view_rounded,
-                    unitsData.map((u) => u['title'] as String).toList(),
-                    selectedUnitData?['title'],
-                    (val) {
-                      final unit = unitsData.firstWhere((u) => u['title'] == val);
-                      setModalState(() {
-                        tempUnit = unit['number'];
-                        tempPassage = null;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 15),
-                  _buildModalDropdown(
-                    "اختر القطعة (Passage)",
-                    Icons.menu_book_rounded,
-                    filteredPassages.map((p) => p['title'] as String).toList(),
-                    tempPassage?['title'],
-                    (val) {
-                      final passage = filteredPassages.firstWhere((p) => p['title'] == val);
-                      setModalState(() => tempPassage = passage);
-                    },
-                    isEnabled: tempUnit != null,
-                  ),
-                  const SizedBox(height: 30),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: (tempPassage != null)
-                          ? () {
-                              setState(() {
-                                selectedUnit = tempUnit;
-                                selectedPassageData = tempPassage;
-                              });
-                              Navigator.pop(context);
-                            }
-                          : null,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      ),
-                      child: const Text("تأكيد الاختيار", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal')),
+  Widget _buildEnglishChoiceRow({
+    required double height,
+    required List items,
+    required String? selectedTitle,
+    required String Function(dynamic item) titleOf,
+    required ValueChanged<dynamic> onSelected,
+  }) {
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: SizedBox(
+        height: height,
+        child: ListView.separated(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsetsDirectional.fromSTEB(12, 7, 19, 7),
+          itemCount: items.length,
+          separatorBuilder: (_, _) => const SizedBox(width: 9),
+          itemBuilder: (context, index) {
+            final item = items[index];
+            final title = titleOf(item);
+            final selected = selectedTitle == title;
+            return Material(
+              color: selected ? const Color(0xFF1A2238) : Colors.white,
+              borderRadius: BorderRadius.circular(13),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(13),
+                onTap: () => onSelected(item),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 13),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(13),
+                    border: Border.all(
+                      color: selected
+                          ? const Color(0xFF1A2238)
+                          : const Color(0xFFE5E8EF),
                     ),
                   ),
-                ],
+                  child: Center(
+                    child: Text(
+                      title,
+                      textDirection: TextDirection.ltr,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontFamily: 'Tajawal',
+                        color: selected
+                            ? Colors.white
+                            : const Color(0xFF1A2238),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ),
               ),
             );
           },
-        );
-      },
-    );
-  }
-
-  Widget _buildModalDropdown(String hint, IconData icon, List<String> items, String? value, ValueChanged<String?> onChanged, {bool isEnabled = true}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: isEnabled ? Colors.grey[50] : Colors.grey[100],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          isExpanded: true,
-          value: value,
-          hint: Row(
-            children: [
-              Icon(icon, size: 20, color: isEnabled ? Colors.grey[400] : Colors.grey[300]),
-              const SizedBox(width: 12),
-              Text(hint, style: TextStyle(color: isEnabled ? Colors.grey[400] : Colors.grey[300], fontFamily: 'Tajawal')),
-            ],
-          ),
-          items: isEnabled
-              ? items
-                  .map((item) => DropdownMenuItem(
-                      value: item,
-                      child: Directionality(
-                          textDirection: TextDirection.ltr,
-                          child: Text(item, textAlign: TextAlign.left, style: const TextStyle(fontFamily: 'Tajawal')))))
-                  .toList()
-              : null,
-          onChanged: isEnabled ? onChanged : null,
         ),
       ),
     );
@@ -204,15 +233,27 @@ class _BookPassagesScreenState extends State<BookPassagesScreen> {
                 color: Colors.white,
                 shape: BoxShape.circle,
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 20,
+                  ),
                 ],
               ),
-              child: Icon(Icons.menu_book_rounded, size: 50, color: primaryColor.withValues(alpha: 0.3)),
+              child: Icon(
+                Icons.menu_book_rounded,
+                size: 50,
+                color: primaryColor.withValues(alpha: 0.3),
+              ),
             ),
             const SizedBox(height: 20),
             const Text(
               "يرجى اختيار الوحدة والقطعة للعرض",
-              style: TextStyle(color: Colors.grey, fontSize: 15, fontWeight: FontWeight.w600, fontFamily: 'Tajawal'),
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Tajawal',
+              ),
             ),
           ],
         ),
@@ -237,14 +278,24 @@ class _BookPassagesScreenState extends State<BookPassagesScreen> {
                   child: Text(
                     selectedPassageData!['title'],
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: primaryColor, fontFamily: 'Tajawal'),
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: primaryColor,
+                      fontFamily: 'Tajawal',
+                    ),
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   selectedPassageData!['title_ar'] ?? "",
                   textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: Colors.grey, fontFamily: 'Tajawal'),
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.grey,
+                    fontFamily: 'Tajawal',
+                  ),
                 ),
                 if (selectedPassageData!['note'] != null) ...[
                   const SizedBox(height: 12),
@@ -254,16 +305,27 @@ class _BookPassagesScreenState extends State<BookPassagesScreen> {
                     decoration: BoxDecoration(
                       color: Colors.amber.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.amber.withValues(alpha: 0.3)),
+                      border: Border.all(
+                        color: Colors.amber.withValues(alpha: 0.3),
+                      ),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.info_outline_rounded, color: Colors.amber, size: 20),
+                        const Icon(
+                          Icons.info_outline_rounded,
+                          color: Colors.amber,
+                          size: 20,
+                        ),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Text(
                             selectedPassageData!['note'],
-                            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.amber, fontFamily: 'Tajawal'),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.amber,
+                              fontFamily: 'Tajawal',
+                            ),
                           ),
                         ),
                       ],
@@ -275,10 +337,12 @@ class _BookPassagesScreenState extends State<BookPassagesScreen> {
               ],
             ),
           ),
-          
+
           if (segments.isNotEmpty) ...[
             _buildSectionHeader("نص القطعة (Passage Text)", primaryColor),
-            ...segments.map((segment) => _buildSegmentCard(segment, primaryColor)),
+            ...segments.map(
+              (segment) => _buildSegmentCard(segment, primaryColor),
+            ),
           ],
 
           if (questions.isNotEmpty) ...[
@@ -308,7 +372,12 @@ class _BookPassagesScreenState extends State<BookPassagesScreen> {
           const SizedBox(width: 10),
           Text(
             title,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E293B), fontFamily: 'Tajawal'),
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1E293B),
+              fontFamily: 'Tajawal',
+            ),
           ),
         ],
       ),
@@ -324,7 +393,11 @@ class _BookPassagesScreenState extends State<BookPassagesScreen> {
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: 0.02), offset: const Offset(0, 2), blurRadius: 5),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            offset: const Offset(0, 2),
+            blurRadius: 5,
+          ),
         ],
       ),
       child: Column(
@@ -334,7 +407,12 @@ class _BookPassagesScreenState extends State<BookPassagesScreen> {
             textDirection: TextDirection.ltr,
             child: Text(
               segment['en'] ?? "",
-              style: const TextStyle(fontSize: 16, height: 1.6, color: Color(0xFF334155), fontWeight: FontWeight.w500),
+              style: const TextStyle(
+                fontSize: 16,
+                height: 1.6,
+                color: Color(0xFF334155),
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
           const Padding(
@@ -344,7 +422,13 @@ class _BookPassagesScreenState extends State<BookPassagesScreen> {
           Text(
             segment['ar'] ?? "",
             textAlign: TextAlign.right,
-            style: const TextStyle(fontSize: 16, height: 1.6, color: Color(0xFF475569), fontWeight: FontWeight.w600, fontFamily: 'Tajawal'),
+            style: const TextStyle(
+              fontSize: 16,
+              height: 1.6,
+              color: Color(0xFF475569),
+              fontWeight: FontWeight.w600,
+              fontFamily: 'Tajawal',
+            ),
           ),
         ],
       ),
@@ -352,7 +436,8 @@ class _BookPassagesScreenState extends State<BookPassagesScreen> {
   }
 
   Widget _buildQuestionCard(Map<String, dynamic> q, Color primaryColor) {
-    final bool isFillInBlank = (q['a_en'] == null || q['a_en'].toString().trim().isEmpty) &&
+    final bool isFillInBlank =
+        (q['a_en'] == null || q['a_en'].toString().trim().isEmpty) &&
         (q['a_ar'] == null || q['a_ar'].toString().trim().isEmpty);
 
     return Container(
@@ -370,10 +455,22 @@ class _BookPassagesScreenState extends State<BookPassagesScreen> {
           // Question Section
           Row(
             children: [
-              Icon(isFillInBlank ? Icons.edit_note_rounded : Icons.help_outline_rounded, size: 20, color: primaryColor),
+              Icon(
+                isFillInBlank
+                    ? Icons.edit_note_rounded
+                    : Icons.help_outline_rounded,
+                size: 20,
+                color: primaryColor,
+              ),
               const SizedBox(width: 8),
-              Text(isFillInBlank ? "أكمل الفراغ" : "السؤال",
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', color: Colors.grey)),
+              Text(
+                isFillInBlank ? "أكمل الفراغ" : "السؤال",
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Tajawal',
+                  color: Colors.grey,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 10),
@@ -389,9 +486,20 @@ class _BookPassagesScreenState extends State<BookPassagesScreen> {
             // Answer Section
             Row(
               children: [
-                const Icon(Icons.check_circle_outline_rounded, size: 20, color: Colors.green),
+                const Icon(
+                  Icons.check_circle_outline_rounded,
+                  size: 20,
+                  color: Colors.green,
+                ),
                 const SizedBox(width: 8),
-                const Text("الجواب", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal', color: Colors.grey)),
+                const Text(
+                  "الجواب",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'Tajawal',
+                    color: Colors.grey,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 10),
@@ -399,13 +507,22 @@ class _BookPassagesScreenState extends State<BookPassagesScreen> {
               textDirection: TextDirection.ltr,
               child: Text(
                 q['a_en'] ?? "",
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: primaryColor),
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                  color: primaryColor,
+                ),
               ),
             ),
             const SizedBox(height: 5),
             Text(
               q['a_ar'] ?? "",
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF475569), fontFamily: 'Tajawal'),
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF475569),
+                fontFamily: 'Tajawal',
+              ),
             ),
           ],
         ],
@@ -422,41 +539,49 @@ class _BookPassagesScreenState extends State<BookPassagesScreen> {
 
     for (final match in matches) {
       if (match.start > lastMatchEnd) {
-        spans.add(TextSpan(
-          text: text.substring(lastMatchEnd, match.start),
+        spans.add(
+          TextSpan(
+            text: text.substring(lastMatchEnd, match.start),
+            style: TextStyle(
+              fontSize: isArabic ? 14 : 15,
+              fontWeight: isArabic ? FontWeight.w600 : FontWeight.bold,
+              color: isArabic
+                  ? const Color(0xFF475569)
+                  : const Color(0xFF1E293B),
+              fontFamily: isArabic ? 'Tajawal' : null,
+            ),
+          ),
+        );
+      }
+
+      spans.add(
+        TextSpan(
+          text: match.group(1),
+          style: TextStyle(
+            fontSize: isArabic ? 14 : 15,
+            fontWeight: FontWeight.bold,
+            color: Theme.of(context).colorScheme.primary,
+            decoration: TextDecoration.underline,
+            fontFamily: isArabic ? 'Tajawal' : null,
+          ),
+        ),
+      );
+
+      lastMatchEnd = match.end;
+    }
+
+    if (lastMatchEnd < text.length) {
+      spans.add(
+        TextSpan(
+          text: text.substring(lastMatchEnd),
           style: TextStyle(
             fontSize: isArabic ? 14 : 15,
             fontWeight: isArabic ? FontWeight.w600 : FontWeight.bold,
             color: isArabic ? const Color(0xFF475569) : const Color(0xFF1E293B),
             fontFamily: isArabic ? 'Tajawal' : null,
           ),
-        ));
-      }
-
-      spans.add(TextSpan(
-        text: match.group(1),
-        style: TextStyle(
-          fontSize: isArabic ? 14 : 15,
-          fontWeight: FontWeight.bold,
-          color: Theme.of(context).colorScheme.primary,
-          decoration: TextDecoration.underline,
-          fontFamily: isArabic ? 'Tajawal' : null,
         ),
-      ));
-
-      lastMatchEnd = match.end;
-    }
-
-    if (lastMatchEnd < text.length) {
-      spans.add(TextSpan(
-        text: text.substring(lastMatchEnd),
-        style: TextStyle(
-          fontSize: isArabic ? 14 : 15,
-          fontWeight: isArabic ? FontWeight.w600 : FontWeight.bold,
-          color: isArabic ? const Color(0xFF475569) : const Color(0xFF1E293B),
-          fontFamily: isArabic ? 'Tajawal' : null,
-        ),
-      ));
+      );
     }
 
     return RichText(
