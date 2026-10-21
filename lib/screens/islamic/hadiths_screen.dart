@@ -13,6 +13,7 @@ class _HadithsScreenState extends State<HadithsScreen> {
   Map<String, dynamic>? hadithData;
   Map<String, dynamic>? selectedLesson;
   bool isInitialLoading = true;
+  bool _showSelectionBar = true;
 
   @override
   void initState() {
@@ -22,7 +23,9 @@ class _HadithsScreenState extends State<HadithsScreen> {
 
   Future<void> _loadHadithData() async {
     try {
-      final String response = await rootBundle.loadString('assets/jsons/Content/Preparatory/Islamic/hadiths_questions.json');
+      final String response = await rootBundle.loadString(
+        'assets/jsons/Content/Preparatory/Islamic/hadiths_questions.json',
+      );
       final data = json.decode(response);
       setState(() {
         hadithData = data;
@@ -43,114 +46,144 @@ class _HadithsScreenState extends State<HadithsScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text("الأحاديث النبوية الشريفة", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, fontFamily: 'Tajawal')),
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        title: const Text(
+          "الأحاديث النبوية الشريفة",
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 19,
+            fontFamily: 'Tajawal',
+            color: Color(0xFF1A2238),
+          ),
+        ),
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF1A2238),
         elevation: 0,
         centerTitle: true,
-        toolbarHeight: 70,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => Navigator.pop(context),
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.white,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.white,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list_rounded),
-            onPressed: isInitialLoading ? null : () => _showSelectionBottomSheet(context, primaryColor),
+            tooltip: _showSelectionBar
+                ? 'إخفاء اختيار الحديث'
+                : 'إظهار اختيار الحديث',
+            icon: Icon(
+              _showSelectionBar
+                  ? Icons.keyboard_arrow_up_rounded
+                  : Icons.tune_rounded,
+            ),
+            onPressed: isInitialLoading
+                ? null
+                : () => setState(() => _showSelectionBar = !_showSelectionBar),
           ),
         ],
       ),
-      body: isInitialLoading 
-          ? Center(child: SizedBox(width: 40, height: 40, child: CircularProgressIndicator(strokeWidth: 3, color: primaryColor)))
+      body: isInitialLoading
+          ? Center(
+              child: SizedBox(
+                width: 40,
+                height: 40,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  color: primaryColor,
+                ),
+              ),
+            )
           : (hadithData == null
-              ? const Center(child: Text("تعذر تحميل البيانات"))
-              : _buildHadithContent(primaryColor)),
+                ? const Center(child: Text("تعذر تحميل البيانات"))
+                : Stack(
+                    children: [
+                      Positioned.fill(
+                        top: _showSelectionBar ? 62 : 0,
+                        child: _buildHadithContent(primaryColor),
+                      ),
+                      if (_showSelectionBar)
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: _buildHadithSelector(),
+                        ),
+                    ],
+                  )),
     );
   }
 
-  void _showSelectionBottomSheet(BuildContext context, Color primaryColor) {
+  Widget _buildHadithSelector() {
     final lessons = hadithData?['lessons'] as List? ?? [];
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1A2238).withValues(alpha: 0.12),
+            blurRadius: 20,
+            offset: const Offset(0, 7),
+          ),
+        ],
       ),
-      builder: (context) {
-        Map<String, dynamic>? tempLesson = selectedLesson;
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "اختيار الحديث",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
-                  ),
-                  const SizedBox(height: 20),
-                  _buildModalDropdown(
-                    "الحديث",
-                    Icons.menu_book_rounded,
-                    lessons.map((l) => l['lesson_title'].toString()).toList(),
-                    tempLesson?['lesson_title'],
-                    (val) {
-                      final newLesson = lessons.firstWhere((l) => l['lesson_title'] == val);
-                      setModalState(() => tempLesson = newLesson);
-                    },
-                  ),
-                  const SizedBox(height: 30),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        setState(() => selectedLesson = tempLesson);
-                        Navigator.pop(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: SizedBox(
+        height: 62,
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+            itemCount: lessons.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 9),
+            itemBuilder: (context, index) {
+              final lesson = lessons[index] as Map<String, dynamic>;
+              final title = lesson['lesson_title'].toString();
+              final selected = selectedLesson == lesson;
+              return Material(
+                color: selected ? const Color(0xFF1A2238) : Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(14),
+                  onTap: () => setState(() => selectedLesson = lesson),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: selected
+                            ? const Color(0xFF1A2238)
+                            : const Color(0xFFE5E8EF),
                       ),
-                      child: const Text("تأكيد الاختيار", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal')),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (selected) ...[
+                          const Icon(
+                            Icons.check_rounded,
+                            color: Color(0xFFF2B833),
+                            size: 17,
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            color: selected
+                                ? Colors.white
+                                : const Color(0xFF1A2238),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 10),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildModalDropdown(String hint, IconData icon, List<String> items, String? value, ValueChanged<String?> onChanged) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          isExpanded: true,
-          value: value,
-          hint: Row(
-            children: [
-              Icon(icon, size: 20, color: Colors.grey[400]),
-              const SizedBox(width: 12),
-              Text(hint, style: TextStyle(color: Colors.grey[400], fontFamily: 'Tajawal')),
-            ],
+                ),
+              );
+            },
           ),
-          items: items.map((item) => DropdownMenuItem(value: item, child: Text(item, style: const TextStyle(fontFamily: 'Tajawal')))).toList(),
-          onChanged: onChanged,
         ),
       ),
     );
@@ -168,15 +201,27 @@ class _HadithsScreenState extends State<HadithsScreen> {
                 color: Colors.white,
                 shape: BoxShape.circle,
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 20,
+                  ),
                 ],
               ),
-              child: Icon(Icons.format_quote_rounded, size: 50, color: primaryColor.withValues(alpha: 0.3)),
+              child: Icon(
+                Icons.format_quote_rounded,
+                size: 50,
+                color: primaryColor.withValues(alpha: 0.3),
+              ),
             ),
             const SizedBox(height: 20),
             const Text(
               "يرجى اختيار الحديث للعرض",
-              style: TextStyle(color: Colors.grey, fontSize: 15, fontWeight: FontWeight.w600, fontFamily: 'Tajawal'),
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Tajawal',
+              ),
             ),
           ],
         ),
@@ -184,28 +229,40 @@ class _HadithsScreenState extends State<HadithsScreen> {
     }
 
     final sections = selectedLesson!['sections'] as List? ?? [];
-    final hasMeanings = sections.any((s) => s['section_title'] == "معاني الكلمات");
-    final hasGuidance = sections.any((s) => s['section_title'] == "أهم ما يرشد إليه الحديث");
+    final hasMeanings = sections.any(
+      (s) => s['section_title'] == "معاني الكلمات",
+    );
+    final hasGuidance = sections.any(
+      (s) => s['section_title'] == "أهم ما يرشد إليه الحديث",
+    );
 
     return SingleChildScrollView(
       padding: const EdgeInsets.only(bottom: 40),
       child: Column(
         children: [
           _buildHadithTitleHeader(primaryColor),
-          
+
           _buildSectionHeader("نص الحديث الشريف", primaryColor),
           _buildHadithTextCard(),
 
           if (hasMeanings) ...[
             const SizedBox(height: 10),
             _buildSectionHeader("معاني الكلمات", primaryColor),
-            _buildVocabularyCard(sections.firstWhere((s) => s['section_title'] == "معاني الكلمات")['questions']),
+            _buildVocabularyCard(
+              sections.firstWhere(
+                (s) => s['section_title'] == "معاني الكلمات",
+              )['questions'],
+            ),
           ],
-          
+
           if (hasGuidance) ...[
             const SizedBox(height: 10),
             _buildSectionHeader("أبرز ما ترشد إليه الحديث", primaryColor),
-            _buildGuidanceCard(sections.firstWhere((s) => s['section_title'] == "أهم ما يرشد إليه الحديث")),
+            _buildGuidanceCard(
+              sections.firstWhere(
+                (s) => s['section_title'] == "أهم ما يرشد إليه الحديث",
+              ),
+            ),
           ],
         ],
       ),
@@ -222,13 +279,26 @@ class _HadithsScreenState extends State<HadithsScreen> {
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text(selectedLesson!['lesson_title'],
-                textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryColor, fontFamily: 'Tajawal')),
+            child: Text(
+              selectedLesson!['lesson_title'],
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: primaryColor,
+                fontFamily: 'Tajawal',
+              ),
+            ),
           ),
           const SizedBox(height: 6),
-          Text(selectedLesson!['unit_title'] ?? hadithData!['unit'] ?? "",
-              style: const TextStyle(fontSize: 14, color: Colors.grey, fontFamily: 'Tajawal')),
+          Text(
+            selectedLesson!['unit_title'] ?? hadithData!['unit'] ?? "",
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.grey,
+              fontFamily: 'Tajawal',
+            ),
+          ),
           if (selectedLesson!['note'] != null) ...[
             const SizedBox(height: 10),
             Container(
@@ -240,7 +310,12 @@ class _HadithsScreenState extends State<HadithsScreen> {
               ),
               child: Text(
                 selectedLesson!['note'],
-                style: const TextStyle(fontSize: 12, color: Colors.blue, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.blue,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Tajawal',
+                ),
               ),
             ),
           ],
@@ -258,10 +333,21 @@ class _HadithsScreenState extends State<HadithsScreen> {
           Container(
             width: 4,
             height: 20,
-            decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
           const SizedBox(width: 10),
-          Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E293B), fontFamily: 'Tajawal')),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1E293B),
+              fontFamily: 'Tajawal',
+            ),
+          ),
         ],
       ),
     );
@@ -273,22 +359,45 @@ class _HadithsScreenState extends State<HadithsScreen> {
       padding: const EdgeInsets.all(25),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), offset: const Offset(0, 2), blurRadius: 5)],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            offset: const Offset(0, 2),
+            blurRadius: 5,
+          ),
+        ],
       ),
       child: Text.rich(
         TextSpan(
           children: [
             const TextSpan(
-              text: "قَالَ رَسُولُ اللَّهِ (صَلَّى اللَّهُ عَلَيْهِ وَآلِهِ وَسَلَّمَ):\n\n",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.black, fontFamily: 'Tajawal'),
+              text:
+                  "قَالَ رَسُولُ اللَّهِ (صَلَّى اللَّهُ عَلَيْهِ وَآلِهِ وَسَلَّمَ):\n\n",
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.black,
+                fontFamily: 'Tajawal',
+              ),
             ),
             TextSpan(
               text: selectedLesson!['hadith_text'],
-              style: const TextStyle(fontSize: 18, height: 2.0, fontWeight: FontWeight.w600, fontFamily: 'Amiri', color: Color(0xFF1E293B)),
+              style: const TextStyle(
+                fontSize: 18,
+                height: 2.0,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Amiri',
+                color: Color(0xFF1E293B),
+              ),
             ),
             const TextSpan(
               text: "\n\nصَدَقَ رَسُولُ اللَّهِ",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17, color: Colors.blueGrey, fontFamily: 'Tajawal'),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 17,
+                color: Colors.blueGrey,
+                fontFamily: 'Tajawal',
+              ),
             ),
           ],
         ),
@@ -303,7 +412,10 @@ class _HadithsScreenState extends State<HadithsScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(10),
       margin: const EdgeInsets.symmetric(horizontal: 15),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+      ),
       child: Column(
         children: questions.asMap().entries.map((entry) {
           final index = entry.key;
@@ -317,15 +429,37 @@ class _HadithsScreenState extends State<HadithsScreen> {
   Widget _buildVocabRow(String word, String meaning, bool isGray) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
-      decoration: BoxDecoration(color: isGray ? Colors.grey[50] : Colors.white, borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(
+        color: isGray ? Colors.grey[50] : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(flex: 2, child: Text(word, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue, fontFamily: 'Tajawal'))),
+          Expanded(
+            flex: 2,
+            child: Text(
+              word,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.blue,
+                fontFamily: 'Tajawal',
+              ),
+            ),
+          ),
           const SizedBox(width: 10),
           const Icon(Icons.arrow_forward, size: 14, color: Colors.grey),
           const SizedBox(width: 10),
-          Expanded(flex: 3, child: Text(meaning, style: const TextStyle(color: Color(0xFF475569), fontFamily: 'Tajawal'))),
+          Expanded(
+            flex: 3,
+            child: Text(
+              meaning,
+              style: const TextStyle(
+                color: Color(0xFF475569),
+                fontFamily: 'Tajawal',
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -339,7 +473,10 @@ class _HadithsScreenState extends State<HadithsScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       margin: const EdgeInsets.symmetric(horizontal: 15),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -361,9 +498,26 @@ class _HadithsScreenState extends State<HadithsScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text("${index + 1}.", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber, fontSize: 14)),
+                  Text(
+                    "${index + 1}.",
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Colors.amber,
+                      fontSize: 14,
+                    ),
+                  ),
                   const SizedBox(width: 12),
-                  Expanded(child: Text(guidance[index], style: const TextStyle(fontSize: 14, height: 1.6, color: Color(0xFF334155), fontFamily: 'Tajawal'))),
+                  Expanded(
+                    child: Text(
+                      guidance[index],
+                      style: const TextStyle(
+                        fontSize: 14,
+                        height: 1.6,
+                        color: Color(0xFF334155),
+                        fontFamily: 'Tajawal',
+                      ),
+                    ),
+                  ),
                 ],
               ),
             );

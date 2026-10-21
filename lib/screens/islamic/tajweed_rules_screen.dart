@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 class TajweedRulesScreen extends StatelessWidget {
   const TajweedRulesScreen({super.key});
@@ -14,12 +15,26 @@ class TajweedRulesScreen extends StatelessWidget {
       child: Scaffold(
         backgroundColor: Colors.white,
         appBar: AppBar(
-          title: const Text("أحكام التلاوة",
-              style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
-          backgroundColor: primaryColor,
+          title: const Text(
+            "أحكام التلاوة",
+            style: TextStyle(
+              fontFamily: 'Tajawal',
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF1A2238),
+              fontSize: 19,
+            ),
+          ),
+          backgroundColor: Colors.white,
+          foregroundColor: const Color(0xFF1A2238),
           elevation: 0,
-          centerTitle: false,
-          iconTheme: const IconThemeData(color: Colors.white),
+          scrolledUnderElevation: 0,
+          surfaceTintColor: Colors.white,
+          centerTitle: true,
+          systemOverlayStyle: const SystemUiOverlayStyle(
+            statusBarColor: Colors.white,
+            statusBarIconBrightness: Brightness.dark,
+            statusBarBrightness: Brightness.light,
+          ),
         ),
         body: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
@@ -34,18 +49,35 @@ class TajweedRulesScreen extends StatelessWidget {
               const SizedBox(height: 30),
               _buildRuleSection(
                 title: "أولاً: حكم الإظهار",
-                definition: "وهو أن تخرج النون الساكنة أو التنوين من مخرجها من غير غنة فيقرعه اللسان إذا جاء بعدهما أحد حروف الحلق الستة (ء - هـ - ح - خ - ع - غ) والمجموعة في أوائل كلمات: (أخي هاك علماً حازه غير خاسر). ويقع الإظهار في كلمة أو كلمتين.",
+                definition:
+                    "وهو أن تخرج النون الساكنة أو التنوين من مخرجها من غير غنة فيقرعه اللسان إذا جاء بعدهما أحد حروف الحلق الستة (ء - هـ - ح - خ - ع - غ) والمجموعة في أوائل كلمات: (أخي هاك علماً حازه غير خاسر). ويقع الإظهار في كلمة أو كلمتين.",
                 extraContent: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 10),
-                    _buildSubRuleBox("علامة الإظهار:", "رأس خاء (حـ) صغيرة فوق النون مثل: عَنْهُمْ، أَنْعَمْتَ", primaryColor),
+                    _buildSubRuleBox(
+                      "علامة الإظهار:",
+                      "رأس خاء (حـ) صغيرة فوق النون مثل: عَنْهُمْ، أَنْعَمْتَ",
+                      primaryColor,
+                    ),
                   ],
                 ),
                 examples: [
-                  {'word': 'أَنْ أَتَاكُم', 'rule': 'إظهار', 'reason': 'جاء بعد النون الساكنة حرف الإظهار (أ)'},
-                  {'word': 'بَيَاتاً أَوْ', 'rule': 'إظهار', 'reason': 'جاء بعد التنوين حرف الإظهار (أ)'},
-                  {'word': 'مِنْ هَادٍ', 'rule': 'إظهار', 'reason': 'جاء بعد النون الساكنة حرف الإظهار (هـ)'},
+                  {
+                    'word': 'أَنْ أَتَاكُم',
+                    'rule': 'إظهار',
+                    'reason': 'جاء بعد النون الساكنة حرف الإظهار (أ)',
+                  },
+                  {
+                    'word': 'بَيَاتاً أَوْ',
+                    'rule': 'إظهار',
+                    'reason': 'جاء بعد التنوين حرف الإظهار (أ)',
+                  },
+                  {
+                    'word': 'مِنْ هَادٍ',
+                    'rule': 'إظهار',
+                    'reason': 'جاء بعد النون الساكنة حرف الإظهار (هـ)',
+                  },
                 ],
                 primaryColor: primaryColor,
                 secondaryColor: secondaryColor,
@@ -53,18 +85,35 @@ class TajweedRulesScreen extends StatelessWidget {
               const SizedBox(height: 25),
               _buildRuleSection(
                 title: "ثانياً: حكم الإقلاب",
-                definition: "هو قلب النون الساكنة أو التنوين ميماً مخفاة مع الغنة إذا جاء بعدها حرف الباء ويقع في كلمة واحدة أو كلمتين.",
+                definition:
+                    "هو قلب النون الساكنة أو التنوين ميماً مخفاة مع الغنة إذا جاء بعدها حرف الباء ويقع في كلمة واحدة أو كلمتين.",
                 extraContent: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 10),
-                    _buildSubRuleBox("علامة الإقلاب:", "وضع حرف ميم (م) فوق النون أو بدلاً من الحركة الثانية في التنوين", primaryColor),
+                    _buildSubRuleBox(
+                      "علامة الإقلاب:",
+                      "وضع حرف ميم (م) فوق النون أو بدلاً من الحركة الثانية في التنوين",
+                      primaryColor,
+                    ),
                   ],
                 ),
                 examples: [
-                  {'word': 'أَنبِيَاء', 'rule': 'إقلاب', 'reason': 'جاء بعد النون الساكنة حرف الباء'},
-                  {'word': 'مِن بَعْدِ', 'rule': 'إقلاب', 'reason': 'جاء بعد النون الساكنة حرف الباء'},
-                  {'word': 'سَمِيعٌ بَصِيرٌ', 'rule': 'إقلاب', 'reason': 'جاء بعد التنوين حرف الباء'},
+                  {
+                    'word': 'أَنبِيَاء',
+                    'rule': 'إقلاب',
+                    'reason': 'جاء بعد النون الساكنة حرف الباء',
+                  },
+                  {
+                    'word': 'مِن بَعْدِ',
+                    'rule': 'إقلاب',
+                    'reason': 'جاء بعد النون الساكنة حرف الباء',
+                  },
+                  {
+                    'word': 'سَمِيعٌ بَصِيرٌ',
+                    'rule': 'إقلاب',
+                    'reason': 'جاء بعد التنوين حرف الباء',
+                  },
                 ],
                 primaryColor: primaryColor,
                 secondaryColor: secondaryColor,
@@ -72,18 +121,31 @@ class TajweedRulesScreen extends StatelessWidget {
               const SizedBox(height: 25),
               _buildRuleSection(
                 title: "ثالثاً: حكم الإدغام",
-                definition: "هو قلب النون الساكنة أو التنوين في آخر الكلمة الأولى إلى أحد حروف (يرملون) في بداية الكلمة الثانية ليصبحا حرفاً واحداً مشدداً. وهو على قسمين:",
+                definition:
+                    "هو قلب النون الساكنة أو التنوين في آخر الكلمة الأولى إلى أحد حروف (يرملون) في بداية الكلمة الثانية ليصبحا حرفاً واحداً مشدداً. وهو على قسمين:",
                 extraContent: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 15),
-                    _buildSubRuleBox("1. الإدغام بغنة", "حروفه: (ي، ن، م، و) مجموعة في كلمة (ينمو)", primaryColor),
+                    _buildSubRuleBox(
+                      "1. الإدغام بغنة",
+                      "حروفه: (ي، ن، م، و) مجموعة في كلمة (ينمو)",
+                      primaryColor,
+                    ),
                     const SizedBox(height: 10),
-                    _buildSubRuleBox("2. الإدغام بدون غنة", "حروفه: (ل، ر)", primaryColor),
+                    _buildSubRuleBox(
+                      "2. الإدغام بدون غنة",
+                      "حروفه: (ل، ر)",
+                      primaryColor,
+                    ),
                     const SizedBox(height: 15),
                     const Text(
                       "ملاحظات هامة:",
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.redAccent),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: Colors.redAccent,
+                      ),
                     ),
                     const SizedBox(height: 5),
                     const Text(
@@ -93,10 +155,26 @@ class TajweedRulesScreen extends StatelessWidget {
                   ],
                 ),
                 examples: [
-                  {'word': 'مَن يَعْمَلْ', 'rule': 'إدغام بغنة', 'reason': 'جاء بعد النون الساكنة حرف الياء'},
-                  {'word': 'مِن مَّاءٍ', 'rule': 'إدغام بغنة', 'reason': 'جاء بعد النون الساكنة حرف الميم'},
-                  {'word': 'مِن رَّبِّهِمْ', 'rule': 'إدغام بدون غنة', 'reason': 'جاء بعد النون الساكنة حرف الراء'},
-                  {'word': 'هُدًى لِّلْمُتَّقِينَ', 'rule': 'إدغام بدون غنة', 'reason': 'جاء بعد التنوين حرف اللام'},
+                  {
+                    'word': 'مَن يَعْمَلْ',
+                    'rule': 'إدغام بغنة',
+                    'reason': 'جاء بعد النون الساكنة حرف الياء',
+                  },
+                  {
+                    'word': 'مِن مَّاءٍ',
+                    'rule': 'إدغام بغنة',
+                    'reason': 'جاء بعد النون الساكنة حرف الميم',
+                  },
+                  {
+                    'word': 'مِن رَّبِّهِمْ',
+                    'rule': 'إدغام بدون غنة',
+                    'reason': 'جاء بعد النون الساكنة حرف الراء',
+                  },
+                  {
+                    'word': 'هُدًى لِّلْمُتَّقِينَ',
+                    'rule': 'إدغام بدون غنة',
+                    'reason': 'جاء بعد التنوين حرف اللام',
+                  },
                 ],
                 primaryColor: primaryColor,
                 secondaryColor: secondaryColor,
@@ -104,11 +182,24 @@ class TajweedRulesScreen extends StatelessWidget {
               const SizedBox(height: 25),
               _buildRuleSection(
                 title: "رابعاً: حكم الإخفاء",
-                definition: "هو النطق بالنون الساكنة أو التنوين خالية من التشديد وسطاً بين الإظهار والإدغام مع الغنة، إذا جاء بعدها أحد الحروف الخمسة عشر المجموعة في أوائل كلمات بيت الشعر:\n(صف ذا ثنا كم جاد شخص قد سما ... دم طيباً زد في تقى ضع ظالماً)",
+                definition:
+                    "هو النطق بالنون الساكنة أو التنوين خالية من التشديد وسطاً بين الإظهار والإدغام مع الغنة، إذا جاء بعدها أحد الحروف الخمسة عشر المجموعة في أوائل كلمات بيت الشعر:\n(صف ذا ثنا كم جاد شخص قد سما ... دم طيباً زد في تقى ضع ظالماً)",
                 examples: [
-                  {'word': 'مَنصُوراً', 'rule': 'إخفاء', 'reason': 'جاء بعد النون الساكنة حرف الصاد'},
-                  {'word': 'مِن طِينٍ', 'rule': 'إخفاء', 'reason': 'جاء بعد النون الساكنة حرف الطاء'},
-                  {'word': 'قَوْماً جَبَّارِينَ', 'rule': 'إخفاء', 'reason': 'جاء بعد التنوين حرف الجيم'},
+                  {
+                    'word': 'مَنصُوراً',
+                    'rule': 'إخفاء',
+                    'reason': 'جاء بعد النون الساكنة حرف الصاد',
+                  },
+                  {
+                    'word': 'مِن طِينٍ',
+                    'rule': 'إخفاء',
+                    'reason': 'جاء بعد النون الساكنة حرف الطاء',
+                  },
+                  {
+                    'word': 'قَوْماً جَبَّارِينَ',
+                    'rule': 'إخفاء',
+                    'reason': 'جاء بعد التنوين حرف الجيم',
+                  },
                 ],
                 primaryColor: primaryColor,
                 secondaryColor: secondaryColor,
@@ -147,7 +238,10 @@ class TajweedRulesScreen extends StatelessWidget {
           const Text(
             "أحكام النون الساكنة والتنوين",
             style: TextStyle(
-                color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 10),
           Container(
@@ -201,12 +295,19 @@ class TajweedRulesScreen extends StatelessWidget {
           Text(
             title,
             style: TextStyle(
-                fontWeight: FontWeight.bold, color: primaryColor, fontSize: 16),
+              fontWeight: FontWeight.bold,
+              color: primaryColor,
+              fontSize: 16,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             content,
-            style: const TextStyle(fontSize: 14, height: 1.5, color: Colors.black87),
+            style: const TextStyle(
+              fontSize: 14,
+              height: 1.5,
+              color: Colors.black87,
+            ),
           ),
         ],
       ),
@@ -220,17 +321,25 @@ class TajweedRulesScreen extends StatelessWidget {
         _buildSectionTitle("الفرق بين النون الساكنة والتنوين", primaryColor),
         const SizedBox(height: 15),
         Table(
-          border: TableBorder.all(color: Colors.grey[300]!, borderRadius: BorderRadius.circular(10)),
-          columnWidths: const {
-            0: FlexColumnWidth(1),
-            1: FlexColumnWidth(1),
-          },
+          border: TableBorder.all(
+            color: Colors.grey[300]!,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          columnWidths: const {0: FlexColumnWidth(1), 1: FlexColumnWidth(1)},
           children: [
             TableRow(
               decoration: BoxDecoration(color: primaryColor.withAlpha(25)),
               children: [
-                _buildTableCell("النون الساكنة", isHeader: true, primaryColor: primaryColor),
-                _buildTableCell("التنوين", isHeader: true, primaryColor: primaryColor),
+                _buildTableCell(
+                  "النون الساكنة",
+                  isHeader: true,
+                  primaryColor: primaryColor,
+                ),
+                _buildTableCell(
+                  "التنوين",
+                  isHeader: true,
+                  primaryColor: primaryColor,
+                ),
               ],
             ),
             TableRow(
@@ -257,7 +366,11 @@ class TajweedRulesScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTableCell(String text, {bool isHeader = false, Color? primaryColor}) {
+  Widget _buildTableCell(
+    String text, {
+    bool isHeader = false,
+    Color? primaryColor,
+  }) {
     return Padding(
       padding: const EdgeInsets.all(12.0),
       child: Text(
@@ -311,16 +424,21 @@ class TajweedRulesScreen extends StatelessWidget {
               Text(
                 title,
                 style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: primaryColor),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: primaryColor,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 15),
           Text(
             definition,
-            style: const TextStyle(fontSize: 14, height: 1.6, color: Colors.black87),
+            style: const TextStyle(
+              fontSize: 14,
+              height: 1.6,
+              color: Colors.black87,
+            ),
           ),
           if (extraContent != null) extraContent,
           const SizedBox(height: 20),
@@ -329,13 +447,19 @@ class TajweedRulesScreen extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
           ),
           const SizedBox(height: 10),
-          ...examples.map((ex) => _buildExampleRow(ex, primaryColor, secondaryColor)),
+          ...examples.map(
+            (ex) => _buildExampleRow(ex, primaryColor, secondaryColor),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildExampleRow(Map<String, String> ex, Color primaryColor, Color secondaryColor) {
+  Widget _buildExampleRow(
+    Map<String, String> ex,
+    Color primaryColor,
+    Color secondaryColor,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(12),
@@ -350,10 +474,11 @@ class TajweedRulesScreen extends StatelessWidget {
             child: Text(
               ex['word']!,
               style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: primaryColor,
-                  fontFamily: 'Tajawal'),
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: primaryColor,
+                fontFamily: 'Tajawal',
+              ),
             ),
           ),
           Expanded(
@@ -363,7 +488,11 @@ class TajweedRulesScreen extends StatelessWidget {
               children: [
                 Text(
                   "الحكم: ${ex['rule']}",
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: secondaryColor),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: secondaryColor,
+                  ),
                 ),
                 Text(
                   "السبب: ${ex['reason']}",
@@ -385,7 +514,10 @@ class TajweedRulesScreen extends StatelessWidget {
         Text(
           title,
           style: TextStyle(
-              fontSize: 18, fontWeight: FontWeight.bold, color: primaryColor),
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: primaryColor,
+          ),
         ),
       ],
     );
@@ -403,7 +535,11 @@ class TajweedRulesScreen extends StatelessWidget {
         children: [
           Text(
             title,
-            style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor, fontSize: 13),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: primaryColor,
+              fontSize: 13,
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(

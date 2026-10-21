@@ -13,6 +13,7 @@ class _SurahScreenState extends State<SurahScreen> {
   Map<String, dynamic>? islamicData;
   Map<String, dynamic>? selectedUnit;
   bool isInitialLoading = true;
+  bool _showSelectionBar = true;
 
   @override
   void initState() {
@@ -22,7 +23,9 @@ class _SurahScreenState extends State<SurahScreen> {
 
   Future<void> _loadSurahData() async {
     try {
-      final String response = await rootBundle.loadString('assets/jsons/Content/Preparatory/Islamic/islamic_surah.json');
+      final String response = await rootBundle.loadString(
+        'assets/jsons/Content/Preparatory/Islamic/islamic_surah.json',
+      );
       final data = json.decode(response);
       setState(() {
         islamicData = data;
@@ -43,114 +46,144 @@ class _SurahScreenState extends State<SurahScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: const Text("سور الحفظ", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, fontFamily: 'Tajawal')),
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
+        title: const Text(
+          "سور الحفظ",
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            fontSize: 19,
+            fontFamily: 'Tajawal',
+            color: Color(0xFF1A2238),
+          ),
+        ),
+        backgroundColor: Colors.white,
+        foregroundColor: const Color(0xFF1A2238),
         elevation: 0,
         centerTitle: true,
-        toolbarHeight: 70,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => Navigator.pop(context),
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.white,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: Colors.white,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list_rounded),
-            onPressed: isInitialLoading ? null : () => _showSelectionBottomSheet(context, primaryColor),
+            tooltip: _showSelectionBar
+                ? 'إخفاء اختيار السورة'
+                : 'إظهار اختيار السورة',
+            icon: Icon(
+              _showSelectionBar
+                  ? Icons.keyboard_arrow_up_rounded
+                  : Icons.tune_rounded,
+            ),
+            onPressed: isInitialLoading
+                ? null
+                : () => setState(() => _showSelectionBar = !_showSelectionBar),
           ),
         ],
       ),
-      body: isInitialLoading 
-          ? Center(child: SizedBox(width: 40, height: 40, child: CircularProgressIndicator(strokeWidth: 3, color: primaryColor)))
+      body: isInitialLoading
+          ? Center(
+              child: SizedBox(
+                width: 40,
+                height: 40,
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  color: primaryColor,
+                ),
+              ),
+            )
           : (islamicData == null
-              ? const Center(child: Text("تعذر تحميل البيانات"))
-              : _buildSurahContent(primaryColor)),
+                ? const Center(child: Text("تعذر تحميل البيانات"))
+                : Stack(
+                    children: [
+                      Positioned.fill(
+                        top: _showSelectionBar ? 62 : 0,
+                        child: _buildSurahContent(primaryColor),
+                      ),
+                      if (_showSelectionBar)
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          right: 0,
+                          child: _buildSurahSelector(),
+                        ),
+                    ],
+                  )),
     );
   }
 
-  void _showSelectionBottomSheet(BuildContext context, Color primaryColor) {
+  Widget _buildSurahSelector() {
     final units = islamicData?['units'] as List? ?? [];
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.white,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF1A2238).withValues(alpha: 0.12),
+            blurRadius: 20,
+            offset: const Offset(0, 7),
+          ),
+        ],
       ),
-      builder: (context) {
-        Map<String, dynamic>? tempUnit = selectedUnit;
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "اختيار السورة",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
-                  ),
-                  const SizedBox(height: 20),
-                  _buildModalDropdown(
-                    "السورة",
-                    Icons.menu_book_rounded,
-                    units.map((u) => u['lesson']['subtitle'].toString()).toList(),
-                    tempUnit?['lesson']['subtitle'],
-                    (val) {
-                      final newUnit = units.firstWhere((u) => u['lesson']['subtitle'] == val);
-                      setModalState(() => tempUnit = newUnit);
-                    },
-                  ),
-                  const SizedBox(height: 30),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        setState(() => selectedUnit = tempUnit);
-                        Navigator.pop(context);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: SizedBox(
+        height: 62,
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+            itemCount: units.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 9),
+            itemBuilder: (context, index) {
+              final unit = units[index] as Map<String, dynamic>;
+              final title = unit['lesson']['subtitle'].toString();
+              final selected = selectedUnit == unit;
+              return Material(
+                color: selected ? const Color(0xFF1A2238) : Colors.white,
+                borderRadius: BorderRadius.circular(14),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(14),
+                  onTap: () => setState(() => selectedUnit = unit),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: selected
+                            ? const Color(0xFF1A2238)
+                            : const Color(0xFFE5E8EF),
                       ),
-                      child: const Text("تأكيد الاختيار", style: TextStyle(fontWeight: FontWeight.bold, fontFamily: 'Tajawal')),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (selected) ...[
+                          const Icon(
+                            Icons.check_rounded,
+                            color: Color(0xFFF2B833),
+                            size: 17,
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        Text(
+                          title,
+                          style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            color: selected
+                                ? Colors.white
+                                : const Color(0xFF1A2238),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 10),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildModalDropdown(String hint, IconData icon, List<String> items, String? value, ValueChanged<String?> onChanged) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          isExpanded: true,
-          value: value,
-          hint: Row(
-            children: [
-              Icon(icon, size: 20, color: Colors.grey[400]),
-              const SizedBox(width: 12),
-              Text(hint, style: TextStyle(color: Colors.grey[400], fontFamily: 'Tajawal')),
-            ],
+                ),
+              );
+            },
           ),
-          items: items.map((item) => DropdownMenuItem(value: item, child: Text(item, style: const TextStyle(fontFamily: 'Tajawal')))).toList(),
-          onChanged: onChanged,
         ),
       ),
     );
@@ -168,15 +201,27 @@ class _SurahScreenState extends State<SurahScreen> {
                 color: Colors.white,
                 shape: BoxShape.circle,
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 20),
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 20,
+                  ),
                 ],
               ),
-              child: Icon(Icons.menu_book_rounded, size: 50, color: primaryColor.withValues(alpha: 0.3)),
+              child: Icon(
+                Icons.menu_book_rounded,
+                size: 50,
+                color: primaryColor.withValues(alpha: 0.3),
+              ),
             ),
             const SizedBox(height: 20),
             const Text(
               "يرجى اختيار السورة للعرض",
-              style: TextStyle(color: Colors.grey, fontSize: 15, fontWeight: FontWeight.w600, fontFamily: 'Tajawal'),
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                fontFamily: 'Tajawal',
+              ),
             ),
           ],
         ),
@@ -188,7 +233,7 @@ class _SurahScreenState extends State<SurahScreen> {
       child: Column(
         children: [
           _buildSurahTitleHeader(primaryColor),
-          
+
           _buildSectionHeader("النص القرآني", primaryColor),
           _buildMergedSurahTextCard(),
 
@@ -197,7 +242,7 @@ class _SurahScreenState extends State<SurahScreen> {
           if (selectedUnit!['meanings_note'] != null)
             _buildNoteCard(selectedUnit!['meanings_note'], Colors.orange),
           _buildVocabularyCard(),
-          
+
           const SizedBox(height: 10),
           _buildSectionHeader("المعنى العام", primaryColor),
           _buildGeneralMeaningCard(),
@@ -219,11 +264,24 @@ class _SurahScreenState extends State<SurahScreen> {
       color: Colors.white,
       child: Column(
         children: [
-          Text(lesson['subtitle'],
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: primaryColor, fontFamily: 'Tajawal')),
+          Text(
+            lesson['subtitle'],
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              color: primaryColor,
+              fontFamily: 'Tajawal',
+            ),
+          ),
           const SizedBox(height: 6),
-          Text(selectedUnit!['title'],
-              style: const TextStyle(fontSize: 14, color: Colors.grey, fontFamily: 'Tajawal')),
+          Text(
+            selectedUnit!['title'],
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.grey,
+              fontFamily: 'Tajawal',
+            ),
+          ),
           if (lesson['memorization_range'] != null) ...[
             const SizedBox(height: 10),
             Container(
@@ -235,7 +293,12 @@ class _SurahScreenState extends State<SurahScreen> {
               ),
               child: Text(
                 "آيات الحفظ: من ${lesson['memorization_range'].toString().split('-').first} إلى ${lesson['memorization_range'].toString().split('-').last}",
-                style: const TextStyle(fontSize: 12, color: Colors.green, fontWeight: FontWeight.bold, fontFamily: 'Tajawal'),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.green,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Tajawal',
+                ),
               ),
             ),
           ],
@@ -253,10 +316,21 @@ class _SurahScreenState extends State<SurahScreen> {
           Container(
             width: 4,
             height: 20,
-            decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(2)),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(2),
+            ),
           ),
           const SizedBox(width: 10),
-          Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFF1E293B), fontFamily: 'Tajawal')),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF1E293B),
+              fontFamily: 'Tajawal',
+            ),
+          ),
         ],
       ),
     );
@@ -272,14 +346,24 @@ class _SurahScreenState extends State<SurahScreen> {
       padding: const EdgeInsets.all(25),
       decoration: BoxDecoration(
         color: Colors.white,
-        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.02), offset: const Offset(0, 2), blurRadius: 5)],
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.02),
+            offset: const Offset(0, 2),
+            blurRadius: 5,
+          ),
+        ],
       ),
       child: Text.rich(
         TextSpan(
           children: [
             const TextSpan(
               text: "بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ\n\n",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.black),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                color: Colors.black,
+              ),
             ),
             ...List.generate(verses.length, (index) {
               final v = verses[index];
@@ -287,13 +371,23 @@ class _SurahScreenState extends State<SurahScreen> {
             }),
             const TextSpan(
               text: "\n\nصَدَقَ اللَّهُ الْعَلِيُّ الْعَظِيمُ",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: Colors.blueGrey),
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.blueGrey,
+              ),
             ),
           ],
         ),
         textAlign: TextAlign.center,
         textDirection: TextDirection.rtl,
-        style: const TextStyle(fontSize: 18, height: 2.3, fontWeight: FontWeight.w500, fontFamily: 'Tajawal', color: Color(0xFF1E293B)),
+        style: const TextStyle(
+          fontSize: 18,
+          height: 2.3,
+          fontWeight: FontWeight.w500,
+          fontFamily: 'Tajawal',
+          color: Color(0xFF1E293B),
+        ),
       ),
     );
   }
@@ -305,7 +399,10 @@ class _SurahScreenState extends State<SurahScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(10),
       margin: const EdgeInsets.symmetric(horizontal: 15),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+      ),
       child: Column(
         children: vocab.asMap().entries.map((entry) {
           final index = entry.key;
@@ -349,15 +446,37 @@ class _SurahScreenState extends State<SurahScreen> {
   Widget _buildVocabRow(String word, String meaning, bool isGray) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 15),
-      decoration: BoxDecoration(color: isGray ? Colors.grey[50] : Colors.white, borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(
+        color: isGray ? Colors.grey[50] : Colors.white,
+        borderRadius: BorderRadius.circular(8),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(flex: 2, child: Text(word, style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue, fontFamily: 'Tajawal'))),
+          Expanded(
+            flex: 2,
+            child: Text(
+              word,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.blue,
+                fontFamily: 'Tajawal',
+              ),
+            ),
+          ),
           const SizedBox(width: 10),
           const Icon(Icons.arrow_forward, size: 14, color: Colors.grey),
           const SizedBox(width: 10),
-          Expanded(flex: 3, child: Text(meaning, style: const TextStyle(color: Color(0xFF475569), fontFamily: 'Tajawal'))),
+          Expanded(
+            flex: 3,
+            child: Text(
+              meaning,
+              style: const TextStyle(
+                color: Color(0xFF475569),
+                fontFamily: 'Tajawal',
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -371,7 +490,10 @@ class _SurahScreenState extends State<SurahScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       margin: const EdgeInsets.symmetric(horizontal: 15),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: meanings.map((item) {
@@ -386,9 +508,21 @@ class _SurahScreenState extends State<SurahScreen> {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.menu_book_rounded, size: 16, color: Colors.blue),
+                    const Icon(
+                      Icons.menu_book_rounded,
+                      size: 16,
+                      color: Colors.blue,
+                    ),
                     const SizedBox(width: 8),
-                    Text("الآيات ($verseRange)", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue, fontSize: 14, fontFamily: 'Tajawal')),
+                    Text(
+                      "الآيات ($verseRange)",
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue,
+                        fontSize: 14,
+                        fontFamily: 'Tajawal',
+                      ),
+                    ),
                   ],
                 ),
                 if (verseText.isNotEmpty)
@@ -396,10 +530,34 @@ class _SurahScreenState extends State<SurahScreen> {
                     width: double.infinity,
                     margin: const EdgeInsets.symmetric(vertical: 10),
                     padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(color: Colors.blue.withValues(alpha: 0.03), borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.blue.withValues(alpha: 0.05))),
-                    child: Text(verseText, textAlign: TextAlign.center, textDirection: TextDirection.rtl, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.blueGrey, height: 1.8)),
+                    decoration: BoxDecoration(
+                      color: Colors.blue.withValues(alpha: 0.03),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: Colors.blue.withValues(alpha: 0.05),
+                      ),
+                    ),
+                    child: Text(
+                      verseText,
+                      textAlign: TextAlign.center,
+                      textDirection: TextDirection.rtl,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.blueGrey,
+                        height: 1.8,
+                      ),
+                    ),
                   ),
-                Text(item['text'], style: const TextStyle(fontSize: 14, height: 1.7, color: Color(0xFF334155), fontFamily: 'Tajawal')),
+                Text(
+                  item['text'],
+                  style: const TextStyle(
+                    fontSize: 14,
+                    height: 1.7,
+                    color: Color(0xFF334155),
+                    fontFamily: 'Tajawal',
+                  ),
+                ),
               ],
             ),
           );
@@ -435,7 +593,10 @@ class _SurahScreenState extends State<SurahScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       margin: const EdgeInsets.symmetric(horizontal: 15),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: List.generate(guidance.length, (index) {
@@ -444,9 +605,26 @@ class _SurahScreenState extends State<SurahScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text("${index + 1}.", style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.amber, fontSize: 14)),
+                Text(
+                  "${index + 1}.",
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.amber,
+                    fontSize: 14,
+                  ),
+                ),
                 const SizedBox(width: 12),
-                Expanded(child: Text(guidance[index], style: const TextStyle(fontSize: 14, height: 1.6, color: Color(0xFF334155), fontFamily: 'Tajawal'))),
+                Expanded(
+                  child: Text(
+                    guidance[index],
+                    style: const TextStyle(
+                      fontSize: 14,
+                      height: 1.6,
+                      color: Color(0xFF334155),
+                      fontFamily: 'Tajawal',
+                    ),
+                  ),
+                ),
               ],
             ),
           );
