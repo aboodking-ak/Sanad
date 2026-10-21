@@ -19,12 +19,61 @@ class MinisterialsScreen extends StatefulWidget {
 }
 
 class _MinisterialsScreenState extends State<MinisterialsScreen> {
+  static const _navy = Color(0xFF1A2238);
+  static const _gold = Color(0xFFF2B833);
+
   String? selectedChapter;
   String? selectedTopic;
+  String? selectedPart;
+  bool _showSelectionBar = true;
   bool isInitialLoading = true;
+  int _currentQuestionIndex = 0;
+  final TextEditingController _questionInputController = TextEditingController(
+    text: '1',
+  );
 
   Map<String, dynamic> subjectData = {};
   List<dynamic> filteredQuestions = [];
+
+  List<dynamic> get _currentLessons => selectedChapter == null
+      ? const []
+      : (subjectData[selectedChapter!]?['lessons'] as List? ?? const []);
+
+  List<String> get _availableParts {
+    dynamic lessonData;
+    if (selectedTopic != null) {
+      for (final lesson in _currentLessons) {
+        if (lesson['lesson_title'] == selectedTopic) {
+          lessonData = lesson['data'];
+          break;
+        }
+      }
+    } else if (_currentLessons.length == 1) {
+      lessonData = _currentLessons.first['data'];
+    }
+
+    if (lessonData is Map && lessonData['parts'] is List) {
+      return (lessonData['parts'] as List)
+          .map((part) => part['part']?.toString() ?? '')
+          .where((part) => part.isNotEmpty)
+          .toList();
+    }
+    return const [];
+  }
+
+  double get _selectionPanelHeight {
+    if (!_showSelectionBar || subjectData.isEmpty) return 0;
+    final selectorRows =
+        (_currentLessons.length > 1 ? 1 : 0) +
+        (_availableParts.isNotEmpty ? 1 : 0);
+    return 62 + (selectorRows > 0 ? 8 : 0) + selectorRows * 45;
+  }
+
+  @override
+  void dispose() {
+    _questionInputController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -76,15 +125,51 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
         },
       ],
       'العربية': [
-        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/istifham_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/nafi_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/takdim_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/tawkid_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/nidaa_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/taajjub_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'rules/madh_thamm_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'literature/literature_ministerials.json'},
-        {'cat': 'Preparatory', 'sub': 'Arabic', 'file': 'criticism/criticism_ministerials.json'},
+        {
+          'cat': 'Preparatory',
+          'sub': 'Arabic',
+          'file': 'rules/istifham_ministerials.json',
+        },
+        {
+          'cat': 'Preparatory',
+          'sub': 'Arabic',
+          'file': 'rules/nafi_ministerials.json',
+        },
+        {
+          'cat': 'Preparatory',
+          'sub': 'Arabic',
+          'file': 'rules/takdim_ministerials.json',
+        },
+        {
+          'cat': 'Preparatory',
+          'sub': 'Arabic',
+          'file': 'rules/tawkid_ministerials.json',
+        },
+        {
+          'cat': 'Preparatory',
+          'sub': 'Arabic',
+          'file': 'rules/nidaa_ministerials.json',
+        },
+        {
+          'cat': 'Preparatory',
+          'sub': 'Arabic',
+          'file': 'rules/taajjub_ministerials.json',
+        },
+        {
+          'cat': 'Preparatory',
+          'sub': 'Arabic',
+          'file': 'rules/madh_thamm_ministerials.json',
+        },
+        {
+          'cat': 'Preparatory',
+          'sub': 'Arabic',
+          'file': 'literature/literature_ministerials.json',
+        },
+        {
+          'cat': 'Preparatory',
+          'sub': 'Arabic',
+          'file': 'criticism/criticism_ministerials.json',
+        },
       ],
       'الإنكليزي': [
         {
@@ -151,7 +236,9 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
             if (fileName.contains('tajweed')) {
               mainCategory = "أحكام التلاوة";
             } else if (fileName.contains('unit1')) {
-              mainCategory = widget.subjectName == 'الإنكليزي' ? "Unit 1" : "الوحدة الأولى";
+              mainCategory = widget.subjectName == 'الإنكليزي'
+                  ? "Unit 1"
+                  : "الوحدة الأولى";
             } else if (fileName.contains('chapter1')) {
               mainCategory = "الفصل الأول";
             }
@@ -173,7 +260,9 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
                 'data': item,
               });
             }
-          } else if (data is Map && data.containsKey('lessons') && data['lessons'] is List) {
+          } else if (data is Map &&
+              data.containsKey('lessons') &&
+              data['lessons'] is List) {
             // التعامل مع هيكل ملفات الإسلامية التي تحتوي على دروس بداخلها
             for (var subLesson in data['lessons']) {
               (subjectData[mainCategory]['lessons'] as List).add({
@@ -229,6 +318,7 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
       } else if (d.containsKey('parts')) {
         for (var part in d['parts']) {
           String partName = part['part'] ?? "";
+          if (selectedPart != null && partName != selectedPart) continue;
           if (part['questions'] != null) {
             for (var q in part['questions']) {
               Map<String, dynamic> qWithTag = Map<String, dynamic>.from(q);
@@ -254,87 +344,371 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
       }).toList();
     }
 
-    bool isSimpleSubject = ['الرياضيات', 'الإنكليزي', 'الأحياء', 'التاريخ', 'الجغرافية', 'الاقتصاد'].contains(widget.subjectName);
+    final selectedLessons = selectedTopic == null
+        ? lessons
+        : lessons
+              .where((lesson) => lesson['lesson_title'] == selectedTopic)
+              .toList();
 
-    if (isSimpleSubject || selectedTopic == null || selectedChapter == "أحكام التلاوة") {
-      // عرض كافة المواضيع في هذا القسم (تلقائياً للإنكليزي والأحياء، أو إذا لم يتم اختيار موضوع)
-      for (var lesson in lessons) {
-        final lessonTitle = lesson['lesson_title'];
-        final data = lesson['data'];
-
-        if (data is Map && data.containsKey('lessons') && data['lessons'] is List) {
-          for (var subLesson in data['lessons']) {
-            final subTitle = subLesson['lesson_title'] ?? subLesson['title'] ?? lessonTitle;
-            questionsList.addAll(getQuestionsFromData(subLesson, subTitle));
-          }
-        } else {
-          questionsList.addAll(getQuestionsFromData(data, lessonTitle));
-        }
-      }
-    } else {
-      // عرض موضوع محدد فقط (للعربية والإسلامية)
-      final lesson = lessons.firstWhere((l) => l['lesson_title'] == selectedTopic, orElse: () => lessons.first);
+    for (final lesson in selectedLessons) {
+      final lessonTitle = lesson['lesson_title'];
       final data = lesson['data'];
-
-      if (data is Map && data.containsKey('lessons') && data['lessons'] is List) {
-        for (var subLesson in data['lessons']) {
-          final subTitle = subLesson['lesson_title'] ?? subLesson['title'] ?? selectedTopic!;
+      if (data is Map && data['lessons'] is List) {
+        for (final subLesson in data['lessons']) {
+          final subTitle =
+              subLesson['lesson_title'] ?? subLesson['title'] ?? lessonTitle;
           questionsList.addAll(getQuestionsFromData(subLesson, subTitle));
         }
       } else {
-        questionsList.addAll(getQuestionsFromData(data, selectedTopic!));
+        questionsList.addAll(getQuestionsFromData(data, lessonTitle));
       }
     }
 
-    setState(() => filteredQuestions = questionsList);
+    setState(() {
+      filteredQuestions = questionsList;
+      _currentQuestionIndex = 0;
+      _questionInputController.text = '1';
+    });
+  }
+
+  void _changeQuestion(int delta) {
+    final nextIndex = _currentQuestionIndex + delta;
+    if (nextIndex < 0 || nextIndex >= filteredQuestions.length) return;
+    setState(() {
+      _currentQuestionIndex = nextIndex;
+      _questionInputController.text = '${nextIndex + 1}';
+    });
+  }
+
+  void _goToQuestionFromInput(String value) {
+    final requested = int.tryParse(value);
+    if (requested == null || filteredQuestions.isEmpty) {
+      _questionInputController.text = '${_currentQuestionIndex + 1}';
+      return;
+    }
+    final nextIndex = (requested - 1)
+        .clamp(0, filteredQuestions.length - 1)
+        .toInt();
+    FocusScope.of(context).unfocus();
+    setState(() {
+      _currentQuestionIndex = nextIndex;
+      _questionInputController.text = '${nextIndex + 1}';
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final primaryColor = theme.colorScheme.primary;
-    final secondaryColor = theme.colorScheme.secondary;
-
     return Scaffold(
-      backgroundColor: const Color(0xFFF1F5F9),
+      backgroundColor: const Color(0xFFF5F6FA),
       appBar: AppBar(
-        title: Text(
-          "وزاريات ${widget.subjectName}",
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        backgroundColor: primaryColor,
-        foregroundColor: Colors.white,
-        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: _navy,
         centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-          onPressed: () => Navigator.pop(context),
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.white,
+        systemOverlayStyle: const SystemUiOverlayStyle(
+          statusBarColor: _navy,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
+        ),
+        title: Text(
+          'وزاريات ${widget.subjectName}',
+          style: const TextStyle(
+            fontFamily: 'Tajawal',
+            color: _navy,
+            fontWeight: FontWeight.w800,
+            fontSize: 19,
+          ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list_rounded),
-            onPressed: isInitialLoading
-                ? null
-                : () => showSelectionSheet(context, primaryColor),
+            tooltip: _showSelectionBar
+                ? 'إخفاء الاختيارات'
+                : 'إظهار الاختيارات',
+            onPressed: () =>
+                setState(() => _showSelectionBar = !_showSelectionBar),
+            icon: Icon(
+              _showSelectionBar
+                  ? Icons.keyboard_arrow_up_rounded
+                  : Icons.tune_rounded,
+              color: _navy,
+            ),
           ),
         ],
       ),
       body: isInitialLoading
-          ? Center(
-              child: SizedBox(
-                width: 40,
-                height: 40,
-                child: CircularProgressIndicator(
-                  strokeWidth: 3,
-                  color: primaryColor,
+          ? const Center(child: CircularProgressIndicator(color: _gold))
+          : Stack(
+              children: [
+                Positioned.fill(
+                  top: _selectionPanelHeight,
+                  child: ClipRect(child: buildQuestionsList()),
                 ),
-              ),
-            )
-          : buildQuestionsList(primaryColor, secondaryColor),
+                // Paint the selector after the scrolling content so its shadow
+                // remains visible above the question as it reaches the top.
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: _buildSelectionPanel(),
+                ),
+              ],
+            ),
     );
   }
 
-  Widget buildQuestionsList(Color primaryColor, Color secondaryColor) {
+  Widget _buildChapterSelector() {
+    final chapters = subjectData.keys.toList();
+    if (chapters.isEmpty) return const SizedBox.shrink();
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: _navy.withValues(alpha: 0.13),
+            blurRadius: 22,
+            spreadRadius: 0,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: SizedBox(
+        height: 62,
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+            itemCount: chapters.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 9),
+            itemBuilder: (context, index) {
+              final chapter = chapters[index];
+              final selected = selectedChapter == chapter;
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                decoration: BoxDecoration(
+                  color: selected ? _navy : Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: selected ? _navy : const Color(0xFFE5E8EF),
+                  ),
+                  boxShadow: selected
+                      ? [
+                          BoxShadow(
+                            color: _navy.withValues(alpha: 0.12),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ]
+                      : null,
+                ),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(14),
+                  onTap: () {
+                    setState(() {
+                      selectedChapter = chapter;
+                      selectedTopic = null;
+                      selectedPart = null;
+                    });
+                    applyFilter();
+                  },
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 15),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (selected) ...[
+                          const Icon(
+                            Icons.check_rounded,
+                            color: _gold,
+                            size: 17,
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        Text(
+                          chapter,
+                          style: TextStyle(
+                            fontFamily: 'Tajawal',
+                            color: selected ? Colors.white : _navy,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSelectionPanel() {
+    return AnimatedSize(
+      duration: const Duration(milliseconds: 240),
+      curve: Curves.easeInOut,
+      alignment: Alignment.topCenter,
+      child: _showSelectionBar
+          ? Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: _navy.withValues(alpha: 0.1),
+                    blurRadius: 18,
+                    offset: const Offset(0, 7),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildChapterSelector(),
+                  _buildSubsectionSelectors(),
+                ],
+              ),
+            )
+          : const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildSubsectionSelectors() {
+    final lessons = _currentLessons;
+    if (selectedChapter == null || lessons.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final lessonTitles = lessons
+        .map((lesson) => lesson['lesson_title'].toString())
+        .toList();
+    final parts = _availableParts;
+    if (lessonTitles.length < 2 && parts.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Container(
+      width: double.infinity,
+      color: Colors.white,
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (lessonTitles.length > 1)
+            _buildOptionStrip(
+              title: 'الدروس',
+              options: lessonTitles,
+              selected: selectedTopic,
+              onSelected: (value) {
+                setState(() {
+                  selectedTopic = value;
+                  selectedPart = null;
+                });
+                applyFilter();
+              },
+            ),
+          if (parts.isNotEmpty)
+            _buildOptionStrip(
+              title: 'الأجزاء',
+              options: parts,
+              selected: selectedPart,
+              onSelected: (value) {
+                setState(() => selectedPart = value);
+                applyFilter();
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOptionStrip({
+    required String title,
+    required List<String> options,
+    required String? selected,
+    required ValueChanged<String?> onSelected,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 7),
+      child: Row(
+        children: [
+          if (title != 'الدروس')
+            Padding(
+              padding: const EdgeInsetsDirectional.only(start: 14, end: 8),
+              child: Text(
+                '$title:',
+                style: const TextStyle(
+                  fontFamily: 'Tajawal',
+                  color: Color(0xFF7B8495),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          Expanded(
+            child: SizedBox(
+              height: 38,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsetsDirectional.only(start: 19, end: 12),
+                children: [
+                  _buildOptionChip(
+                    title == 'الدروس' ? 'كل الدروس' : 'كل الأجزاء',
+                    selected == null,
+                    () => onSelected(null),
+                  ),
+                  ...options.map(
+                    (option) => _buildOptionChip(
+                      option,
+                      selected == option,
+                      () => onSelected(option),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOptionChip(String label, bool selected, VoidCallback onTap) {
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(end: 7),
+      child: Material(
+        color: selected ? _navy : const Color(0xFFF2F4F8),
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Center(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontFamily: 'Tajawal',
+                  color: selected ? Colors.white : _navy,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildQuestionsList() {
     if (subjectData.isEmpty) {
       return Center(
         child: Column(
@@ -344,7 +718,60 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
             const SizedBox(height: 16),
             const Text(
               "لا توجد وزاريات متوفرة حالياً لهذه المادة",
-              style: TextStyle(color: Colors.grey, fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    if (selectedChapter == null) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(22),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFFF8E7),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: _gold.withValues(alpha: 0.16),
+                    blurRadius: 22,
+                    offset: const Offset(0, 7),
+                  ),
+                ],
+              ),
+              child: const Icon(
+                Icons.touch_app_rounded,
+                size: 42,
+                color: _navy,
+              ),
+            ),
+            const SizedBox(height: 18),
+            const Text(
+              "اختر الفصل للبدء",
+              style: TextStyle(
+                color: _navy,
+                fontFamily: 'Tajawal',
+                fontSize: 19,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              "اختر فصلاً من الشريط أعلاه لعرض الأسئلة الوزارية",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: Color(0xFF7B8495),
+                fontSize: 14,
+                height: 1.5,
+              ),
             ),
           ],
         ),
@@ -352,152 +779,183 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
     }
 
     if (filteredQuestions.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(25),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                shape: BoxShape.circle,
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 20,
-                  ),
-                ],
-              ),
-              child: Icon(
-                Icons.history_edu_rounded,
-                size: 50,
-                color: primaryColor.withOpacity(0.3),
+      return const Center(
+        child: Text("لا توجد أسئلة متاحة في هذا الفصل حالياً"),
+      );
+    }
+
+    return Column(
+      children: [
+        Expanded(
+          child: AnimatedSwitcher(
+            duration: const Duration(milliseconds: 260),
+            switchInCurve: Curves.easeOutCubic,
+            switchOutCurve: Curves.easeInCubic,
+            layoutBuilder: (currentChild, previousChildren) => Stack(
+              alignment: Alignment.topCenter,
+              fit: StackFit.expand,
+              children: [
+                ...previousChildren,
+                if (currentChild != null) currentChild,
+              ],
+            ),
+            transitionBuilder: (child, animation) => FadeTransition(
+              opacity: animation,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.025),
+                  end: Offset.zero,
+                ).animate(animation),
+                child: child,
               ),
             ),
-            const SizedBox(height: 20),
-            const Text(
-              "يرجى اختيار القسم لعرض الوزاريات",
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
+            child: SingleChildScrollView(
+              key: ValueKey(_currentQuestionIndex),
+              primary: false,
+              clipBehavior: Clip.hardEdge,
+              padding: const EdgeInsets.fromLTRB(0, 8, 0, 12),
+              child: buildMinisterialItem(
+                filteredQuestions[_currentQuestionIndex],
+                _currentQuestionIndex,
+              ),
+            ),
+          ),
+        ),
+        _buildQuestionNavigation(),
+      ],
+    );
+  }
+
+  Widget _buildQuestionNavigation() {
+    final total = filteredQuestions.length;
+    final hasPrevious = _currentQuestionIndex > 0;
+    final hasNext = _currentQuestionIndex < total - 1;
+
+    return SafeArea(
+      top: false,
+      child: Container(
+        height: 50,
+        margin: const EdgeInsets.fromLTRB(18, 2, 18, 8),
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _navy.withValues(alpha: 0.10)),
+          boxShadow: [
+            BoxShadow(
+              color: _navy.withValues(alpha: 0.08),
+              blurRadius: 10,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              tooltip: 'السؤال السابق',
+              onPressed: hasPrevious ? () => _changeQuestion(-1) : null,
+              icon: const Icon(Icons.chevron_left_rounded),
+              color: _navy,
+              style: IconButton.styleFrom(
+                minimumSize: const Size(36, 36),
+                maximumSize: const Size(36, 36),
+                padding: EdgeInsets.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+            ),
+            SizedBox(
+              width: 112,
+              height: 32,
+              child: TextField(
+                controller: _questionInputController,
+                textAlign: TextAlign.center,
+                keyboardType: TextInputType.number,
+                textInputAction: TextInputAction.go,
+                onSubmitted: _goToQuestionFromInput,
+                decoration: InputDecoration(
+                  hintText: 'رقم السؤال',
+                  suffixText: '/ $total',
+                  filled: true,
+                  fillColor: Colors.white,
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 4,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: _gold, width: 1.5),
+                  ),
+                ),
+              ),
+            ),
+            IconButton(
+              tooltip: 'السؤال التالي',
+              onPressed: hasNext ? () => _changeQuestion(1) : null,
+              icon: const Icon(Icons.chevron_right_rounded),
+              color: _navy,
+              style: IconButton.styleFrom(
+                minimumSize: const Size(36, 36),
+                maximumSize: const Size(36, 36),
+                padding: EdgeInsets.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
             ),
           ],
         ),
-      );
-    }
-
-    return ListView.separated(
-      padding: EdgeInsets.zero,
-      itemCount: filteredQuestions.length,
-      separatorBuilder: (context, index) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 30),
-        child: Container(
-          height: 1,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                Colors.transparent,
-                Colors.blueGrey.withOpacity(0.15),
-                Colors.transparent,
-              ],
-            ),
-          ),
-        ),
-      ),
-      itemBuilder: (context, index) => buildMinisterialItem(
-        filteredQuestions[index],
-        index,
-        primaryColor,
-        secondaryColor,
       ),
     );
   }
 
-  Widget buildMinisterialItem(
-    Map<String, dynamic> item,
-    int index,
-    Color primaryColor,
-    Color secondaryColor,
-  ) {
+  Widget buildMinisterialItem(Map<String, dynamic> item, int index) {
     final dynamic rawYears = item['years'];
-    final List<dynamic> years = (rawYears is List) ? rawYears : (rawYears != null ? [rawYears] : []);
+    final List<dynamic> years = (rawYears is List)
+        ? rawYears
+        : (rawYears != null ? [rawYears] : []);
     final String? tag = item['section_tag'];
-    final String? topicHeader = item['topic_header'];
     final bool isHeader = item['isHeader'] ?? false;
 
-    // التحقق إذا كان هذا أول سؤال في موضوع جديد لعرض العنوان
-    bool showTopicHeader = false;
-    if (topicHeader != null) {
-      if (index == 0) {
-        showTopicHeader = true;
-      } else {
-        final prevItem = filteredQuestions[index - 1];
-        if (prevItem['topic_header'] != topicHeader) {
-          showTopicHeader = true;
-        }
-      }
-    }
-
-    final TextDirection textDir = widget.subjectName == 'الإنكليزي' ? TextDirection.ltr : TextDirection.rtl;
+    final TextDirection textDir = widget.subjectName == 'الإنكليزي'
+        ? TextDirection.ltr
+        : TextDirection.rtl;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        if (showTopicHeader)
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-            color: primaryColor.withValues(alpha: 0.05),
-            child: Directionality(
-              textDirection: TextDirection.rtl,
-              child: Row(
-                children: [
-                  Container(
-                    width: 4,
-                    height: 18,
-                    decoration: BoxDecoration(
-                      color: secondaryColor,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: Text(
-                      topicHeader!,
-                      style: TextStyle(
-                        color: primaryColor,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 16,
-                        fontFamily: 'Tajawal',
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        Container(
-          color: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: 20),
+        Padding(
+          padding: const EdgeInsets.fromLTRB(14, 2, 14, 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
+                padding: EdgeInsets.zero,
                 child: Directionality(
                   textDirection: TextDirection.rtl,
                   child: Row(
                     children: [
-                      Icon(Icons.history_edu_rounded, size: 18, color: primaryColor),
-                      const SizedBox(width: 10),
-                      Text(
-                        tag ?? "سؤال وزاري ${index + 1}",
-                        style: TextStyle(
-                          color: Colors.blueGrey[800],
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
+                      const Icon(
+                        Icons.history_edu_rounded,
+                        size: 17,
+                        color: _navy,
+                      ),
+                      const SizedBox(width: 7),
+                      Expanded(
+                        child: Text(
+                          tag ?? "سؤال وزاري ${index + 1}",
+                          style: const TextStyle(
+                            color: _navy,
+                            fontFamily: 'Tajawal',
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
                         ),
                       ),
                     ],
@@ -505,9 +963,9 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
                 ),
               ),
               if (years.isNotEmpty) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: 8),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: EdgeInsets.zero,
                   child: Directionality(
                     textDirection: TextDirection.rtl,
                     child: Wrap(
@@ -521,13 +979,13 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
                                 vertical: 4,
                               ),
                               decoration: BoxDecoration(
-                                color: secondaryColor.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(6),
+                                color: _gold.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(8),
                               ),
                               child: Text(
                                 year.toString(),
                                 style: TextStyle(
-                                  color: secondaryColor,
+                                  color: const Color(0xFF8A6200),
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -541,14 +999,14 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
               ],
               if (item['verse'] != null && item['verse'].toString().isNotEmpty)
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+                  padding: const EdgeInsets.only(top: 12),
                   child: Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.green.withValues(alpha: 0.03),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.green.withValues(alpha: 0.1)),
+                      color: const Color(0xFFF3F8F3),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFD7E8D9)),
                     ),
                     child: Text(
                       item['verse'],
@@ -563,92 +1021,117 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
                     ),
                   ),
                 ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 15, 20, 10),
-                child: Directionality(
-                  textDirection: textDir,
-                  child: _buildMathContent(
-                    item['question'] ??
-                        (item['word'] != null ? "ما معنى كلمة: ${item['word']}" : ""),
-                    TextStyle(
-                      fontSize: 16,
-                      fontWeight: isHeader ? FontWeight.bold : FontWeight.w600,
-                      height: 1.6,
-                      color: const Color(0xFF1E293B),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 17,
+                    decoration: BoxDecoration(
+                      color: _gold,
+                      borderRadius: BorderRadius.circular(4),
                     ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'السؤال',
+                    style: TextStyle(
+                      fontFamily: 'Tajawal',
+                      color: _navy,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 9),
+              Directionality(
+                textDirection: textDir,
+                child: _buildMathContent(
+                  item['question'] ??
+                      (item['word'] != null
+                          ? "ما معنى كلمة: ${item['word']}"
+                          : ""),
+                  TextStyle(
+                    fontSize: 16,
+                    fontWeight: isHeader ? FontWeight.bold : FontWeight.w600,
+                    height: 1.8,
+                    color: const Color(0xFF1E293B),
                   ),
                 ),
               ),
-              Theme(
-                data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-                child: ExpansionTile(
-                  title: Directionality(
-                    textDirection: TextDirection.rtl,
-                    child: Text(
-                      "عرض الجواب النموذجي",
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: secondaryColor,
-                      ),
+              const Divider(height: 28, color: Color(0xFFE9ECF1)),
+              Row(
+                children: [
+                  Container(
+                    width: 4,
+                    height: 17,
+                    decoration: BoxDecoration(
+                      color: _gold,
+                      borderRadius: BorderRadius.circular(4),
                     ),
                   ),
-                  iconColor: secondaryColor,
-                  collapsedIconColor: secondaryColor,
-                  tilePadding: const EdgeInsets.symmetric(horizontal: 20),
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.check_circle_outline_rounded,
+                    color: _gold,
+                    size: 18,
+                  ),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'الإجابة النموذجية',
+                    style: TextStyle(
+                      fontFamily: 'Tajawal',
+                      color: _navy,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 14,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 9),
+              Directionality(
+                textDirection: textDir,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 15),
-                      child: Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(15),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.grey.withValues(alpha: 0.1)),
+                    if (item['answers'] != null)
+                      buildTajweedTable(item['answers']),
+                    if (item['answer'] != null || item['meaning'] != null)
+                      _buildMathContent(
+                        item['answer'] ?? item['meaning'],
+                        const TextStyle(
+                          fontSize: 15,
+                          height: 1.85,
+                          color: Color(0xFF334155),
                         ),
-                        child: Directionality(
-                          textDirection: textDir,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (item['answers'] != null)
-                                buildTajweedTable(item['answers']),
-                              if (item['answer'] != null || item['meaning'] != null)
-                                _buildMathContent(
-                                  item['answer'] ?? item['meaning'],
-                                  const TextStyle(
-                                    fontSize: 14,
-                                    height: 1.7,
-                                    color: Colors.black87,
-                                  ),
-                                ),
-                              if (item['note'] != null)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 8),
-                                  child: Text(
-                                    "• ملاحظة: ${item['note']}",
-                                    style: const TextStyle(
-                                      color: Colors.redAccent,
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              if (item['extra_answer'] != null) ...[
-                                const Divider(height: 25),
-                                Text(
-                                  item['extra_answer']['definition'] ??
-                                      item['extra_answer']['text'] ??
-                                      "",
-                                  style: const TextStyle(fontSize: 14, height: 1.7),
-                                ),
-                              ],
-                            ],
+                      ),
+                    if (item['note'] != null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Text(
+                          "ملاحظة: ${item['note']}",
+                          style: const TextStyle(
+                            color: Color(0xFF8A6200),
+                            fontSize: 13,
+                            height: 1.6,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
-                    ),
+                    if (item['extra_answer'] != null) ...[
+                      const Divider(height: 28, color: Color(0xFFE9ECF1)),
+                      Text(
+                        item['extra_answer']['definition'] ??
+                            item['extra_answer']['text'] ??
+                            "",
+                        style: const TextStyle(
+                          fontSize: 14,
+                          height: 1.8,
+                          color: Color(0xFF475569),
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -711,9 +1194,16 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
                       });
                     },
                   ),
-                  if (tempChapter != null && 
-                      topics.isNotEmpty && 
-                      !['الرياضيات', 'الإنكليزي', 'الأحياء', 'التاريخ', 'الجغرافية', 'الاقتصاد'].contains(widget.subjectName) &&
+                  if (tempChapter != null &&
+                      topics.isNotEmpty &&
+                      ![
+                        'الرياضيات',
+                        'الإنكليزي',
+                        'الأحياء',
+                        'التاريخ',
+                        'الجغرافية',
+                        'الاقتصاد',
+                      ].contains(widget.subjectName) &&
                       tempChapter != "أحكام التلاوة") ...[
                     const SizedBox(height: 16),
                     buildDropdown(
@@ -732,15 +1222,24 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
                     width: double.infinity,
                     height: 50,
                     child: ElevatedButton(
-                      onPressed: (tempChapter != null && 
-                                 (topics.isEmpty || 
-                                  tempTopic != null || 
-                                  ['الرياضيات', 'الإنكليزي', 'الأحياء', 'التاريخ', 'الجغرافية', 'الاقتصاد'].contains(widget.subjectName) ||
+                      onPressed:
+                          (tempChapter != null &&
+                              (topics.isEmpty ||
+                                  tempTopic != null ||
+                                  [
+                                    'الرياضيات',
+                                    'الإنكليزي',
+                                    'الأحياء',
+                                    'التاريخ',
+                                    'الجغرافية',
+                                    'الاقتصاد',
+                                  ].contains(widget.subjectName) ||
                                   tempChapter == "أحكام التلاوة"))
                           ? () {
                               setState(() {
                                 selectedChapter = tempChapter;
                                 selectedTopic = tempTopic;
+                                selectedPart = null;
                               });
                               Navigator.pop(context);
                               applyFilter();
@@ -868,13 +1367,18 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
       return Text(
         text,
         style: style,
-        textAlign: widget.subjectName == 'الإنكليزي' ? TextAlign.left : TextAlign.right,
+        textAlign: widget.subjectName == 'الإنكليزي'
+            ? TextAlign.left
+            : TextAlign.right,
       );
     }
 
     // في الرياضيات: السؤال (يبدأ بـ س/) لليمين، والحل (يبدأ بـ sol :) لليسار
-    bool isAnswer = text.trim().startsWith('sol :') || text.trim().startsWith('ج/');
-    Alignment alignment = isAnswer ? Alignment.centerLeft : Alignment.centerRight;
+    bool isAnswer =
+        text.trim().startsWith('sol :') || text.trim().startsWith('ج/');
+    Alignment alignment = isAnswer
+        ? Alignment.centerLeft
+        : Alignment.centerRight;
     TextAlign textAlign = isAnswer ? TextAlign.left : TextAlign.right;
 
     // منطق الرياضيات المتقدم
@@ -882,11 +1386,7 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
       return Container(
         width: double.infinity,
         alignment: alignment,
-        child: Text(
-          text,
-          style: style,
-          textAlign: textAlign,
-        ),
+        child: Text(text, style: style, textAlign: textAlign),
       );
     }
 
@@ -902,11 +1402,7 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
               width: double.infinity,
               alignment: alignment,
               padding: const EdgeInsets.symmetric(vertical: 2),
-              child: Text(
-                parts[i],
-                style: style,
-                textAlign: textAlign,
-              ),
+              child: Text(parts[i], style: style, textAlign: textAlign),
             ),
           );
         }
@@ -923,7 +1419,10 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
                 child: Directionality(
                   textDirection: TextDirection.ltr,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 8,
+                    ),
                     child: tex.Math.tex(
                       "\u200E ${parts[i]} \u200E",
                       textStyle: style.copyWith(
