@@ -34,6 +34,7 @@ class AuthService {
       );
 
       if (response.user != null) {
+        await _restoreSavedProfileName(response.user!);
         final prefs = await SharedPreferences.getInstance();
         await prefs.remove(explicitSignOutKey);
       }
@@ -76,6 +77,7 @@ class AuthService {
       );
 
       if (response.user != null) {
+        await _restoreSavedProfileName(response.user!);
         final prefs = await SharedPreferences.getInstance();
         await prefs.remove(explicitSignOutKey);
       }
@@ -87,6 +89,27 @@ class AuthService {
     }
   }
 
+  // Restore the app's saved name after Google OAuth supplies its display name.
+  Future<void> _restoreSavedProfileName(User user) async {
+    try {
+      final profile = await _supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', user.id)
+          .maybeSingle();
+      final savedName = profile?['full_name']?.toString().trim();
+      if (savedName == null || savedName.isEmpty) return;
+
+      if (user.userMetadata?['full_name']?.toString().trim() != savedName) {
+        await _supabase.auth.updateUser(
+          UserAttributes(data: {'full_name': savedName}),
+        );
+      }
+    } catch (e) {
+      // A temporary profile lookup failure must not block authentication.
+      print('Could not restore saved profile name: $e');
+    }
+  }
   // الحصول على المستخدم الحالي
   User? get currentUser => _supabase.auth.currentUser;
 
@@ -127,6 +150,14 @@ class AuthService {
       await _supabase.auth.updateUser(
         UserAttributes(data: {'full_name': fullName}),
       );
+      try {
+        await _supabase
+            .from('profiles')
+            .update({'full_name': fullName})
+            .eq('id', user.id);
+      } catch (e) {
+        print('Could not sync profile name: $e');
+      }
     } catch (e) {
       print('Error updating name: $e');
       rethrow;

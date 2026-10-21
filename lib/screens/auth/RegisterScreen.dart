@@ -307,7 +307,7 @@ class _RegisterScreenState extends State<RegisterScreen>
       if (!await _googleConsent() || !mounted) return;
       setState(() => _agreeToTerms = true);
       final response = await _authService.signInWithGoogle();
-      var user = response.user;
+      var user = _authService.currentUser ?? response.user;
       if (user == null || !mounted) return;
       if ((user.userMetadata?['user_stage']?.toString().isEmpty ?? true) &&
           _stage != null) {

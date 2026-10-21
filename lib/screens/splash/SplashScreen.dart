@@ -140,7 +140,7 @@ class _SplashScreenState extends State<SplashScreen> {
         final response = await authService.signInGoogleSilently();
         if (response?.session != null) {
           session = response!.session;
-          user = response.user;
+          user = authService.currentUser ?? response.user;
           debugPrint("Silent Google sign-in successful");
         }
       }
