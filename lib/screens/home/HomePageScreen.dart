@@ -30,6 +30,27 @@ class HomePageScreen extends StatefulWidget {
   State<HomePageScreen> createState() => _HomePageScreenState();
 }
 
+class _KeepAliveTab extends StatefulWidget {
+  const _KeepAliveTab({required this.child});
+
+  final Widget child;
+
+  @override
+  State<_KeepAliveTab> createState() => _KeepAliveTabState();
+}
+
+class _KeepAliveTabState extends State<_KeepAliveTab>
+    with AutomaticKeepAliveClientMixin<_KeepAliveTab> {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
+  }
+}
+
 class _RoundedTabIndicator extends Decoration {
   const _RoundedTabIndicator({
     required this.color,
@@ -128,6 +149,7 @@ class _HomePageScreenState extends State<HomePageScreen>
   String? _profileImagePath;
   String? selectedStage;
   bool _isDrawerOpen = false;
+  final GlobalKey<ScaffoldState> _homeScaffoldKey = GlobalKey<ScaffoldState>();
   bool isAdsRemoved = false;
   DateTime? _aiResetAt;
   List<SubjectModel> _supabaseSubjects = [];
@@ -151,6 +173,7 @@ class _HomePageScreenState extends State<HomePageScreen>
       {};
   final Map<String, Map<String, dynamic>> _recentlyRestoredNotifications = {};
   final Map<String, int> _notificationDismissGenerations = {};
+  final Map<String, Future<void>> _pendingNotificationReadWrites = {};
   Timer? _notificationDeleteTimer;
   Timer? _undoSnackBarTimer;
   bool _isLoadingNotifications = false;
@@ -192,8 +215,6 @@ class _HomePageScreenState extends State<HomePageScreen>
   );
   late TabController _tabController;
   final List<Map<String, dynamic>> _chatMessages = [];
-  final ValueNotifier<String> _liveAssistantText = ValueNotifier('');
-  Map<String, dynamic>? _liveAssistantMessage;
   final List<Map<String, dynamic>> _aiConversations = [];
   final Map<String, Map<String, dynamic>> _pendingConversationDeletes = {};
   Timer? _conversationDeleteTimer;
@@ -335,7 +356,6 @@ class _HomePageScreenState extends State<HomePageScreen>
     _quickShortcutsController.dispose();
     _studySuggestionsController.dispose();
     _chatController.dispose();
-    _liveAssistantText.dispose();
     _chatFocusNode.dispose();
     _sendDotsController.dispose();
     _chatGlowController.dispose();
@@ -572,10 +592,14 @@ class _HomePageScreenState extends State<HomePageScreen>
     int index,
   ) {
     final id = notification['id'].toString();
-    _pendingNotificationDeletes[id] = (
-      Map<String, dynamic>.from(notification),
-      index,
-    );
+    final dismissedNotification = Map<String, dynamic>.from(notification)
+      ..['is_read'] = true;
+    _pendingNotificationDeletes[id] = (dismissedNotification, index);
+    _pendingNotificationReadWrites[id] = _markNotificationReadForDelete(id);
+    _unreadCount = _liveNotifications
+        .where((item) => item['is_read'] != true)
+        .length;
+    _refreshNotificationsPage();
     _notificationDeleteTimer?.cancel();
     _notificationDeleteTimer = Timer(
       const Duration(seconds: 5),
@@ -584,7 +608,7 @@ class _HomePageScreenState extends State<HomePageScreen>
     _showUndoSnackBar('تم حذف الإشعار', _undoNotificationDeletes);
   }
 
-  void _undoNotificationDeletes() {
+  Future<void> _undoNotificationDeletes() async {
     if (!mounted || _pendingNotificationDeletes.isEmpty) return;
     _notificationDeleteTimer?.cancel();
     _undoSnackBarTimer?.cancel();
@@ -607,7 +631,29 @@ class _HomePageScreenState extends State<HomePageScreen>
           .length;
     });
     _refreshNotificationsPage();
+    final readWrites = pending
+        .map(
+          (entry) =>
+              _pendingNotificationReadWrites.remove(entry.$1['id'].toString()),
+        )
+        .whereType<Future<void>>()
+        .toList();
+    await Future.wait(readWrites);
     _refreshNotificationsAfterUndo();
+  }
+
+  Future<void> _markNotificationReadForDelete(String id) async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
+    try {
+      await Supabase.instance.client
+          .from('notifications')
+          .update({'is_read': true})
+          .eq('id', id)
+          .eq('user_id', user.id);
+    } catch (error) {
+      debugPrint('Could not mark deleted notification as read: $error');
+    }
   }
 
   Future<void> _refreshNotificationsAfterUndo() async {
@@ -644,6 +690,7 @@ class _HomePageScreenState extends State<HomePageScreen>
     _pendingNotificationDeletes.clear();
     for (final id in ids) {
       try {
+        await _pendingNotificationReadWrites.remove(id);
         await Supabase.instance.client
             .from('notifications')
             .delete()
@@ -990,8 +1037,6 @@ class _HomePageScreenState extends State<HomePageScreen>
       _setTypingState(true);
     });
 
-    _scrollToBottom();
-
     String? uploadedImagePath;
     String? imageMimeType;
     if (selectedImage != null) {
@@ -1047,24 +1092,10 @@ class _HomePageScreenState extends State<HomePageScreen>
       return;
     }
 
-    Map<String, dynamic>? liveReply;
     try {
       String? responseText = await _getGroqResponse(
         message,
         imagePath: uploadedImagePath,
-        onToken: (text) {
-          if (!mounted) return;
-          if (liveReply == null) {
-            liveReply = {'text': text, 'isMe': false};
-            _chatMessages.add(liveReply!);
-            _liveAssistantMessage = liveReply;
-            _liveAssistantText.value = text;
-            setState(() {});
-          } else {
-            liveReply!['text'] = text;
-            _liveAssistantText.value = text;
-          }
-        },
       );
 
       if (responseText == null || responseText.trim().isEmpty) {
@@ -1072,24 +1103,13 @@ class _HomePageScreenState extends State<HomePageScreen>
       }
 
       if (!mounted) return;
-      setState(() {
-        if (liveReply == null) {
-          _chatMessages.add({'text': responseText, 'isMe': false});
-        } else {
-          liveReply!['text'] = responseText;
-        }
-        _liveAssistantMessage = null;
+      _appendChatMessagePreservingViewport({
+        'text': responseText,
+        'isMe': false,
       });
       await _saveMessageToDB(responseText!, false);
     } catch (e) {
       if (!mounted) return;
-      if (liveReply != null) {
-        setState(() {
-          _chatMessages.remove(liveReply);
-          _liveAssistantMessage = null;
-          _liveAssistantText.value = '';
-        });
-      }
       if (e is FunctionException &&
           e.details is Map &&
           e.details['error'] == 'daily_limit') {
@@ -1195,7 +1215,6 @@ class _HomePageScreenState extends State<HomePageScreen>
   Future<String?> _getGroqResponse(
     String userMessage, {
     String? imagePath,
-    required ValueChanged<String> onToken,
   }) async {
     final messages = <Map<String, dynamic>>[];
     for (final message
@@ -1261,7 +1280,7 @@ class _HomePageScreenState extends State<HomePageScreen>
     try {
       final response = await client
           .send(request)
-          .timeout(const Duration(seconds: 70));
+          .timeout(const Duration(seconds: 130));
       if (response.statusCode != 200) {
         final body = await response.stream.bytesToString();
         dynamic details;
@@ -1280,8 +1299,6 @@ class _HomePageScreenState extends State<HomePageScreen>
 
       final answer = StringBuffer();
       var receivedUsage = false;
-      var publishedLength = 0;
-      final uiUpdateClock = Stopwatch()..start();
       await for (final line
           in response.stream
               .transform(utf8.decoder)
@@ -1293,11 +1310,6 @@ class _HomePageScreenState extends State<HomePageScreen>
         if (event is! Map) continue;
         if (event['delta'] is String) {
           answer.write(event['delta']);
-          if (publishedLength == 0 || uiUpdateClock.elapsedMilliseconds >= 50) {
-            onToken(answer.toString());
-            publishedLength = answer.length;
-            uiUpdateClock.reset();
-          }
         } else if (event['usage'] != null) {
           _applyAiUsage(event['usage']);
           receivedUsage = true;
@@ -1308,7 +1320,6 @@ class _HomePageScreenState extends State<HomePageScreen>
           );
         }
       }
-      if (answer.length != publishedLength) onToken(answer.toString());
       if (answer.isEmpty || !receivedUsage) {
         throw const FunctionException(
           status: 503,
@@ -1346,14 +1357,12 @@ class _HomePageScreenState extends State<HomePageScreen>
     String? retryImagePath,
   }) {
     if (mounted) {
-      setState(() {
-        _chatMessages.add({
-          'text': msg,
-          'isMe': false,
-          'isError': true,
-          'retryText': retryText,
-          'retryImagePath': retryImagePath,
-        });
+      _appendChatMessagePreservingViewport({
+        'text': msg,
+        'isMe': false,
+        'isError': true,
+        'retryText': retryText,
+        'retryImagePath': retryImagePath,
       });
     }
   }
@@ -1364,48 +1373,19 @@ class _HomePageScreenState extends State<HomePageScreen>
       _chatMessages.removeWhere((item) => item['isError'] == true);
       _setTypingState(true);
     });
-    _scrollToBottom();
-    Map<String, dynamic>? liveReply;
     try {
       final response = await _getGroqResponse(
         message,
         imagePath: imagePath,
-        onToken: (text) {
-          if (!mounted) return;
-          if (liveReply == null) {
-            liveReply = {'text': text, 'isMe': false};
-            _chatMessages.add(liveReply!);
-            _liveAssistantMessage = liveReply;
-            _liveAssistantText.value = text;
-            setState(() {});
-          } else {
-            liveReply!['text'] = text;
-            _liveAssistantText.value = text;
-          }
-        },
       );
       if (response == null || response.isEmpty) {
         throw const FormatException('empty_response');
       }
       if (!mounted) return;
-      setState(() {
-        if (liveReply == null) {
-          _chatMessages.add({'text': response, 'isMe': false});
-        } else {
-          liveReply!['text'] = response;
-        }
-        _liveAssistantMessage = null;
-      });
+      _appendChatMessagePreservingViewport({'text': response, 'isMe': false});
       await _saveMessageToDB(response, false);
     } catch (_) {
       if (!mounted) return;
-      if (liveReply != null) {
-        setState(() {
-          _chatMessages.remove(liveReply);
-          _liveAssistantMessage = null;
-          _liveAssistantText.value = '';
-        });
-      }
       _showErrorMessage(
         'تعذر الاتصال بالمساعد. تحقق من الإنترنت ثم أعد المحاولة.',
         retryText: message,
@@ -2221,6 +2201,10 @@ class _HomePageScreenState extends State<HomePageScreen>
     }
   }
 
+  void _appendChatMessagePreservingViewport(Map<String, dynamic> message) {
+    setState(() => _chatMessages.add(message));
+  }
+
   Future<bool> _saveMessageToDB(
     String text,
     bool isMe, {
@@ -2653,6 +2637,10 @@ class _HomePageScreenState extends State<HomePageScreen>
       canPop: false,
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop) return;
+        if (_isDrawerOpen) {
+          _homeScaffoldKey.currentState?.closeDrawer();
+          return;
+        }
         if (_tabController.index != 0) {
           _tabController.animateTo(0);
           return;
@@ -2665,6 +2653,7 @@ class _HomePageScreenState extends State<HomePageScreen>
       child: Directionality(
         textDirection: widgets.TextDirection.rtl,
         child: Scaffold(
+          key: _homeScaffoldKey,
           backgroundColor: Colors.white,
           extendBody: true,
           resizeToAvoidBottomInset: false,
@@ -2740,7 +2729,7 @@ class _HomePageScreenState extends State<HomePageScreen>
                 controller: _tabController,
                 children: [
                   _buildHomeView(primaryColor, secondaryColor),
-                  _buildAiChatView(primaryColor),
+                  _KeepAliveTab(child: _buildAiChatView(primaryColor)),
                   _buildToolsView(),
                   _buildLeaderboardView(primaryColor, secondaryColor),
                 ],
@@ -4406,9 +4395,6 @@ class _HomePageScreenState extends State<HomePageScreen>
                               return false;
                             },
                             child: ListView.builder(
-                              key: PageStorageKey<String>(
-                                'sanad-ai-chat-${_currentConversationId ?? "new-conversation"}',
-                              ),
                               controller: _chatScrollController,
                               padding: EdgeInsets.fromLTRB(
                                 16,
@@ -4562,14 +4548,7 @@ class _HomePageScreenState extends State<HomePageScreen>
       imageUrl: message['imageUrl'] as String?,
       hasStoredImage: message['imagePath'] != null,
     );
-
-    if (!identical(message, _liveAssistantMessage)) {
-      return buildBubble(message['text']?.toString() ?? '');
-    }
-    return ValueListenableBuilder<String>(
-      valueListenable: _liveAssistantText,
-      builder: (context, text, child) => buildBubble(text),
-    );
+    return buildBubble(message['text']?.toString() ?? '');
   }
 
   Widget _buildTypingIndicator(Color primaryColor) => Container(
@@ -5307,7 +5286,7 @@ class _HomePageScreenState extends State<HomePageScreen>
                             ],
                           ),
                         ),
-                        SelectionArea(child: _buildAssistantContent(message)),
+                        _buildAssistantContent(message),
                         if (retryText == null && message.trim().isNotEmpty)
                           Align(
                             alignment: AlignmentDirectional.centerStart,
@@ -5529,7 +5508,7 @@ class _HomePageScreenState extends State<HomePageScreen>
           '  \n',
         )
         .replaceAll(RegExp(r'<\s*br\s*>', caseSensitive: false), '  \n'),
-    selectable: true,
+    selectable: false,
     styleSheet: MarkdownStyleSheet(
       p: const TextStyle(
         color: Colors.black87,

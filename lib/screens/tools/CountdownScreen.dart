@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 
 class CountdownScreen extends StatefulWidget {
@@ -32,7 +31,6 @@ class _CountdownScreenState extends State<CountdownScreen> {
     _loadCountdowns();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (mounted) {
-        _checkCompletions();
         setState(() {});
       }
     });
@@ -150,39 +148,6 @@ class _CountdownScreenState extends State<CountdownScreen> {
       }
     });
     await _saveCountdowns();
-  }
-
-  void _checkCompletions() async {
-    final now = DateTime.now();
-    bool changed = false;
-
-    for (final item in _countdowns) {
-      final target = DateTime.tryParse(item['target']?.toString() ?? '');
-      if (target != null && !target.isAfter(now) && item['notified'] != true) {
-        item['notified'] = true;
-        changed = true;
-        _sendInAppNotification(item['name']);
-      }
-    }
-
-    if (changed) {
-      _saveCountdowns();
-    }
-  }
-
-  Future<void> _sendInAppNotification(String taskName) async {
-    final user = Supabase.instance.client.auth.currentUser;
-    if (user != null) {
-      try {
-        await Supabase.instance.client.from('notifications').insert({
-          'user_id': user.id,
-          'title': 'انتهى العد التنازلي! ⏰',
-          'body': 'لقد وصل موعد: $taskName. نتمنى لك كل التوفيق!',
-        });
-      } catch (e) {
-        debugPrint("Error sending notification: $e");
-      }
-    }
   }
 
   void _addCountdown() {

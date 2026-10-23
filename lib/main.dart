@@ -23,6 +23,7 @@ import 'screens/tools/CountdownScreen.dart';
 import 'screens/tools/NotesScreen.dart';
 import 'screens/tools/PomodoroScreen.dart';
 import 'screens/tools/pomodoro_timer_service.dart';
+import 'screens/tools/countdown_notification_service.dart';
 import 'screens/tools/TodosScreen.dart';
 import 'screens/profile/ProfileScreen.dart';
 import 'screens/auth/ChangePasswordScreen.dart';
@@ -60,6 +61,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     PomodoroTimerService.instance.initialize();
+    CountdownNotificationService.instance.initialize();
     _setupAuthListener();
   }
 

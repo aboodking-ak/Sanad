@@ -142,43 +142,72 @@ Deno.serve(async (request: Request) => {
         void (async () => {
           let completedSuccessfully = false;
           let generatedText = '';
-          let pending = '';
           let finishReason: string | null = null;
           const emit = (event: unknown) => controller.enqueue(encoder.encode(`data: ${JSON.stringify(event)}\n\n`));
           try {
-            const reader = response.body!.getReader();
-            const decoder = new TextDecoder();
-            let providerDone = false;
-            const processProviderLine = (line: string) => {
-              if (!line.startsWith('data:')) return;
-              const data = line.slice(5).trim();
-              if (data === '[DONE]') { providerDone = true; return; }
-              try {
-                const event = JSON.parse(data);
-                const choice = event.choices?.[0];
-                if (typeof choice?.finish_reason === 'string') {
-                  finishReason = choice.finish_reason;
+            const model = imageCount > 0 ? 'qwen/qwen3.8-27b' : 'openai/gpt-oss-120b';
+            let currentResponse = response;
+            for (let attempt = 0; attempt < 2; attempt++) {
+              let pending = '';
+              let providerDone = false;
+              finishReason = null;
+              const reader = currentResponse.body!.getReader();
+              const decoder = new TextDecoder();
+              const processProviderLine = (line: string) => {
+                if (!line.startsWith('data:')) return;
+                const data = line.slice(5).trim();
+                if (data === '[DONE]') { providerDone = true; return; }
+                try {
+                  const event = JSON.parse(data);
+                  const choice = event.choices?.[0];
+                  if (typeof choice?.finish_reason === 'string') {
+                    finishReason = choice.finish_reason;
+                  }
+                  const delta = choice?.delta?.content;
+                  if (typeof delta === 'string' && delta.length) {
+                    generatedText += delta;
+                    emit({ delta });
+                  }
+                } catch { /* Ignore malformed or non-content provider events. */ }
+              };
+              while (!providerDone) {
+                const chunk = await reader.read();
+                if (chunk.done) break;
+                pending += decoder.decode(chunk.value, { stream: true });
+                const lines = pending.split(/\r?\n/);
+                pending = lines.pop() ?? '';
+                for (const line of lines) {
+                  processProviderLine(line);
+                  if (providerDone) break;
                 }
-                const delta = choice?.delta?.content;
-                if (typeof delta === 'string' && delta.length) {
-                  generatedText += delta;
-                  emit({ delta });
-                }
-              } catch { /* Ignore malformed or non-content provider events. */ }
-            };
-            while (!providerDone) {
-              const chunk = await reader.read();
-              if (chunk.done) break;
-              pending += decoder.decode(chunk.value, { stream: true });
-              const lines = pending.split(/\r?\n/);
-              pending = lines.pop() ?? '';
-              for (const line of lines) {
-                processProviderLine(line);
-                if (providerDone) break;
+              }
+              pending += decoder.decode();
+              if (!providerDone && pending.trim()) processProviderLine(pending);
+
+              if (finishReason !== 'length' || attempt === 1) break;
+              currentResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${groqKey}` },
+                body: JSON.stringify({
+                  model,
+                  messages: [
+                    { role: 'system', content: systemPrompt },
+                    ...modelMessages,
+                    { role: 'assistant', content: generatedText },
+                    { role: 'user', content: 'أكمل الإجابة من حيث توقفت، من دون تكرار ما سبق، وأنهِ جميع الخطوات المطلوبة.' },
+                  ],
+                  temperature: 0.7,
+                  max_completion_tokens: 8192,
+                  stream: true,
+                }),
+                signal: AbortSignal.timeout(60000),
+              });
+              if (!currentResponse.ok || !currentResponse.body) {
+                emit({ error: 'provider_unavailable' });
+                finishReason = 'error';
+                break;
               }
             }
-            pending += decoder.decode();
-            if (!providerDone && pending.trim()) processProviderLine(pending);
             if (finishReason !== 'stop') {
               emit({ error: 'incomplete_response' });
             } else if (!generatedText.trim()) {
