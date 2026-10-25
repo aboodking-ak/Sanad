@@ -123,6 +123,26 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
           'sub': 'Islamic',
           'file': 'unit1_ministerials.json',
         },
+        {
+          'cat': 'Preparatory',
+          'sub': 'Islamic',
+          'file': 'unit2_ministerials.json',
+        },
+        {
+          'cat': 'Preparatory',
+          'sub': 'Islamic',
+          'file': 'unit3_ministerials.json',
+        },
+        {
+          'cat': 'Preparatory',
+          'sub': 'Islamic',
+          'file': 'unit4_ministerials.json',
+        },
+        {
+          'cat': 'Preparatory',
+          'sub': 'Islamic',
+          'file': 'unit5_ministerials.json',
+        },
       ],
       'العربية': [
         {
@@ -230,6 +250,14 @@ class _MinisterialsScreenState extends State<MinisterialsScreen> {
             String fileName = fileInfo['file']!;
             if (fileName.contains('tajweed')) {
               mainCategory = "أحكام التلاوة";
+            } else if (fileName.contains('unit5')) {
+              mainCategory = "الوحدة الخامسة";
+            } else if (fileName.contains('unit4')) {
+              mainCategory = "الوحدة الرابعة";
+            } else if (fileName.contains('unit3')) {
+              mainCategory = "الوحدة الثالثة";
+            } else if (fileName.contains('unit2')) {
+              mainCategory = "الوحدة الثانية";
             } else if (fileName.contains('unit1')) {
               mainCategory = widget.subjectName == 'الإنكليزي'
                   ? "Unit 1"
