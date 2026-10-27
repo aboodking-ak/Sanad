@@ -1,6 +1,7 @@
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AdHelper {
   static final AdHelper _instance = AdHelper._internal();
@@ -60,7 +61,17 @@ class AdHelper {
 
   Future<void> showRewardedAd(VoidCallback onComplete) async {
     final prefs = await SharedPreferences.getInstance();
-    if (prefs.getBool('user_ads_removed') ?? false) {
+    final user = Supabase.instance.client.auth.currentUser;
+    final expiry = DateTime.tryParse(
+      prefs.getString('user_ads_removed_until') ?? '',
+    );
+    final savedUserId = prefs.getString('user_ads_removed_user_id');
+    final hasActiveSubscription =
+        user != null &&
+        savedUserId == user.id &&
+        expiry != null &&
+        expiry.isAfter(DateTime.now());
+    if (hasActiveSubscription) {
       onComplete();
       return;
     }

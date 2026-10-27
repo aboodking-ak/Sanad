@@ -122,7 +122,7 @@ class _HomePageScreenState extends State<HomePageScreen>
   static const double _homeHeaderScrollInset = 124;
   final AdHelper _adHelper = AdHelper();
   final InAppPurchase _inAppPurchase = InAppPurchase.instance;
-  late StreamSubscription<List<PurchaseDetails>> _purchaseSubscription;
+  StreamSubscription<List<PurchaseDetails>>? _purchaseSubscription;
   static const String _noAdsId =
       'sanad_premium_monthly'; // نفس المعرف في جوجل بلاي
 
@@ -249,8 +249,6 @@ class _HomePageScreenState extends State<HomePageScreen>
       }
       if (mounted) setState(() {});
     });
-    // تصفير القيم عند الدخول لأول مرة فقط (للتجربة)
-    isAdsRemoved = false;
 
     SystemChrome.setEnabledSystemUIMode(
       SystemUiMode.manual,
@@ -350,6 +348,7 @@ class _HomePageScreenState extends State<HomePageScreen>
   @override
   void dispose() {
     _timer.cancel();
+    _purchaseSubscription?.cancel();
     _quickShortcutsTimer?.cancel();
     _studySuggestionsTimer?.cancel();
     _studyQuoteTimer?.cancel();
@@ -790,12 +789,27 @@ class _HomePageScreenState extends State<HomePageScreen>
           // فحص حالة الاشتراك وتاريخ الانتهاء
           bool adsStillRemoved = false;
           if (profileData['ads_removed_until'] != null) {
-            final expiryDate = DateTime.parse(profileData['ads_removed_until']);
-            if (expiryDate.isAfter(DateTime.now())) {
+            final expiryDate = DateTime.tryParse(
+              profileData['ads_removed_until'].toString(),
+            );
+            if (expiryDate != null && expiryDate.isAfter(DateTime.now())) {
               adsStillRemoved = true;
             }
           }
 
+          final prefs = await SharedPreferences.getInstance();
+          if (adsStillRemoved) {
+            await prefs.setBool('user_ads_removed', true);
+            await prefs.setString('user_ads_removed_user_id', user.id);
+            await prefs.setString(
+              'user_ads_removed_until',
+              profileData['ads_removed_until'].toString(),
+            );
+          } else {
+            await prefs.remove('user_ads_removed');
+            await prefs.remove('user_ads_removed_user_id');
+            await prefs.remove('user_ads_removed_until');
+          }
           if (mounted) {
             setState(() {
               isAdsRemoved = adsStillRemoved;
@@ -2911,18 +2925,22 @@ class _HomePageScreenState extends State<HomePageScreen>
   }
 
   void _initializeInAppPurchase() {
+    _purchaseSubscription?.cancel();
     final purchaseUpdated = _inAppPurchase.purchaseStream;
     _purchaseSubscription = purchaseUpdated.listen(
       (purchaseDetailsList) {
         _handlePurchaseUpdates(purchaseDetailsList);
       },
       onDone: () {
-        _purchaseSubscription.cancel();
+        _purchaseSubscription?.cancel();
       },
       onError: (error) {
         debugPrint("IAP Error: $error");
       },
     );
+    _inAppPurchase.restorePurchases().catchError((Object error) {
+      debugPrint('IAP restore error: $error');
+    });
   }
 
   Future<void> _handlePurchaseUpdates(
@@ -2935,8 +2953,9 @@ class _HomePageScreenState extends State<HomePageScreen>
         // حدث خطأ في الدفع
       } else if (purchaseDetails.status == PurchaseStatus.purchased ||
           purchaseDetails.status == PurchaseStatus.restored) {
-        // نجاح عملية الدفع!
-        await _activateSubscription();
+        if (purchaseDetails.productID == _noAdsId) {
+          await _activateSubscription(purchaseDetails);
+        }
       }
 
       if (purchaseDetails.pendingCompletePurchase) {
@@ -2945,33 +2964,60 @@ class _HomePageScreenState extends State<HomePageScreen>
     }
   }
 
-  Future<void> _activateSubscription() async {
-    final expiryDate = DateTime.now().add(const Duration(days: 30));
+  Future<void> _activateSubscription(PurchaseDetails purchaseDetails) async {
+    if (purchaseDetails.productID != _noAdsId) return;
     final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) return;
 
-    if (user != null) {
-      try {
-        await Supabase.instance.client
-            .from('profiles')
-            .update({'ads_removed_until': expiryDate.toIso8601String()})
-            .eq('id', user.id);
-
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('user_ads_removed', true);
-        if (mounted) setState(() => isAdsRemoved = true);
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("تم تفعيل الاشتراك عبر جوجل بلاي بنجاح!"),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } catch (e) {
-        debugPrint("DB Sync Error: $e");
+    try {
+      final purchaseDate = DateTime.tryParse(
+        purchaseDetails.transactionDate ?? '',
+      );
+      if (purchaseDetails.status == PurchaseStatus.restored &&
+          purchaseDate == null) {
+        debugPrint('Restored subscription has no transaction date.');
+        return;
       }
+      final startDate = purchaseDate ?? DateTime.now();
+      final expiryDate = startDate.add(const Duration(days: 30));
+      final isActive = expiryDate.isAfter(DateTime.now());
+
+      final updatedProfile = await Supabase.instance.client
+          .from('profiles')
+          .update({'ads_removed_until': expiryDate.toIso8601String()})
+          .eq('id', user.id)
+          .select('id')
+          .maybeSingle();
+      if (updatedProfile == null) {
+        throw StateError('لم يتم تحديث سجل الاشتراك في profiles');
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+      if (isActive) {
+        await prefs.setBool('user_ads_removed', true);
+        await prefs.setString('user_ads_removed_user_id', user.id);
+        await prefs.setString(
+          'user_ads_removed_until',
+          expiryDate.toIso8601String(),
+        );
+      } else {
+        await prefs.remove('user_ads_removed');
+        await prefs.remove('user_ads_removed_user_id');
+        await prefs.remove('user_ads_removed_until');
+      }
+      if (mounted) setState(() => isAdsRemoved = isActive);
+      if (!isActive) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("تم تفعيل الاشتراك عبر جوجل بلاي بنجاح!"),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      debugPrint("DB Sync Error: $e");
     }
   }
-
   Future<void> _buySubscription() async {
     final bool available = await _inAppPurchase.isAvailable();
     if (!available) {
@@ -3014,7 +3060,14 @@ class _HomePageScreenState extends State<HomePageScreen>
     final PurchaseParam purchaseParam = PurchaseParam(
       productDetails: response.productDetails.first,
     );
-    _inAppPurchase.buyNonConsumable(purchaseParam: purchaseParam);
+    final started = await _inAppPurchase.buyNonConsumable(
+      purchaseParam: purchaseParam,
+    );
+    if (!started && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تعذر بدء عملية الاشتراك. حاول مجدداً.')),
+      );
+    }
   }
 
   Future<void> _processPayment(String type) async {
